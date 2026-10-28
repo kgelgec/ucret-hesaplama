@@ -7,3 +7,4 @@
 # Sürüm paketine (git archive) girmeyenler
 .gitattributes export-ignore
 .gitignore export-ignore
+.github export-ignore

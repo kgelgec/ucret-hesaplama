@@ -1,0 +1,94 @@
+name: Hesap farkı
+description: Bir bordro kalemi (brüt, SGK, gelir / damga vergisi, istisna, teşvik, işveren maliyeti) beklenenden farklı çıkıyor.
+title: "[Hesap] "
+labels: ["hesap farkı"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > **Gerçek kişi verisi paylaşmayın.** Bu sayfa herkese açıktır. Ad soyad, T.C. Kimlik No ya da bir çalışanın gerçek maaşını
+        > yazmayın (KVKK). Farkı **uydurma bir tutarla** (örneğin 50.000 TL net) tekrarlayıp o tutarla bildirin.
+
+        Hesabın formülleri `docs/02-hesap-motoru.md` belgesindedir. Önce yılın **Parametreler** ekranındaki değerlerin
+        (asgari ücret, vergi dilimleri, SGK oranları ve tavanı, teşvik oranları) resmî değerlerle aynı olduğunu kontrol edin;
+        farkların çoğu buradan çıkar.
+  - type: input
+    id: surum
+    attributes:
+      label: Program sürümü
+      description: Sol alttaki "Sürüm" yazısı.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: donem
+    attributes:
+      label: Yıl ve ay
+      placeholder: "2026, Mart"
+    validations:
+      required: true
+  - type: dropdown
+    id: esas
+    attributes:
+      label: Çalışmanın ücret esası
+      options:
+        - Net
+        - Brüt
+    validations:
+      required: true
+  - type: textarea
+    id: girdiler
+    attributes:
+      label: Kişi ve ay bilgileri (uydurma tutarlarla)
+      description: Maaş, yaka, hesaplama türü (SSK / EMK / SGK'sız), kanun / teşvik, sakatlık, BES, o ayın prim / ayni / mesai / gün girdileri.
+      placeholder: |
+        Maaş: 50.000 (net), beyaz yaka, SSK, kanun 05510, sakatlık yok, BES katılmıyor
+        Mart: 30 gün, prim 5.000, mesai yok
+    validations:
+      required: true
+  - type: dropdown
+    id: kalem
+    attributes:
+      label: Farklı çıkan kalem
+      multiple: true
+      options:
+        - Brüt ücret
+        - SGK işçi payı / işsizlik
+        - Gelir vergisi (kümülatif matrah)
+        - Damga vergisi
+        - Asgari ücret istisnası
+        - Teşvik (05510 / 05746 / 14857 / 15510)
+        - BES
+        - Sakatlık indirimi
+        - Fazla mesai
+        - İşveren maliyeti
+        - Zam öngörüsü
+        - Diğer
+    validations:
+      required: true
+  - type: textarea
+    id: degerler
+    attributes:
+      label: Programın değeri ve beklenen değer
+      placeholder: |
+        Program: 7.512,40
+        Beklenen: 7.498,10
+    validations:
+      required: true
+  - type: textarea
+    id: kaynak
+    attributes:
+      label: Beklenen değerin kaynağı
+      description: Mevzuat maddesi, resmî duyuru ya da karşılaştırdığınız bordro programı.
+    validations:
+      required: true
+  - type: checkboxes
+    id: onay
+    attributes:
+      label: Onay
+      options:
+        - label: Yılın Parametreler ekranındaki değerleri resmî değerlerle karşılaştırdım.
+          required: true
+        - label: Gerçek kişi verisi (ad soyad, T.C. Kimlik No, gerçek maaş) paylaşmadım; tutarlar uydurmadır.
+          required: true

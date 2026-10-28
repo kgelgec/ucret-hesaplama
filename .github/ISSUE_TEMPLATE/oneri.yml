@@ -1,0 +1,36 @@
+name: Öneri / istek
+description: Yeni bir özellik, ekran ya da mevzuata uyum önerisi.
+title: "[Öneri] "
+labels: ["öneri"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > Bu sayfa herkese açıktır; örneklerde gerçek kişi verisi (ad soyad, T.C. Kimlik No, maaş) kullanmayın.
+  - type: textarea
+    id: ihtiyac
+    attributes:
+      label: İhtiyaç
+      description: Hangi işi yaparken neye ihtiyaç duydunuz? Bugün nasıl çözüyorsunuz?
+    validations:
+      required: true
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Öneri
+      description: Programın ne yapmasını istersiniz? Ekran, alan, rapor ya da hesap kuralı olarak.
+    validations:
+      required: true
+  - type: textarea
+    id: dayanak
+    attributes:
+      label: Mevzuat dayanağı
+      description: Hesap ya da teşvik kuralıyla ilgiliyse ilgili kanun / yönetmelik / genelge maddesi.
+  - type: checkboxes
+    id: onay
+    attributes:
+      label: Onay
+      options:
+        - label: Örneklerde gerçek kişi verisi kullanmadım.
+          required: true

@@ -1,0 +1,88 @@
+name: Hata bildirimi
+description: Program beklenmedik davrandı, bir ekran açılmadı ya da bir işlem yapılamadı.
+title: "[Hata] "
+labels: ["hata"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > **Gerçek kişi verisi paylaşmayın.** Bu sayfa herkese açıktır. Ad soyad, T.C. Kimlik No, maaş tutarı, gerçek veri içeren
+        > ekran görüntüsü, Excel dosyası ya da `butce.db` / yedek dosyası eklemeyin (KVKK). Sorunu **örnek veriyle**
+        > (Sistem → Örnek Veri ya da deneme kurulumu) ya da uydurma tutarlarla gösterin.
+        >
+        > Güvenlik açığı bildirecekseniz burayı değil, **Security → Report a vulnerability** (özel bildirim) yolunu kullanın.
+  - type: input
+    id: surum
+    attributes:
+      label: Program sürümü
+      description: Sol alttaki "Sürüm" yazısı.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: ekran
+    attributes:
+      label: Hangi ekranda?
+      options:
+        - Kurulum / başlatma (siyah pencere, giriş)
+        - Özet
+        - Maaş Dağılımı
+        - Bütçe Çalışmaları
+        - Personel ve Zam
+        - Aylık Girdiler
+        - Maliyet Tablosu
+        - Performans Değerlendirme
+        - Fazla Mesai Planı
+        - Personel İçe Aktarma
+        - Excel Raporu
+        - Parametreler
+        - Tanımlar
+        - Kullanıcılar
+        - Sistem (yedek, şifreleme)
+        - Kullanım Kılavuzu / Başlangıç Gezisi
+        - Diğer
+    validations:
+      required: true
+  - type: textarea
+    id: ne-oldu
+    attributes:
+      label: Ne oldu?
+      description: Gördüğünüz durum ve varsa ekrandaki hata mesajı.
+    validations:
+      required: true
+  - type: textarea
+    id: beklenen
+    attributes:
+      label: Ne bekliyordunuz?
+    validations:
+      required: true
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Nasıl tekrarlanır?
+      description: Örnek veriyle ya da boş bir kurulumda adım adım.
+      placeholder: |
+        1. Örnek veriyle başla
+        2. Personel ve Zam → Kişi Bilgileri
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: kayit
+    attributes:
+      label: Siyah penceredeki ya da tarayıcı konsolundaki hata satırları
+      description: Varsa. Tarayıcı konsolu F12 → Console. İçinde kişi adı ya da tutar varsa silin.
+      render: text
+  - type: input
+    id: ortam
+    attributes:
+      label: Windows ve tarayıcı
+      placeholder: "Windows 11, Edge"
+  - type: checkboxes
+    id: onay
+    attributes:
+      label: Onay
+      options:
+        - label: Gerçek kişi verisi (ad soyad, T.C. Kimlik No, maaş, gerçek veri içeren dosya ya da ekran görüntüsü) paylaşmadım.
+          required: true

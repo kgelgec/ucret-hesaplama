@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Güvenlik açığı bildirimi (özel)
+    url: https://github.com/kgelgec/ucret-hesaplama/security/advisories/new
+    about: Güvenlik açıklarını herkese açık başlıkta değil, buradan özel olarak bildirin.
+  - name: Kurulum ve kullanım
+    url: https://github.com/kgelgec/ucret-hesaplama#readme
+    about: Kurulum adımları ve kısa tur README'de; ekran ekran anlatım programın içindeki Kullanım Kılavuzu'nda.

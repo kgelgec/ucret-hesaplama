@@ -243,6 +243,14 @@ T.C. numaralarının kontrol hanesi **kasıtlı olarak yanlıştır**: hiçbiri 
   şifresi çözülmüş veritabanı oturum boyunca tarayıcı belleğindedir. Okuma yetkilerinin tam korunması
   gerekiyorsa (ör. çok kullanıcılı bir ağ kurulumu) hesap ve veri sunucu tarafına taşınmalıdır. Ayrıntı:
   `docs/03-is-kurallari-ve-yetkiler.md` → Güvenlik denetimleri.
+- Güvenlik açığı bulursanız herkese açık başlık açmayın; [`SECURITY.md`](SECURITY.md)'deki özel bildirim yolunu kullanın.
+
+## Hata bildirimi ve öneriler
+
+[Issues](https://github.com/kgelgec/ucret-hesaplama/issues/new/choose) sayfasında üç form var: **Hata bildirimi**,
+**Hesap farkı** (bir bordro kalemi beklenenden farklıysa) ve **Öneri / istek**. Bu sayfa herkese açıktır:
+**gerçek kişi verisi (ad soyad, T.C. Kimlik No, maaş) ve veri dosyası paylaşmayın**; sorunu örnek veriyle ya da uydurma
+tutarlarla gösterin. Güvenlik açıkları için [`SECURITY.md`](SECURITY.md)'deki özel bildirim yolunu kullanın.
 
 ## Lisans
 
