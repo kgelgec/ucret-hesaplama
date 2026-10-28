@@ -30,7 +30,9 @@
         girmez; BES tavanı sigorta günüyle.
      h. SGK prim matrahı asgari ücret tabanının altına inmez.
      i. Yakıt yardımının damga vergisi yılın damga oranıyla.
-     Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur).
+     Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur): saat ücreti =
+     net maaş / 30 / günlük saat; FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri
+     yılın katsayılarıyla çarpılır (Parametreler → Genel).
    ===================================================================== */
 window.HESAP = (function () {
   'use strict';
@@ -85,7 +87,8 @@ window.HESAP = (function () {
      ham = {
        yil, dilimler, asgariUcret:[{ay:1, brut:…}, …], tavanCarpan: 9,
        dv, besOrani, turler:{KOD:{kol, sgkIsci, issizlikIsci, sgkIsveren,
-       issizlikIsveren, gv, dv, istisna}}, tesvik:{…}, argeGun
+       issizlikIsveren, gv, dv, istisna}}, tesvik:{…}, argeGun, argeEsik,
+       mesaiKat1, mesaiKat2, gunlukSaat
      } */
   function parametreHazirla(ham) {
     const P = Object.assign({}, ham);
@@ -137,7 +140,9 @@ window.HESAP = (function () {
     const r = {};
     r.AM = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0;       // NET MAAŞ
     const AF = g.ozurluIndirimi || 0;
-    r.AP = g.argeGun != null ? g.argeGun : ((g.gvTesvik || 0) < 0.8 ? 0 : P.argeGun);
+    /* Kişiye AR-GE günü girilmemişse çalışmanın AR-GE günü, yalnız GV teşviki eşiğin (vars. %80) üstündekilere */
+    const argeEsik = P.argeEsik == null ? 0.8 : P.argeEsik;
+    r.AP = g.argeGun != null ? g.argeGun : ((g.gvTesvik || 0) < argeEsik ? 0 : P.argeGun);
     r.AQ = g.calisilanGun != null ? g.calisilanGun : ((k.yaka === 'B' || k.yaka === 'M') ? 30 : 0);
     r.AR = r.AQ === P.gun[m] ? 30 : r.AQ;                        // SİGORTA GÜN
     const AO = pasifSifir ? 0 : (g.yakit || 0), AT = pasifSifir ? 0 : (g.fm1 || 0), AU = pasifSifir ? 0 : (g.fm2 || 0);
@@ -154,7 +159,9 @@ window.HESAP = (function () {
     const istMatrahDV = P.istMatrahDV[m] * istOran;
 
     r.AS = hata0(r.AM / 30 * UG) + AO;                           // TOPLAM ÜCRET ÖDEMESİ
-    r.AV = hata0(r.AM / 30 / 7.5 * 1.5 * AT + r.AM / 30 / 7.5 * 2 * AU); // TOPLAM MESAİ
+    const saat = P.gunlukSaat || 7.5;
+    const kat1 = P.mesaiKat1 == null ? 1.5 : P.mesaiKat1, kat2 = P.mesaiKat2 == null ? 2 : P.mesaiKat2;
+    r.AV = hata0(r.AM / 30 / saat * kat1 * AT + r.AM / 30 / saat * kat2 * AU); // TOPLAM MESAİ
     r.AZ = AY + AX + AO;                                         // TOPLAM EK ÖDEME
     r.BA = r.AZ + r.AV + r.AS;                                   // TOPLAM NET ÖDEME
 

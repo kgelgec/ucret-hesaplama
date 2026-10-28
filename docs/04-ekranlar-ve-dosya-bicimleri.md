@@ -5,7 +5,7 @@
 >
 > **Kaynak:** `program/` klasörünün güncel kodu: `index.html`, `js/app.js`, `js/modules/*.js`, `js/core/*.js` (`bilesen.js`, `bicim.js`, `util.js`, `tablooku.js`, `performans.js`, `kilit.js`), API davranışı için `js/db/api.js`, görünüm için `css/app.css` ve `css/butce.css`. Her bilginin yanında kaynağı `dosya.js:işlev` biçiminde verilir. Ekranda görünen metinler tırnak içinde, koddaki gibi yazılmıştır.
 > Belgede kişi adı, T.C. ya da kişiye ait tutar yoktur. Geçen sayılar koddaki sabitler / varsayılanlar ya da yuvarlak örneklerdir; örnek grup adları (Ofis, Üretim) programla gelen örnek veridendir.
-> `program/img/kilavuz/*.png` görselleri güncel arayüzden, örnek veriyle çekilmiştir; belgenin kaynağı ise koddur (bkz. §6).
+> `program/img/kilavuz/*.png` görselleri bu belgenin kaynağı değildir (bkz. §6).
 >
 > **Diğer belgeler:** "01 — Veri Modeli ve Depolama" (tablolar, depolama, yedek, şifreleme), "02 — Hesap Motoru" (bordro ve zam hesabı, alan kodları), "03 — İş Kuralları, İş Akışları ve Yetkiler" (iş akışları, yetki tablosu). Bu belge onların ekrandaki karşılığını anlatır; hesap ve kural ayrıntısı için bölüm adıyla onlara gönderme yapar.
 >
@@ -21,9 +21,9 @@
 3. [Ekranlar](#3-ekranlar)
    - 3.1 Özet · 3.2 Maaş Dağılımı
    - 3.3 Personel ve Zam (+ kişi kartı) · 3.4 Maliyet Tablosu (+ bordro dökümü) · 3.5 Aylık Girdiler
-   - 3.6 Performans Değerlendirme · 3.7 Mesai Öngörüsü · 3.8 Çalışmalar (+ yeni çalışma / ayarlar / revize) · 3.9 Yönetim Raporu
+   - 3.6 Performans Değerlendirme (+ kişi penceresi, değerlendirme modeli) · 3.7 Mesai Öngörüsü · 3.8 Çalışmalar (+ yeni çalışma / ayarlar / revize) · 3.9 Yönetim Raporu
    - 3.10 Dış Liste Aktarımı
-   - 3.11 Parametreler · 3.12 Tanımlar (+ Gruplar)
+   - 3.11 Parametreler · 3.12 Tanımlar (+ Gruplar, Aktarım Başlıkları)
    - 3.13 Kullanıcılar ve Yetkiler · 3.14 Sistem
    - 3.15 Kullanım Kılavuzu
 4. [Bütün Excel çıktıları ve içe almalar](#4-bütün-excel-çıktıları-ve-içe-almalar)
@@ -48,6 +48,8 @@
 | **Yazılabilir** | `API.calismaYazilabilir(c)` = çalışma `ONAYLI` değil **ve** kullanıcının o gruba yazma ("Görür ve düzenler") erişimi var. Ekranlar düzenleme alanlarını buna + ilgili yetkiye göre açar. Yazma kilidini (§2.2) bilmez. |
 | **Yetkiler** | `window.YETKILER` (`js/db/schema.js`), 11 kod (aşağıda). Sistem yöneticisi (`yonetici = 1`) hepsine sahiptir (`api.js:yetkiVar`). Yazma yetkileri (`.yaz`, `.yonet`) ayrıca yazma kilidini ister (`api.js:yetkiIste`). |
 | **Tazele** | `APP.tazele()` = etkin ekranı baştan çizer (`app.js:git(aktifModul)`, açılış parametresi olmadan). Ekranların çoğu her kayıttan sonra tazelenir. |
+| **Değerlendirme modeli** | Performans puanlamasının yıl bazındaki tanımı (amirler, kriterler, ağırlıklar, ek puan kuralları). `parametre` tablosunda `perf.model` (JSON); kayıt yoksa programla gelen örnek model. Performans Değerlendirme ekranından düzenlenir (§3.6.2). |
+| **Aktarım sözlüğü** | Dış Liste Aktarımı'nın her alan için tanıdığı sütun başlıkları. Varsayılanlar `api.js:AKTARIM_ALANLARI`; değişiklikler `sistem_bilgi.aktarim.sozluk`. Tanımlar → Aktarım Başlıkları'ndan düzenlenir (§3.12.5). |
 
 Yetki açıklamaları (ekranda ve Kılavuz'da aynen görünür, `schema.js:YETKILER`):
 
@@ -162,13 +164,13 @@ Modüller `APP.modulKaydet({ id, ad, ikon, grup, baslik, altBaslik, yetki, calis
 | Bütçe | 👥 Personel ve Zam | `personel` | `personel.oku` | evet | hayır | Rozet: seçili çalışmadaki kişi sayısı (0 ise rozet yok) |
 | Bütçe | 🧮 Maliyet Tablosu | `maliyet` | `ozet.oku` | evet | **evet** | — |
 | Bütçe | 📅 Aylık Girdiler | `aylik` | `personel.oku` | evet | hayır | — |
-| Bütçe | 🎯 Performans Değerlendirme | `performans` | `zam.oku` | evet | hayır | Her grupta çalışır |
+| Bütçe | 🎯 Performans Değerlendirme | `performans` | `zam.oku` | evet | hayır | Her grupta çalışır; "Değerlendirme modeli…" penceresi |
 | Bütçe | ⏱ Mesai Öngörüsü | `mesai` | `personel.oku` | evet | hayır | Her grupta çalışır |
 | Bütçe | 🗂 Çalışmalar | `calisma` | `personel.oku` | hayır | (seçim gerekmez; "Tümü"de bütün grupları listeler) | — |
 | Bütçe | 📤 Yönetim Raporu | `excel` | `excel.aktar` | evet | hayır | — |
 | Veri | ⇩ Dış Liste Aktarımı | `aktarim` | `personel.yaz` | evet | hayır | — |
 | Tanımlar | ⚙ Parametreler | `parametre` | `parametre.oku` | hayır | (seçim gerekmez) | — |
-| Tanımlar | 📋 Tanımlar | `tanim` | `parametre.oku` | hayır | (seçim gerekmez) | Gruplar sekmesi yalnız sistem yöneticisine |
+| Tanımlar | 📋 Tanımlar | `tanim` | `parametre.oku` | hayır | (seçim gerekmez) | Gruplar sekmesi yalnız sistem yöneticisine; Aktarım Başlıkları sekmesi |
 | Yönetim | 🔑 Kullanıcılar | `kullanici` | `sistem.yonet` | hayır | — | Sayfa başlığı "Kullanıcılar ve Yetkiler" |
 | Yönetim | 🛠 Sistem | `sistem` | `sistem.yonet` | hayır | — | — |
 | (Yardım; menüde yok) | 📖 Kullanım Kılavuzu | `kilavuz` | yok | hayır | — | `gorunur: () => false`; sol alttaki düğmeyle açılır |
@@ -322,12 +324,12 @@ Başlıklar beyaz yazı. Renk grubunun değiştiği sütunun soluna kalın ayır
 | Sınıf | Görünüm | Kullanıldığı yerler (örnek) |
 |---|---|---|
 | `rz-yesil` | açık yeşil zemin, yeşil yazı | Onaylı, Resmî, Etkin, şifreli, "Zam hesabı güncel", mesai öngörüsü açık |
-| `rz-sari` | açık turuncu zemin | Taslak, "en küçük / en büyük", "sonradan çıkış", Kılavuz hedef kitlesi, "bu yıl başka bir grupta kayıtlı" |
+| `rz-sari` | açık turuncu zemin | Taslak, "en küçük / en büyük", "sonradan çıkış", Kılavuz hedef kitlesi, "bu yıl başka bir grupta kayıtlı", aktarım başlığı "değiştirildi" |
 | `rz-kirmizi` | açık kırmızı zemin | parametre "girilmemiş", ŞİFRESİZ, yıl içi çıkış (Maaş Dağılımı), grup erişimi "hiçbiri" |
 | `rz-mavi` | açık mavi zemin | seçili, yeni giriş, bu çalışma, Mavi yaka, tanınan sütun |
 | `rz-gri` | gri | devre dışı, Beyaz yaka, çıkış tarihi, "🔒 onay anındaki", "henüz oluşmadı" |
 | `rz-mor` | mor | Sistem Yöneticisi |
-| `rz-ongoru` | turuncu | parametre öngörüsü, uygulanmamış çarpan, mesai öngörüsü kapalı |
+| `rz-ongoru` | turuncu | parametre öngörüsü, uygulanmamış çarpan, mesai öngörüsü kapalı, model penceresinde "100 değil" |
 
 ---
 
@@ -754,7 +756,7 @@ Toplam satırı: "Toplam (N)" + (Tümü'de boş Grup hücresi) + boş Bölüm + 
 | FM2 Mesai (saat) | `fm2` | `aylik.yaz` | aynı | Σ etkin saat |
 | Yakıt Yardımı | `yakit` | `aylik.yaz` | | Σ |
 | Çalışılan Gün | `calisilan_gun` | `aylik.yaz` | yer tutucu her zaman "30" | **boş** |
-| AR-GE Günü | `arge_gun` | `aylik.yaz` | yer tutucu = o ay hesaplanan `AP` (0 ise "—"); kaydı yoksa ipucu: "Önceki aydan devralındı" (önceki aydan değer var) / "Çalışmanın kayıtlı AR-GE günü" (hesaplanan gün var) / "AR-GE günü girilmedi (varsayılan yok) — Ocak'a girilen gün bütün yıla geçer" (GV teşviki ≥ %80) / "AR-GE personeli değil (GV teşviki yok)" | **boş** |
+| AR-GE Günü | `arge_gun` | `aylik.yaz` | yer tutucu = o ay hesaplanan `AP` (0 ise "—"); kaydı yoksa ipucu: "Önceki aydan devralındı" (önceki aydan değer var) / "Çalışmanın kayıtlı AR-GE günü" (hesaplanan gün var) / "AR-GE günü girilmedi (varsayılan yok) — Ocak'a girilen gün bütün yıla geçer" (GV teşviki ≥ yılın `arge_gv_esik` eşiği, vars. %80) / "AR-GE personeli değil (GV teşviki yok)" | **boş** |
 | Ay Maliyeti | `s.yil.aylar[ay].DM` | — | `B.tl` | Σ |
 
 - Kutu değeri kuruşluysa 2, değilse 0 ondalıkla gösterilir; yer tutucudaki saat / gün kesirliyse 1 ondalık.
@@ -781,68 +783,83 @@ Toplam satırı: "Toplam (N)" + (Tümü'de boş Grup hücresi) + boş Bölüm + 
 
 ### 3.6 Performans Değerlendirme
 
-**Kaynak:** `js/modules/performans.js` (`ciz`, `veri`, `satirHtml`, `kisiAc`, `denetle`, `uygula`, `sutunlar`, `sablonIndir`, `oku`, `onizlemeHtml`, `baglaOnizleme`); `js/core/performans.js` (`PERF.MODEL`, `PERF.AMIR`, `PERF.EGITIM`, `PERF.alanlar`, `PERF.metinAlan`, `PERF.hesapla`); `api.js:performansGirdiHarita, performansGirdiYaz, performansGirdiSil, performansCarpanUygula, performansOncekiDonem, performansCarpani`.
+**Kaynak:** `js/modules/performans.js` (`ciz`, `veri`, `satirHtml`, `kisiAc`, `denetle`, `uygula`, `sutunlar`, `sayfaAdlari`, `kaliciAlanlar`, `sablonIndir`, `oku`, `onizlemeHtml`, `baglaOnizleme`; model düzenleyicisi `modelAc`, `modelDenetle`, `kaldirilanlar`, `ekAciklama`); `js/core/performans.js` (`PERF.VARSAYILAN`, `PERF.TURLER`, `PERF.hazirla`, `PERF.hesapla`, `PERF.aciklama`, `PERF.kodUret`, `PERF.sayi`); `api.js:performansModeliHam, performansModeli, calismaPerformansModeli, performansModeliYaz, performansGirdiHarita, performansGirdiYaz, performansGirdiSil, performansCarpanUygula, performansOncekiDonem, performansCarpani`; `css/butce.css` (`.pf-model-ek*`).
 **Yer:** Bütçe → 🎯 Performans Değerlendirme. Sayfa başlığı "Performans Değerlendirme", alt başlık "Amir değerlendirmeleri, bölüm katsayısı ve zam çarpanı".
-**Yetki:** `zam.oku` (menü ve açma). Değerlendirme girme / silme, Excel'den içe alma ve çarpan uygulama: yazılabilir çalışma (bkz. §0 "Yazılabilir") + `zam.yaz` (`yaz = API.calismaYazilabilir(c) && API.yetkiVar('zam.yaz')`). Şablon indirme: `excel.aktar`; içe alma düğmesi: `excel.aktar` **ve** `yaz`.
+**Yetki:** `zam.oku` (menü ve açma). Değerlendirme girme / silme, Excel'den içe alma ve çarpan uygulama: yazılabilir çalışma (bkz. §0 "Yazılabilir") + `zam.yaz` (`yaz = API.calismaYazilabilir(c) && API.yetkiVar('zam.yaz')`). Şablon indirme: `excel.aktar`; içe alma düğmesi: `excel.aktar` **ve** `yaz`. **Değerlendirme modeli…** penceresi ekranı açan herkese açılır; modeli değiştirmek `parametre.yaz` ister (yoksa salt okunur, §3.6.2).
 **Gruplar:** hepsi — ekranda grup kapısı yoktur. Değerlendirme kullanmayan grupta tablolar boş kalır, herkesin çarpanı 1'dir. **Tümü:** hayır (§1.6 bilgi kutusu).
 
 **Amaç:** Seçili grubun çalışmasındaki kişilerin amir değerlendirmelerinden puan ve zam çarpanı hesaplamak; çarpanları zam öngörüsüne uygulamak. Değerlendirme, zammı yapılan yılın bir önceki yılının dönemine aittir (Y zammı, O dönemi). Girdiler çalışmaya kayıtlıdır (`performans_girdi`, satır başına `calisma_id, tc_kimlik_no, alan, deger`); puan ve çarpan her açılışta yeniden hesaplanır, kaydedilmez. Çarpanın zam hesabına etkisi: "02 — Hesap Motoru", §5.3 Performans çarpanı.
 
-**Değerlendirme modeli** (`js/core/performans.js`). Ekranın bütün kriter, ağırlık ve ek puan sütunları, kişi penceresinin satırları ve Excel şablonunun sütunları bu iki tablodan üretilir; modül kriter adı ya da ağırlık sabiti taşımaz. Dosyadaki model bir **örnek modeldir**; kurum kendi politikasına göre değiştirir (alan kodu değişirse eski girdiler okunmaz).
+**Değerlendirme modeli bir veridir.** Amirler, yaka başına kriterler ve ağırlıklar, değerlendirme ağırlığı ve ek puan kuralları **yıl bazında** `parametre` tablosunda `perf.model` anahtarıyla (JSON) saklanır ve §3.6.2'deki pencereden düzenlenir. Kayıt yoksa programla gelen **örnek model** (`PERF.VARSAYILAN`) geçerlidir. Model, yılın diğer parametreleriyle birlikte yeni yıla kopyalanır (Parametreler → Yeni Yıl Öngörüsü, §3.11) ve çalışma onaylanınca dondurulur. Ekran, kişi penceresi, Excel şablonu ve içe alma her şeyi **çalışmanın** derlenmiş modelinden okur (`API.calismaPerformansModeli(id)`): taslak / revize çalışmada yılın modeli, onaylı çalışmada onay anında dondurulan parametrelerdeki model (onaydan önce kayıt yoksa örnek model). Kayıtlı model okunamaz ya da hatalıysa örnek model kullanılır (`api.js:performansModeli`). Modülde kriter adı, ağırlık ya da ek puan alanı sabiti yoktur.
 
-| Yapı | Biçim | Kullanıldığı yer |
+Ham model biçimi (`PERF.VARSAYILAN()` ile aynı):
+
+| Yapı | Biçim | Not |
 |---|---|---|
-| `PERF.AMIR` | `[[alan, başlık, ağırlık], …]` — değerlendiren amirler | amir adı alanları, kriter sütun grupları, değerlendirme ağırlıklı ortalaması |
-| `PERF.MODEL[yaka]` (`M`, `B`) | `{ ad, sayfa, degAgirlik, kriter: [[kod, başlık, ağırlık], …], ek: [{ alan, ad, aciklama, puan(v), metin?, liste? }, …] }` | yaka düğmesi adı, şablon sayfa adı, toplam puandaki değerlendirme payı, kriter satırları, ek puan satırları |
-| `PERF.alanlar(yaka)` | kayıt alan adları: `grup` (değerlendirme bölümü), `amir1…amirN` (amir adları), `a<i>.<kriter>` (i. amirin kriter puanı), ek puan alanlarının kodları | girdi tablosu, içe almada geçerli alan süzgeci |
-| `PERF.EGITIM` | mezuniyet seçenekleri | MEZUNİYET listesi (pencerede seçim, şablonda liste) |
+| `amirler` | `[{ alan: 'amirN', ad, agirlik }]` | 1–5 amir. `alan` amirin kalıcı kodudur. |
+| `yaka.M`, `yaka.B` | `{ ad, sayfa, degAgirlik, kriter: [{ kod, ad, agirlik }], ek: [ … ] }` | `sayfa` boşsa yaka adının büyük harfi; `degAgirlik` = değerlendirmenin toplam puandaki payı (/100) |
+| `ek[]` | `{ alan, ad, tur, <türün alanları>, sinir?, not?, kalici? }` | `sinir` = `[en az, en çok]` giriş denetimi; `not` açıklamanın başına eklenir; `kalici` = yeni dönemin şablonuna önceki dönemden taşınır |
 
-Örnek modelde:
+Kayıt alanları (girdi tablosundaki `alan` değeri; `M.alanlar(yaka)`): `grup` (değerlendirme bölümü) · `amirN` (amirin adı) · `a<N>.<kriter kodu>` (N **amirin kendi numarasıdır**, sırası değil — amir kaldırılsa da diğerlerinin verisi kaymaz) · ek puan alanı kodu. Metin alanları: `grup`, amir adları ve liste türündeki ek puan alanları; diğerleri sayıdır.
+
+Ek puan kural türleri (`PERF.TURLER`; puan `puanIslevi`, açıklama `PERF.aciklama`; boş değer 0 sayılır):
+
+| `tur` | Ekrandaki ad | Alanlar | Puan | Açıklama metni |
+|---|---|---|---|---|
+| `esik` | Eşik (üstü sabit puan, altı orantılı) | `esik`, `puan`, `katsayi` | değer ≥ eşik → puan; değilse değer × katsayı | "<eşik> ve üstü <puan> puan; altında değer × <katsayı>" |
+| `kademe` | Kademe (sayıya göre puan) | `kademeler` = `[[en az, puan], …]` | değerin ulaştığı en yüksek kademenin puanı (ilk kademenin altındaki değer ilk kademenin puanını alır) | "<d1> → +<p1> · … · <dn> ve üzeri → <pn>" |
+| `carpan` | Çarpan (değer × katsayı, üst sınırlı) | `katsayi`, `enCok` (boş = sınırsız) | en çok `enCok` olmak üzere değer × katsayı | "değer × <k>[, en çok <n>]" |
+| `liste` | Liste (seçeneğe göre puan) | `secenek` = `[[ad, puan], …]`, `bos` | seçeneğin puanı (büyük harfe çevrilip boşluğu sadeleştirilmiş adla eşleşir); listede olmayan ya da boş değer → `bos` | "<Seçenek> <puan> · …[ · diğer <bos>]" |
+
+Model denetimi (`PERF.hazirla`; hata metinleri "Değerlendirme modeli: " ile başlar): en az bir, en çok 5 amir ("en az bir amir tanımlanmalı." · "en çok 5 amir tanımlanabilir."); amir alanı `amirN` biçiminde, adı boş değil, ağırlık sayı ve eksi değil, aynı alan iki kez yok, en az bir amirin ağırlığı sıfırdan büyük ("en az bir amirin ağırlığı sıfırdan büyük olmalı."); her yaka için tanım ve en az bir kriter; kriter kodu `^[a-z][a-z0-9_]{0,29}$` ve yakada tekil; ek puan alanı kodu aynı desende, `grup` ya da `amirN` olamaz, yakada tekil; ad boş değil; kural türü seçilmiş ("… için kural türü seçilmemiş."); türün sayı alanları sayı ("<ad> eşiği sayı olmalı." gibi); kademede en az bir kademe, listede en az bir seçenek; değerlendirme ağırlığı sayı.
+
+**Örnek model** (`PERF.VARSAYILAN`; kurum kendi politikasına göre §3.6.2'den değiştirir):
 
 | Yapı | Değer |
 |---|---|
 | Amirler | `amir1` "1. AMİR" 50 · `amir2` "2. AMİR" 30 · `amir3` "İDARİ AMİR" 20 |
 | Mavi yaka (`ad` "Mavi yaka", `sayfa` "MAVİ YAKA", `degAgirlik` 80) — kriterler | `is_bilgisi` İŞ BİLGİSİ 25 · `gorev` GÖREVLERİNİ YERİNE GETİRME 25 · `kural` İŞ GÜVENLİĞİ VE KURALLARA UYMA 20 · `iletisim` İLETİŞİM VE TAKIM ÇALIŞMASI 15 · `gelisim` KENDİNİ GELİŞTİRME 15 |
-| Mavi yaka — ek puanlar | `devam` DEVAMLILIK ORANI (%) — "%95 ve üstü 5 puan; altında oran × 0,05" · `tutanak` TUTANAK SAYISI — "0 → +2 · 1 → 0 · 2 ve üzeri → −2" · `kidem` KIDEM (YIL) · `egitim` MEZUNİYET |
+| Mavi yaka — ek puan alanları | `devam` DEVAMLILIK ORANI (%) — eşik 95, puan 5, katsayı 0,05; giriş 0–100 · `tutanak` TUTANAK SAYISI — kademe 0 → +2, 1 → 0, 2 ve üzeri → −2; giriş 0–99 · `kidem` · `egitim` |
 | Beyaz yaka (`ad` "Beyaz yaka", `sayfa` "BEYAZ YAKA", `degAgirlik` 80) — kriterler | `is_bilgisi` İŞ BİLGİSİ 20 · `kalite` İŞ KALİTESİ VE HEDEFLERE ULAŞMA 20 · `planlama` PLANLAMA VE PROBLEM ÇÖZME 20 · `iletisim` İLETİŞİM VE TAKIM ÇALIŞMASI 15 · `gelisim` KENDİNİ GELİŞTİRME 10 · `yonetici` YÖNETİCİLİK ÖZELLİKLERİ 15 |
-| Beyaz yaka — ek puanlar | `kidem` KIDEM (YIL) · `egitim` MEZUNİYET |
-| KIDEM (YIL) | "İşyerindeki bütün çalışma dönemlerinin toplamı (elle girilir; işe giriş tarihinden hesaplanmaz). Yıl başına 1 puan, en çok 5." |
-| MEZUNİYET (`metin`, `liste` = `PERF.EGITIM`) | "Okur yazar 1 · İlk okul 2 · Orta okul 3 · Lise / meslek lisesi 4 · Ön lisans 5 · Lisans 6 · Yüksek lisans 7 · Doktora 8"; listede olmayan ya da boş değer 0 puan |
-| `PERF.EGITIM` | OKUR YAZAR, İLK OKUL, ORTA OKUL, LİSE, MESLEK LİSESİ, ÖN LİSANS, LİSANS, YÜKSEK LİSANS, DOKTORA |
+| Beyaz yaka — ek puan alanları | `kidem` · `egitim` |
+| `kidem` KIDEM (YIL) | çarpan × 1, en çok 5; giriş 0–99; önceki dönemden taşınır; not "İşyerindeki bütün çalışma dönemlerinin toplamı (elle girilir; işe giriş tarihinden hesaplanmaz)." |
+| `egitim` MEZUNİYET | liste: OKUR YAZAR 1 · İLK OKUL 2 · ORTA OKUL 3 · LİSE 4 · MESLEK LİSESİ 4 · ÖN LİSANS 5 · LİSANS 6 · YÜKSEK LİSANS 7 · DOKTORA 8; listede olmayan 0; önceki dönemden taşınır |
 
-**Puanlama** (`PERF.hesapla`; aynı adımlar şablonun AÇIKLAMA sayfasında da yazılır, §4.3.1):
-1. Amir puanı = Σ (kriter puanı × kriter ağırlığı / 100). Hiç dolu kriter yoksa **ya da toplam 0 ise** o amirin puanı yoktur.
-2. Değerlendirme = amir puanlarının `PERF.AMIR` ağırlıklarıyla ağırlıklı ortalaması; puanı olmayan amirin ağırlığı paydadan düşer (kalanlara dağılır). Hiçbir amirin puanı yoksa kişi **değerlendirilmemiş** sayılır.
+**Puanlama** (`PERF.hesapla(kisiler, model)`; aynı adımlar şablonun AÇIKLAMA sayfasında da yazılır, §4.3.1):
+1. Amir puanı = Σ (kriter puanı × kriter ağırlığı / 100). Hiç dolu kriter yoksa **ya da toplam 0 ise** o amirin puanı yoktur. Kriter ağırlıklarının toplamı 100 değilse amir puanı en çok bu toplam kadar olur (uyarı verilir, engel değildir).
+2. Değerlendirme = amir puanlarının amir ağırlıklarıyla ağırlıklı ortalaması; puanı olmayan amirin ağırlığı paydadan düşer (kalanlara dağılır). Ağırlıklar oran olarak kullanılır (toplamın 100 olması gerekmez). Hiçbir amirin puanı yoksa kişi **değerlendirilmemiş** sayılır.
 3. Bölüm katsayısı = genel ortalama / kişinin değerlendirme bölümünün ortalaması. Genel ortalama, yakadaki **bölüm ortalamalarının ortalamasıdır** (kişilerin değil). Bölüm adı boş olanlar kendi aralarında bir bölümdür.
-4. Toplam puan = değerlendirme × katsayı × `degAgirlik` / 100 + ek puanların toplamı (her ek puan alanının `puan(v)` işlevi).
+4. Toplam puan = değerlendirme × katsayı × `degAgirlik` / 100 + ek puanların toplamı.
 5. Zam çarpanı = toplam puan / yakada değerlendirilenlerin ortalama toplam puanı. Değerlendirilmeyen kişi çarpan almaz (= 1).
 
 Yakalar ayrı hesaplanır (`yaka` `M` değilse `B` sayılır).
 
 **Kart 1 — "Performans Değerlendirme — <grup adı>"** (`ciz`; grup adı yoksa grup kodu)
-- Açıklama: "<Y> zammı için <O> dönemi değerlendirmesi · <çalışma adı>. Toplam puan, yakanın ortalamasına bölünerek zam çarpanı olur (ortalama kişi = 1,00)."
+- Açıklama: "<Y> zammı için <O> dönemi değerlendirmesi · <çalışma adı> · <model>. Toplam puan, yakanın ortalamasına bölünerek zam çarpanı olur (ortalama kişi = 1,00)." — <model>: onaylı çalışmada "onay anındaki değerlendirme modeli"; değilse yılın kaydı yoksa "varsayılan (örnek) değerlendirme modeli", varsa "<Y> yılına özel değerlendirme modeli".
 - Düğmeler (`.btn-satir`):
+  - **Değerlendirme modeli…** (`#pfModel`, ikincil, ipucu "Amirler, kriterler, ağırlıklar ve ek puan kuralları"; her zaman) → §3.6.2.
   - **Excel şablonu indir** (`#pfSablon`; `excel.aktar`) → §4.3.1. Hata: "Excel oluşturulamadı: …".
   - **Excel'den içe al…** (dosya seçici `#pfDosya`, `accept=".xlsx"`; `excel.aktar` + `yaz`) → önizleme (§4.3.2).
   - **Çarpanları zam hesabına uygula** (`#pfUygula`; `yaz`). Uygulanmamış fark yoksa **kapalı**; üzerine gelince ipucu: hiç değerlendirme varsa "Uygulanacak fark yok. Çarpan = puan ÷ yakada değerlendirilenlerin ortalaması: tek kişi (ya da hepsi aynı puanda) değerlendirildiyse çarpan 1 çıkar. Ya da hesaplanan çarpanlar zaten uygulanmış.", yoksa "Henüz değerlendirme girilmedi — herkesin çarpanı 1."
-- Bilgi kutusu (`yaz`, uygulanmamış fark yok ve hiç değerlendirme yok): "**<Y> için henüz değerlendirme girilmedi**; herkesin çarpanı 1 olduğu için uygulanacak bir şey yok (düğme bu yüzden kapalı). Kişiye tıklayıp değerlendirmeyi buradan girebilir ya da "Excel şablonu indir" ile değerlendirmeyi yapacak amirlere gönderip, doldurulunca "Excel'den içe al" ile alabilirsiniz; düğme o zaman açılır. <O> değerlendirmesi taşınmaz: <Y> zammı <O> dönemi değerlendirmesiyle yapılır (şablonda bölüm, amir adları, mezuniyet ve kıdem geçen yıldan dolu gelir)."
+- Bilgi kutusu (`yaz`, uygulanmamış fark yok ve hiç değerlendirme yok): "**<Y> için henüz değerlendirme girilmedi**; herkesin çarpanı 1 olduğu için uygulanacak bir şey yok (düğme bu yüzden kapalı). Kişiye tıklayıp değerlendirmeyi buradan girebilir ya da "Excel şablonu indir" ile değerlendirmeyi yapacak amirlere gönderip, doldurulunca "Excel'den içe al" ile alabilirsiniz; düğme o zaman açılır. <O> değerlendirmesi taşınmaz: <Y> zammı <O> dönemi değerlendirmesiyle yapılır (şablonda <taşınan bilgiler> geçen yıldan dolu gelir)." — <taşınan bilgiler> = "değerlendirme bölümü", "amir adları" ve modelde *önceki dönemden taşınsın* işaretli ek puan alanlarının adları (küçük harf), "A, B ve C" biçiminde (`kaliciMetin`; örnek modelde "değerlendirme bölümü, amir adları, kıdem (yıl) ve mezuniyet").
 - Dikkat kutusu (bir yakada en az bir kişi değerlendirilmiş ama hepsi değil): "**Değerlendirme eksik:** mavi yakada X kişi, beyaz yakada Y kişi değerlendirilmedi. Çarpan, yakada *değerlendirilenlerin* ortalamasına göre hesaplanır (tek kişi girilmişse onun çarpanı 1 çıkar); eksikler girildikçe herkesin çarpanı değişir. Uygulamadan önce tamamlamanız önerilir. (Değerlendirme dışı bırakılan yöneticiler gibi bilerek boş kalanlar çarpan 1 alır.)" (Yalnız eksiği olan yaka yazılır.)
+- Dikkat kutusu (bir yakanın kriter ağırlıkları toplamı 100 değilse; yaka başına bir satır): "<yaka adı> kriter ağırlıkları toplamı X (100 değil); amir puanı en çok X olur. Gerekirse "Değerlendirme modeli…" penceresinden düzeltin."
 - **Kutular** (`.izgara.izgara-4` içinde üç `.stat`):
 
 | Kutu | Değer | Ek satır |
 |---|---|---|
-| "Mavi yaka değerlendirilen" | değerlendirilen / yakadaki kişi | "ortalama puan X" (`sonuc.ort.M`, 2 ondalık; yoksa soluk "—") |
-| "Beyaz yaka değerlendirilen" | aynı (`B`) | aynı |
+| "<mavi yaka adı> değerlendirilen" | değerlendirilen / yakadaki kişi | "ortalama puan X" (`sonuc.ort.M`, 2 ondalık; yoksa soluk "—") |
+| "<beyaz yaka adı> değerlendirilen" | aynı (`B`) | aynı |
 | "Zam hesabı" | yeşil rozet "Zam hesabı güncel" ya da turuncu (`rz-ongoru`) "N kişide çarpan zam hesabına uygulanmamış" | "Değerlendirilmeyen kişinin çarpanı 1'dir." |
 
-  "Uygulanmamış" ölçütü (`veri`): hesaplanan çarpan (değerlendirilmeyende 1) ile kişinin kayıtlı `calisma_personel.performans_carpani` değeri (boşsa 1) arasındaki fark > 1e-9.
+  Yaka adları modelde tanımlıdır (örnek modelde "Mavi yaka", "Beyaz yaka"). "Uygulanmamış" ölçütü (`veri`): hesaplanan çarpan (değerlendirilmeyende 1) ile kişinin kayıtlı `calisma_personel.performans_carpani` değeri (boşsa 1) arasındaki fark > 1e-9.
 - Çalışmada performans kapalıysa (`calisma.zam_performans` = 0) kutuların altında dikkat kutusu: "⚠ Bu çalışmada zam **performans çarpanı olmadan** hesaplanıyor. "Çarpanları zam hesabına uygula" performansı da açar."
 
 **İçe alma önizlemesi** (`#pfOnizleme`): yalnız önizleme bu çalışmaya aitse çizilir; düzeni §4.3.2.
 
 **Kart 2 — süzgeç ve tablolar**
-- Süzgeç satırı: yaka düğmeleri (`.grup-dugmeler`) **Mavi yaka** (varsayılan) · **Beyaz yaka**; arama kutusu `#pfAra` (yer tutucu "Ad, bölüm ara… (Esc: temizle)", en çok 240 px; §2.9 canlı arama) — ad soyad + değerlendirme bölümü + bütçe bölümü içinde arar (**T.C. ile aramaz**); bilgi "Satıra tıklayınca kişinin değerlendirmesi açılır."
-- **"Bölüm düzeltme katsayısı — <yaka adı>"** (yaka adı `PERF.MODEL[yaka].ad`): açıklama "Katsayı = bölüm ortalamalarının ortalaması (X) / bölümün ortalaması. Not veren amirlerin cömertlik farkını dengeler." (X = genel ortalama, 2 ondalık). Tablo (`.genis-tablo.param-tablo`, en çok 640 px), bölüm adına göre alfabetik:
+- Süzgeç satırı: yaka düğmeleri (`.grup-dugmeler`, yazıları modeldeki yaka adları; mavi yaka varsayılan); arama kutusu `#pfAra` (yer tutucu "Ad, bölüm ara… (Esc: temizle)", en çok 240 px; §2.9 canlı arama) — ad soyad + değerlendirme bölümü + bütçe bölümü içinde arar (**T.C. ile aramaz**); bilgi "Satıra tıklayınca kişinin değerlendirmesi açılır."
+- **"Bölüm düzeltme katsayısı — <yaka adı>"**: açıklama "Katsayı = bölüm ortalamalarının ortalaması (X) / bölümün ortalaması. Not veren amirlerin cömertlik farkını dengeler." (X = genel ortalama, 2 ondalık). Tablo (`.genis-tablo.param-tablo`, en çok 640 px), bölüm adına göre alfabetik:
 
 | Sütun | Kaynak |
 |---|---|
@@ -859,7 +876,7 @@ Yakalar ayrı hesaplanır (`yaka` `M` değilse `B` sayılır).
 | Adı soyadı | `kp.ad_soyad`; altında görev (küçük, çok soluk) |
 | Bütçe bölümü | `kp.butce_bolumu` (etiket numarası olmadan) |
 | Değerlendirme bölümü | girdi `grup` |
-| `PERF.AMIR` başlıkları (örnek modelde 1. AMİR · 2. AMİR · İDARİ AMİR) | o amirin puanı (1 ondalık; yoksa soluk "—") |
+| her amir için bir sütun (başlık = amir adı; örnek modelde 1. AMİR · 2. AMİR · İDARİ AMİR) | o amirin puanı (1 ondalık; yoksa soluk "—") |
 | Değerlendirme | `r.deg` (2 ondalık) ya da küçük "değerlendirilmedi" |
 | Katsayı | `r.kats` (4 ondalık) |
 | Ek puan | `r.ekToplam` (2 ondalık) |
@@ -872,26 +889,77 @@ Yakalar ayrı hesaplanır (`yaka` `M` değilse `B` sayılır).
 - Onay penceresi: başlık "Çarpanları uygula"; mesaj "N kişinin hesaplanan çarpanı zam öngörüsüne yazılacak; değerlendirilmeyen M kişinin çarpanı 1 olacak. Değişecek kişi: **D**." (D = uygulanmamış fark sayısı); detay (yalnız performans kapalıysa) "Bu çalışmada performansla zam hesabı da açılacak."; evet düğmesi **Uygula**.
 - `API.performansCarpanUygula(c.id, { tc: çarpan })`: tek işlemde çalışmadaki **her** kişinin `performans_carpani` alanı yazılır — değerlendirilenlere hesaplanan çarpan, değerlendirilmeyenlere **boş** — ve çalışmada `zam_performans = 1` yapılır. İşlem kaydı `KAYDET` / `calisma_personel` "performans çarpanı uygulandı, N kişi".
 - Başarı bildirimi "Çarpanlar uygulandı; zam öngörüleri güncellendi."; üst çubuktaki seçici (`APP.calismaSeciciCiz`) ve ekran yeniden çizilir.
-- ⚠ Boşaltılan çarpan için zam motoru kişinin `performans_puani` alanına ve Parametreler → Performans tablosuna bakar (`api.js:performansCarpani`); kişi kartında puan girilmişse "çarpanı 1 olacak" bilgisi gerçekleşmez. Kişi kartına elle yazılmış çarpanlar da bu işlemle değişir.
+- ⚠ Boşaltılan çarpan için zam motoru kişinin `performans_puani` alanına ve Parametreler → Performans Kademeleri'ne bakar (`api.js:performansCarpani`); kişi kartında puan girilmişse "çarpanı 1 olacak" bilgisi gerçekleşmez. Kişi kartına elle yazılmış çarpanlar da bu işlemle değişir.
 
 **Ekranın belleği:** seçili yaka, arama metni ve içe alma önizlemesi modül değişkenlerinde tutulur; başka ekrana gidip dönünce ya da çalışma değişince korunur (önizleme yalnız ait olduğu çalışmada gösterilir).
 
 #### 3.6.1 Pencere — Kişinin değerlendirmesi (`kisiAc`)
 
 - `C.kipAc`, `genis`. Başlık: kişinin adı. Alt başlık: "<yaka adı> · <bütçe bölümü> · T.C. <numara>" (`alan.tc` yoksa maskeli, §2.8).
-- **Üst ızgara** (`.izgara-4`): "Değerlendirme bölümü" (`grup`; öneri listesi `datalist` = aynı yakada bu çalışmada girilmiş bölüm adları, alfabetik) · her amir için "<amir başlığı> adı" (`amir1…`).
-- **"Kriter puanları (0–100)"** tablosu: sütunlar Kriter · Ağırlık · her amir için "<amir başlığı>" ve altında küçük "ağırlık <a>". Satırlar = `PERF.MODEL[yaka].kriter`; her amir hücresi 64 px girdi (`a<i>.<kriter>`; kayıtlı değer ondalık virgülle). Son satır (kalın) "Amir puanı": her amirin hesaplanan puanı (1 ondalık).
-- **"Ek puanlar"** tablosu (`param-tablo`), satırlar = `PERF.MODEL[yaka].ek`: 1. sütun ek puan alanının adı + altında küçük açıklama metni; 2. sütun girdi — `liste` tanımlıysa seçim kutusu (boş seçenek + liste; kayıtlı değer büyük harfe çevrilerek seçilir), değilse 80 px girdi; 3. sütun "X puan" (değerlendirilmişse).
+- **Üst ızgara** (`.izgara-4`): "Değerlendirme bölümü" (`grup`; öneri listesi `datalist` = aynı yakada bu çalışmada girilmiş bölüm adları, alfabetik) · her amir için "<amir adı> adı" (`amirN`).
+- **"Kriter puanları (0–100)"** tablosu: sütunlar Kriter · Ağırlık · her amir için "<amir adı>" ve altında küçük "ağırlık <a>". Satırlar = yakanın kriterleri (model sırasıyla); her amir hücresi 64 px girdi (`a<N>.<kod>`; kayıtlı değer ondalık virgülle). Son satır (kalın) "Amir puanı": Ağırlık hücresinde kriter ağırlıkları toplamı (ipucu "Kriter ağırlıkları toplamı"), amir hücrelerinde hesaplanan puan (1 ondalık).
+- **"Ek puanlar"** tablosu (`param-tablo`), satırlar = yakanın ek puan alanları: 1. sütun alanın adı + altında küçük açıklama (`PERF.aciklama`; giriş sınırı varsa " · giriş a–b" eklenir); 2. sütun girdi — liste türünde seçim kutusu (boş seçenek + liste; kayıtlı değer büyük harfe çevrilerek seçilir; listede olmayan kayıtlı değer ek bir seçenek olarak "<değer> (listede yok)" seçili görünür), diğer türlerde 80 px girdi; 3. sütun "X puan" (değerlendirilmişse). Yakada ek puan alanı yoksa "Bu yakada ek puan alanı yok."
 - Alt bilgi: değerlendirilmişse mavi kutu "Σ Değerlendirme X × bölüm katsayısı K × <degAgirlik>/100 + ek E = **P** puan → çarpan **C** (yaka ortalaması O). Kaydedince bütün çarpanlar yeniden hesaplanır."; değilse sarı kutu "Bu kişi değerlendirilmemiş; zam çarpanı 1."
 - **Altlık** — `yaz` ise: **Değerlendirmeyi sil** (kırmızı; yalnız kişinin en az bir girdisi varsa) · **Vazgeç** · **Kaydet**. `yaz` değilse yalnız **Kapat**; bütün alanlar kapalı (`disabled`).
 - **Kaydet:** her alan `denetle` ile çözülür:
-  - Boş → `null` (kayıtlı değer silinir).
-  - Metin alanları (`PERF.metinAlan`: `grup`, `amir<n>`, `egitim`): iç boşluklar teke indirilir; `egitim` ayrıca büyük harfe (tr) çevrilir.
-  - Sayı alanları: `PERF.sayi` (ilk virgül noktaya çevrilir; binlik ayırıcı tanınmaz). Aralık: kriter puanları (`a<i>.…`) ve `devam` 0–100; `tutanak`, `kidem` 0–99; aralığı tanımsız alan 0–1e9.
+  - Boş (ya da tarih) → `null` (kayıtlı değer silinir).
+  - Metin alanları (`grup`, amir adları, liste türü ek puan alanları): iç boşluklar teke indirilir; liste türü ek puan alanları ayrıca büyük harfe (tr) çevrilir.
+  - Sayı alanları: `PERF.sayi` (ilk virgül noktaya çevrilir; binlik ayırıcı tanınmaz). Aralık: kriter puanları (`a<N>.…`) 0–100; ek puan alanında modelin giriş sınırı (`sinir`); sınırı olmayan alan sınırsız.
   - Hata metinleri: "<başlık>: "v" sayı değil" · "<başlık>: v (a–b arası olmalı)"; <başlık> şablon sütun başlığıdır (örn. "1. AMİR - İŞ BİLGİSİ"). Birden çok hata " · " ile tek bildirimde; pencere açık kalır.
-  - Yalnız kayıtlı değerden farklı alanlar `API.performansGirdiYaz(c.id, liste, 'elle <ad>')` ile tek işlemde yazılır (geçersiz alan adı: "Bilinmeyen performans alanı: …"; çalışmada olmayan T.C.: "<tc> bu çalışmada yok."). Pencere kapanır; bildirim "Değerlendirme kaydedildi." ya da "Değişiklik yok."; ekran tazelenir.
+  - Yalnız kayıtlı değerden farklı alanlar `API.performansGirdiYaz(c.id, liste, 'elle <ad>')` ile tek işlemde yazılır. API alan adını çalışmanın modeline göre denetler (modelde olmayan alan: "Bilinmeyen performans alanı: …"; çalışmada olmayan T.C.: "<tc> bu çalışmada yok."). Pencere kapanır; bildirim "Değerlendirme kaydedildi." ya da "Değişiklik yok."; ekran tazelenir.
 - **Değerlendirmeyi sil:** onay "Değerlendirmeyi sil" — "<Ad> kişisinin bütün değerlendirme girdileri silinsin mi?" (kırmızı **Sil**) → `API.performansGirdiSil` (kişinin bu çalışmadaki bütün girdileri; işlem kaydı `SIL`) → bütün pencereler kapanır, ekran tazelenir (bildirim yok).
 - Çarpanlar kaydedilince yeniden hesaplanır ama zam hesabına geçmez; "Zamda uygulanan" sütunu ⚠ gösterir.
+
+#### 3.6.2 Pencere — Değerlendirme modeli (`modelAc`)
+
+- **Ne düzenlenir:** seçili çalışmanın **yılının** modeli (`API.performansModeliHam(yıl)` → `{ model, varsayilan }`); o yılın bütün gruplarındaki çalışmalar kullanır. Taslak ham model üzerinde tutulur (`_` ile başlayan anahtarlar düzenleyicinin kendi işaretleridir, kaydedilmez).
+- `C.kipAc`, `genis`. Başlık "Değerlendirme modeli — <yıl>"; alt başlık "Varsayılan (örnek) model" ya da "Bu yıla özel model" (+ yetki yoksa " · salt okunur").
+- **Altlık:** `parametre.yaz` varsa **Varsayılan modele dön** (solda, ikincil; yalnız yıla özel kayıt varken) · **Vazgeç** · **Kaydet**; yoksa yalnız **Kapat**.
+- **Salt okunur kip** (`parametre.yaz` yok): bütün alanlar kapalı; ekle / sil / sıra düğmeleri ve denetim satırı çizilmez; başta mavi kutu "ℹ Modeli değiştirmek için *Parametre ve tanımları değiştirir* yetkisi gerekir; burada yalnız görüntülenir." Sekmeler arasında gezilebilir.
+- **Onaylı çalışmadan açılınca** başta mavi kutu: "🔒 Seçili çalışma onaylı: onay anındaki modelle değerlendirilir. Buradaki değişiklik <yıl> yılının taslak / revize çalışmalarına uygulanır."
+- Genel not (soluk): "Model <yıl> yılının bütün gruplarındaki çalışmalarda kullanılır. Kriter puanları 0–100 arasında verilir; kriterden ya da ek alandan kaldırılan tanımların girilmiş değerleri silinmez ama artık hesaba girmez."
+
+**Bölüm "Amirler"** — açıklama "Değerlendirme, amir puanlarının bu ağırlıklarla ortalamasıdır; puan vermeyen amirin ağırlığı diğerlerine dağıtılır. Ağırlıklar oran olarak kullanılır, toplamın 100 olması gerekmez. En çok 5 amir." Tablo (`param-tablo`, en çok 620 px):
+
+| Sütun | İçerik |
+|---|---|
+| Amir | ad (metin kutusu) |
+| Ağırlık | sayı kutusu (`.hucre-girdi`) |
+| Kod | `amirN` (salt okunur, eş aralıklı, çok soluk) |
+| (düğme) | 🗑 "Amiri kaldır" — yalnız birden çok amir varken |
+
+Son satır (kalın) "Toplam": ağırlıkların toplamı (yazdıkça güncellenir). Altında **+ Amir ekle** (5'ten az amir varken): kullanılmayan ilk numarayla `amirN`, ad "N. AMİR", ağırlık boş; odak yeni ağırlık kutusuna geçer.
+
+**Yaka sekmeleri** (`.sekme-cubuk`, küçük ikincil düğmeler): iki sekme, yazıları yaka adları; yakanın kriter ağırlıkları toplamı 100 değilse sekme yazısına " ⚠" eklenir. Açılışta ekranda seçili yaka açıktır. Sekme değiştirmek taslağı korur. Seçili yaka için:
+- 3 sütunlu ızgara: "Yaka adı" · "Excel sayfa adı — boşsa yaka adı" (yer tutucu yaka adının büyük harfi) · "Değerlendirme ağırlığı — toplam puandaki payı (/100)" (sayı kutusu).
+- **"Kriterler"** tablosu (en çok 760 px): Kriter (ad) · Ağırlık (sayı) · Kod (salt okunur; yeni kriterde "(yeni)" eki) · düğmeler ↑ (Yukarı) ↓ (Aşağı) — ilk / son satırda kapalı — ve 🗑 "Kriteri kaldır" (yakada birden çok kriter varken). Son satır (kalın) "Toplam": ağırlık toplamı; 100 değilse turuncu rozet "100 değil — amir puanı en çok X olur" (ipucu "Engel değil"). Altında **+ Kriter ekle** (odak yeni kriterin adına).
+- **"Ek puan alanları"**: açıklama "Toplam puana eklenir (eksi puan da olabilir). Excel şablonunda kriterlerden sonra sütun olarak çıkar." Her alan çerçeveli bir kutudur (`.pf-model-ek`: ince çerçeve, 8 px yuvarlak köşe, açık zemin):
+  - Üst satır (3 sütun): "Alan adı — Excel başlığı" (metin) · "Kural türü" (seçim: `PERF.TURLER` etiketleri; tür yoksa "— seçin —") · "Kod" (salt okunur; yeni alanda "(yeni)"); sağda 🗑 "Ek alanı kaldır".
+  - Türe göre alanlar: **Eşik** → "Eşik" · "Eşik ve üstü puan" · "Altında: değer ×"; **Çarpan** → "Değer ×" · "En çok puan (boş = sınırsız)"; **Kademe** → not "Değerin ulaştığı en yüksek kademenin puanı verilir." + tablo "En az değer | Puan | 🗑" + **+ Satır**; **Liste** → tablo "Seçenek | Puan | 🗑" + **+ Satır** + "Listede olmayan ya da boş değerin puanı".
+  - Ardından: "Giriş sınırı: en az [ ] en çok [ ]" (liste türünde yok) · ☐ "Önceki dönemden taşınsın" · "Not — açıklamanın başına eklenir" (metin).
+  - En altta soluk "Açıklama: …" — kuralın canlı açıklaması (`ekAciklama`: `PERF.aciklama` metni + giriş sınırı varsa " · giriş a–b" + taşınıyorsa " · önceki dönemden taşınır"; yarım girilmiş değerde hata vermez, okunamazsa "—"; listede seçenek yoksa "Seçenek girilmedi.", kademe yoksa "Kademe girilmedi.").
+  - Yakada ek puan alanı yoksa "Bu yakada ek puan alanı yok." Altında **+ Ek alan ekle**: yeni alan Çarpan türünde, katsayı 1, üst sınırsız; odak adına geçer.
+  - Tür değişince eski türün alanları silinir, yeni türün varsayılanları eklenir (Eşik 0 / 0 / 0; Kademe tek satır [0, 0]; Çarpan katsayı 1, üst sınır yok; Liste tek boş seçenek ve diğer = 0); Liste'ye geçince giriş sınırı kaldırılır.
+- En altta **canlı denetim satırı** (yalnız yazma yetkisiyle): yeşil "✓ Model geçerli; kaydedilebilir." ya da kırmızı "⚠ <hata metni>" (`modelDenetle`).
+
+**Girdi davranışı:** metin ve sayı kutuları her tuşta taslağa yazılır (`input`); kural türü seçimi ve onay kutusu `change`'de. Sayı kutusu ondalık virgül kabul eder (`PERF.sayi`); sayı değilse kutu kırmızı çerçeve alır (`hatali`), değer metin olarak kalır ve denetim satırı hata gösterir. Toplamlar, sekme ⚠ işaretleri, ek puan alanı açıklamaları ve denetim satırı yazdıkça güncellenir. Ekle / sil / sıra / tür değişikliği gövdeyi yeniden çizer (pencerenin kaydırma yeri korunur).
+
+**Kodlar** (`PERF.kodUret(ad, varolan)`): yeni kriter ve ek puan alanının kodu adından üretilir — Türkçe harfler ASCII'ye, küçük harfe çevrilir, harf / rakam dışı karakterler `_` olur, rakamla başlıyorsa önüne `k` eklenir, en çok 24 karakter, boşsa `alan`; aynı yakada çakışırsa `_2`, `_3`…; `grup` ve `amirN` kullanılmaz. Kod yalnız kaydedilmemiş (yeni) öğede ad değiştikçe yenilenir; kaydedilmiş kod bir daha değişmez (girilmiş değerler koda bağlıdır).
+
+**Kaydet** (`modelDenetle` → `PERF.hazirla`):
+- Kayıttan önce temizlik: boş Excel sayfa adı ve not silinir; Liste türünde giriş sınırı silinir; iki ucu boş sınır silinir; tamamen boş kademe ve seçenek satırları atılır; Çarpan'da boş üst sınır = sınırsız.
+- Ek denetimler (§3.6 başındaki model denetimine ek): "<yaka> — "<alan>": giriş sınırının en az ve en çok değeri birlikte, sayı olarak girilmeli." · "<yaka> — "<alan>": giriş sınırında en az değer en çok değerden büyük olamaz."
+- Hata varsa kayıt yapılmaz: hata bildirimi + denetim satırı.
+- Kayıtlı modelde olup yenisinde olmayan amir / kriter / ek puan alanı varsa (`kaldirilanlar`) onay penceresi "Kaldırılan tanımlar": "Şunlar modelden kaldırılıyor:" + madde listesi ("Amir: <ad>", "<yaka adı> kriteri: <ad>", "<yaka adı> ek alanı: <ad>"); detay "Bu tanımlara girilmiş değerler silinmez, ama artık hesaba ve Excel şablonuna girmez. Aynı kodla yeniden eklenirse değerler geri gelir."; evet düğmesi **Kaydet**.
+- `API.performansModeliYaz(yıl, ham)`: `parametre.yaz` + yazma kilidi; model `PERF.hazirla` ile yeniden denetlenir (hatalı model reddedilir); `parametre` tablosuna `(yıl, 'perf.model', JSON)` yazılır; işlem kaydı `KAYDET` / `parametre` "<yıl>/perf.model". Pencere kapanır; bildirim "<yıl> değerlendirme modeli kaydedildi; puanlar yeni modelle hesaplanıyor." (başarı); ekran tazelenir.
+
+**Varsayılan modele dön** → onay (tehlike) "Varsayılan modele dön" — "<yıl> yılına özel model silinecek; bu yıl için varsayılan (örnek) model kullanılacak." / detay "Girilmiş değerlendirmeler silinmez; varsayılan modelde olmayan kriter ve alanlar hesaba girmez." / **Varsayılana dön** → `API.performansModeliYaz(yıl, null)` (kayıt silinir; işlem kaydı `SIL` / `parametre` "varsayılan modele dönüldü") → "<yıl> için varsayılan değerlendirme modeli geçerli." (başarı).
+
+⚠ Dikkat:
+- Model kaydedilince puan ve çarpanlar yeniden hesaplanır ama zam hesabına kendiliğinden geçmez; "Zamda uygulanan" sütunu ⚠ gösterir, **Çarpanları zam hesabına uygula** gerekir.
+- Varsayılan modelle açılan pencerede değişiklik yapmadan Kaydet'e basmak da yıla özel bir kayıt oluşturur (değişiklik denetimi yoktur).
+- Pencere onaylı çalışmadan açıldığında da yılın modelini değiştirir; onaylı çalışma dondurulmuş modelle kalır, ekranı değişmez.
+- Model değişikliği için `zam.yaz` ya da gruba yazma erişimi gerekmez; `parametre.yaz` yeterlidir (model yılın parametresidir).
 
 ---
 
@@ -1043,8 +1111,9 @@ Başlık "Çalışma Ayarları", alt başlık "<yıl> · <grup>". Altlık: **Vaz
 | Durum (`durum`) | seçim | "Taslak" (`TASLAK`) · "Onaylı (yönetim onayladı)" (`ONAYLI`) |
 | "Zam öngörüsü yöntemi" | onay kutuları | `zam_kademe` "Maaş kademesine göre oran (düşük maaşa yüksek oran)" · `zam_performans` "Performans çarpanı uygula (kişi kartındaki puan / çarpan)" · not "İkisi birden seçilirse: kademe oranı × performans çarpanı. Kademe kapalıysa üst oran sabit uygulanır." |
 | "Bu gruba özel zam kademesi" | tablo: satırlar Beyaz yaka / Mavi yaka × 4 sütun | not "Boş bırakılan alanda <yıl> yılının genel değeri (soluk) geçerlidir." Sütunlar (`KADEME`): "Alt eşik" (`zam.<B|M>.alt_esik`) · "Üst eşik" (`ust_esik`) · "Alt eşik altı oran (%)" (`ust_oran`) · "Üst eşik üstü oran (%)" (`alt_oran`). Yer tutucu = yılın parametresi (`zam.<B|M>.<anahtar>`; parametre yoksa `API.ZAM_TANIM` varsayılanı). Oranlar yüzde olarak gösterilip girilir (×100, en çok 2 ondalık, ",00" atılır), ÷100 saklanır |
+| "Zam öngörüsü yuvarlama adımı (TL)" | sayı | `zam.yuvarla_ongoru` (TL olarak saklanır); yer tutucu yılın `zam_yuvarla` parametresi (yoksa 10). Not: "Öngörülen zam bu tutarın en yakın katına yuvarlanır (ör. …). Boş = yılın parametresi (Parametreler → Genel)." Geçerli adım: bu ayar, yoksa yılın parametresi, o da yoksa 10 |
 | "Varsayılan çalışılan gün" | tablo: Beyaz / Mavi × Oca…Ara (44 px kutular) | `gun.<B|M>.<1..12>`, yer tutucu 30. Not: "Kişiye ayrıca gün girilmemişse bu gün kullanılır (boş = 30). Örn. mavi yaka bazı aylarda eksik gün çalışacaksa (ör. 26) o aylara gün sayısını yazın." Tablo `.tablo-sar` içinde, kendi içinde kayar (§2.11) |
-| "AR-GE çalışılan gün" | sayı | `arge_gun`; **her zaman görünür**; yer tutucu "yok". Not: "Varsayılan yoktur (boş = 0). Girilirse GV teşviki %80 ve üzeri olan (AR-GE) kişilerde, kişiye Aylık Girdiler'den gün girilmemiş aylarda kullanılır. Kişiye girilen gün her zaman önceliklidir." |
+| "AR-GE çalışılan gün" | sayı | `arge_gun`; **her zaman görünür**; yer tutucu "yok". Not: "Varsayılan yoktur (boş = 0). Girilirse GV teşviki %<eşik> ve üzeri olan (AR-GE) kişilerde (eşik: Parametreler → Genel), kişiye Aylık Girdiler'den gün girilmemiş aylarda kullanılır. Kişiye girilen gün her zaman önceliklidir." |
 | "05510 indirim oranı (%) — 05510 dışı kanunlu kişilerde de uygulanır" | sayı (%) | `tesvik.k05510` (×100 gösterilir, ÷100 saklanır); yer tutucu yılın `t05510` parametresi (yoksa 0,02 → "2"). Not: "İmalat işyeri 5, diğerleri 2. Boş = yılın parametresi. AR-GE (05746) ve engelli (14857) kişilerin 05510 payı bu oranla hesaplanır; "05510 - %5" türündeki kişiler zaten %5 alır." |
 | Açıklama (`aciklama`) | metin | |
 
@@ -1060,7 +1129,7 @@ Başlık "Çalışma Ayarları", alt başlık "<yıl> · <grup>". Altlık: **Vaz
 
 Ayarların hesaba etkisi: 02 — Hesap Motoru, "Çalışmaya özel ayarlar — `calisma_ayar`"; anahtarların listesi: 01 — Veri Modeli ve Depolama, "`calisma_ayar`".
 
-⚠ Bu pencere zam kademesi, gün, AR-GE günü ve 05510 oranı dışındaki çalışma ayarlarını göstermez; motorun okuduğu `zam.yuvarla_ongoru` ve `tesvik.k05746 / k14857 / k15510` anahtarlarının ekranda girişi yoktur (`KOPYA` / revize ile, örnek veriyle ya da dışarıdan gelir). `mesai.ongoru` Mesai Öngörüsü ekranından, `dagilim.*` Maaş Dağılımı'ndan yazılır.
+⚠ Bu pencere zam kademesi, yuvarlama adımı, gün, AR-GE günü ve 05510 oranı dışındaki çalışma ayarlarını göstermez; motorun okuduğu `tesvik.k05746 / k14857 / k15510` anahtarlarının ekranda girişi yoktur (`KOPYA` / revize ile, örnek veriyle ya da dışarıdan gelir). `mesai.ongoru` Mesai Öngörüsü ekranından, `dagilim.*` Maaş Dağılımı'ndan yazılır.
 
 ---
 
@@ -1104,17 +1173,17 @@ Ayarların hesaba etkisi: 02 — Hesap Motoru, "Çalışmaya özel ayarlar — `
 
 ### 3.10 Dış Liste Aktarımı
 
-**Kaynak:** `js/modules/aktarim.js` (`ciz`, `oku`, `onizlemeHtml`, `bagla`, `TANIM`, `ETIKET`; modül belleği `durum`); `js/core/tablooku.js` (`TO`, §4.0); `api.js:erpAktar, tcBaskaGrupta, calismaPersonelListe`. Sınama için dışa açık: `window.AKTARIM_TEST.oku`.
+**Kaynak:** `js/modules/aktarim.js` (`ciz`, `oku`, `onizlemeHtml`, `bagla`, `sozluk`; modül belleği `durum`); `js/core/tablooku.js` (`TO`, §4.0); `api.js:aktarimSozluk, AKTARIM_ALANLARI, erpAktar, tcBaskaGrupta, calismaPersonelListe`. Sınama için dışa açık: `window.AKTARIM_TEST.oku`.
 **Yer:** Veri → ⇩ Dış Liste Aktarımı (`aktarim`). Sayfa başlığı "Dış Liste Aktarımı", alt başlık "ERP / bordro programından gerçek maaşlar ve personel bilgisi".
 **Yetki:** `personel.yaz` (menü). Çalışma yazılabilir değilse (onaylı ya da grupta yazma yok) içerik yerine sarı kutu: "ℹ Bu grupta aktarım yetkiniz yok ya da çalışma onaylı (kilitli)." **Tümü:** hayır (§1.6).
 
 **Amaç:** ERP ya da bordro programından alınan listedeki güncel (gerçekleşen) net maaşları ve personel bilgisini çalışmaya almak. Listedeki net maaş, çalışmanın **önceki yıl maaşı** (`maas_eski`) olur; zam öngörüsü bunun üzerine kurulur. Önceki yılın gerçekleşen maliyeti de (`maliyet_onceki`) buradan gelebilir. Program dış sisteme hiçbir şey yazmaz; liste dosya ya da yapıştırma ile verilir (doğrudan bağlantı kurulursa yalnız `oku`'nun kaynağı değişir, önizleme ve `API.erpAktar` aynı kalır).
 
 **Kart:** başlık "Dış Liste Aktarımı — <yıl> · <grup>"; açıklama "ERP ya da bordro programından alınan listedeki güncel net maaşlar bu çalışmanın **<yıl − 1> maaşı** olur; zam öngörüsü bunun üzerine uygulanır. Sütunlar başlık adından tanınır, sıra önemli değildir." İki sütunlu ızgara:
-- Sol: alan "ERP / bordro programı listesi (.xlsx / .csv)" — dosya alanı `#dosya`, `accept=".xlsx,.csv,.txt"`; altında soluk not "Tanınan başlıklar: T.C., Ad Soyad, İşe Giriş, Çıkış, Bölüm, Ekip, Görev, Net Maaş, Yaka, Bütçe Bölümü, Gerçekleşen Maliyet. Yalnızca T.C. zorunludur; boş sütunlar mevcut bilgiye dokunmaz." (liste `ETIKET` sırasından üretilir).
+- Sol: alan "ERP / bordro programı listesi (.xlsx / .csv)" — dosya alanı `#dosya`, `accept=".xlsx,.csv,.txt"`; altında soluk not "Tanınan başlıklar: T.C., Ad Soyad, İşe Giriş, Çıkış, Bölüm, Ekip, Görev, Net Maaş, Yaka, Bütçe Bölümü, Gerçekleşen Maliyet (sütun adları Tanımlar → Aktarım Başlıkları'ndan değiştirilebilir). Yalnızca T.C. zorunludur; boş sütunlar mevcut bilgiye dokunmaz." (alan adları `API.aktarimSozluk().etiket` sırasından üretilir; "Tanımlar → Aktarım Başlıkları" yalnız yönlendirme metnidir, bağlantı değildir — §3.12.5).
 - Sağ: alan "…ya da Excel'den kopyalayıp yapıştırın (başlık satırıyla birlikte)" — metin kutusu `#yapistir` (4 satır, yer tutucu "TC⇥Ad Soyad⇥Net Maaş…") + **Yapıştırılanı oku** (`#yapistirBtn`, küçük ikincil).
 
-**Okuma** (`oku`): dosya seçilince (`change`) `TO.dosyaSatirlar`, düğmeyle `TO.metinSatirlar`; ardından `TO.eslestir(satırlar, TANIM, ['tc'])` ve satır dönüştürme (§4.2). Kaynak adı: dosya adı ya da "yapıştırılan tablo". Hatalar (bildirim): "Başlık satırında T.C. sütunu bulunamadı." (boş yapıştırma da bu hatayı verir) · "Geçerli T.C. içeren satır bulunamadı." · `TO` hataları ("Eski .xls biçimi okunamıyor. Dosyayı Excel'de .xlsx olarak kaydedin ya da tabloyu kopyalayıp yapıştırın." · "Dosyada sayfa yok." · "Excel kütüphanesi yüklenemedi."). Okunan liste modül belleğinde (`durum`) çalışma kimliğiyle tutulur; seçili çalışma değişirse atılır.
+**Okuma** (`oku`): dosya seçilince (`change`) `TO.dosyaSatirlar`, düğmeyle `TO.metinSatirlar`; ardından `TO.eslestir(satırlar, API.aktarimSozluk().sozluk, ['tc'])` (o anki geçerli sözlükle) ve satır dönüştürme (§4.2). Kaynak adı: dosya adı ya da "yapıştırılan tablo". Hatalar (bildirim): "Başlık satırında T.C. sütunu bulunamadı." (boş yapıştırma da bu hatayı verir) · "Geçerli T.C. içeren satır bulunamadı." · `TO` hataları ("Eski .xls biçimi okunamıyor. Dosyayı Excel'de .xlsx olarak kaydedin ya da tabloyu kopyalayıp yapıştırın." · "Dosyada sayfa yok." · "Excel kütüphanesi yüklenemedi."). Okunan liste modül belleğinde (`durum`) çalışma kimliğiyle tutulur; seçili çalışma değişirse atılır.
 
 **Önizleme** (`#sonuc`, `onizlemeHtml`; karşılaştırma bu çalışmanın satırlarıyla, `API.calismaPersonelListe`):
 - Mavi bilgi kutusu: "**<kaynak>**: N satır okundu. Tanınan sütunlar: " + her eşleşen alan için mavi rozet "<etiket> ← <dosyadaki başlık>"; maaş sütunu eşleşmediyse "<br>**Net maaş sütunu tanınmadı** — maaşlar güncellenmeyecek."
@@ -1148,7 +1217,7 @@ Ayarların hesaba etkisi: 02 — Hesap Motoru, "Çalışmaya özel ayarlar — `
 **Yetki:** `parametre.oku`. Değiştirmek ve "Yeni Yıl Öngörüsü" kartı `parametre.yaz` ister; yetki yoksa bütün kutular `disabled`, kaydet / ekle / 🗑 düğmeleri ve öngörü kartı hiç çizilmez. **Gruplar:** parametreler yıl bazındadır, bütün grupları etkiler; ekran grup seçimi istemez (`calismaGerekli` yok). **Tümü:** çalışır.
 **Yıl:** üst çubuktaki yıl (`APP.yil()`; yoksa `API.yillar()[0]`, o da yoksa bu takvim yılı). Ekrandaki yıl seçici (`#prmYilSec`) ayrı bir seçim değildir: değişince `APP.secimYap(yıl, null)` ile **üst çubuğun yılını** değiştirir; böylece ekranda görülen yıl ile öngörünün yazdığı yıl hiç ayrışmaz.
 
-**Amaç:** Yılın yasal ve genel parametreleri (asgari ücret, gelir vergisi tarifesi, sakatlık indirimi, SGK / vergi / teşvik oranları, zam kademesi, performans kademeleri) ve resmî rakamlar açıklanmadan önce yeni yıl için öngörü oluşturma. Parametrelerin hesaptaki anlamı için bkz. "02 — Hesap Motoru"; tabloların yapısı için "01 — Veri Modeli ve Depolama".
+**Amaç:** Yılın yasal ve genel parametreleri (asgari ücret, gelir vergisi tarifesi, sakatlık indirimi, SGK / vergi / teşvik oranları, fazla mesai katsayıları, AR-GE günü eşiği, zam öngörüsü yuvarlaması, zam kademesi, performans kademeleri) ve resmî rakamlar açıklanmadan önce yeni yıl için öngörü oluşturma. Yılın değerlendirme modeli de bir yıl parametresidir (`perf.model`) ama bu ekranda değil, Performans Değerlendirme → **Değerlendirme modeli…** penceresinden düzenlenir (§3.6.2). Parametrelerin hesaptaki anlamı için bkz. "02 — Hesap Motoru"; tabloların yapısı için "01 — Veri Modeli ve Depolama".
 
 Kartlar yukarıdan aşağı şu sıradadır.
 
@@ -1197,7 +1266,7 @@ Tutarlar `B.tl(x, 2)`; hedef sütunu kalın.
 
 **Oluştur** → onay penceresi (`C.onay`): başlık "<hedef> Öngörüsü"; mesaj "<kaynak> yasal parametrelerine **%X** artış uygulanarak **<hedef>** parametreleri oluşturulacak[ (<ay> ara artışı %Y)]."; hedefin parametresi varsa sarı detay "<hedef> parametreleri zaten var: asgari ücret, GV dilimleri ve sakatlık tutarlarının üzerine yazılacak. <hedef> çalışmalarının bütün hesapları değişir."; evet düğmesi **Oluştur**. Onaydan önce form yeniden okunur (önizlemeden sonra alan değiştirildiyse **yeni** değerler uygulanır).
 - `API.ongoruUygula` hataları: "Hedef yıl kaynak yıldan büyük olmalı." · "<hedef> yılında onaylı bir çalışma var; o yılın parametreleri öngörüyle değiştirilemez. Hedef yılı kontrol edin (örneğin kaynak <hedef>, hedef <hedef + 1>)." · "Artış oranı geçersiz." (oran −%100 ile %500 aralığı dışında) · ayrıca önizlemedeki üç hata.
-- Yazılanlar: hedef yılda olmayan yasal dışı tablolar (genel oranlar, hesaplama türleri, zam kademesi, performans kademeleri) kaynaktan kopyalanır; asgari ücret, GV dilimleri ve sakatlık tutarları silinip öngörüyle yeniden yazılır; `parametre` tablosuna `durum = ONGORU` ve `ongoru.*` anahtarları (kaynak yıl, oranlar, ara ay/oran, yuvarlama adımları, tarih) yazılır. İşlem kaydı `ONGORU`.
+- Yazılanlar: hedef yılda olmayan yasal dışı tablolar (genel oranlar ve ayarlar, değerlendirme modeli `perf.model`, hesaplama türleri, zam kademesi, performans kademeleri) kaynaktan kopyalanır; asgari ücret, GV dilimleri ve sakatlık tutarları silinip öngörüyle yeniden yazılır; `parametre` tablosuna `durum = ONGORU` ve `ongoru.*` anahtarları (kaynak yıl, oranlar, ara ay/oran, yuvarlama adımları, tarih) yazılır. İşlem kaydı `ONGORU`.
 - Başarı: "<hedef> parametreleri öngörüyle oluşturuldu." (başarı bildirimi); önizleme belleği silinir ve **üst çubuk hedef yıla geçer** (`APP.secimYap(hedef, null)`).
 
 **Kart 2 — "Parametreler — <yıl>"**
@@ -1224,9 +1293,15 @@ Kartın üstündeki bantlar (koşula göre, sırayla):
 | `t05746` | 05746 AR-GE SGK teşvik oranı (işveren %19,75 × ½) | oran | 0,09875 |
 | `t14857` | 14857 engelli teşvik oranı | oran | 0,1975 |
 | `t15510` | 15510 teşvik oranı | oran | 0,05 |
+| `arge_gv_esik` | AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı | oran | 0,8 |
+| `mesai_fm1_kat` | Hafta içi fazla mesai (FM1) katsayısı | × saat ücreti | 1,5 |
+| `mesai_fm2_kat` | Hafta sonu / tatil mesaisi (FM2) katsayısı | × saat ücreti | 2 |
+| `mesai_gun_saat` | Saat ücretinde günlük çalışma saati (net maaş / 30 / saat) | saat | 7,5 |
+| `zam_yuvarla` | Zam öngörüsü yuvarlama adımı (çalışmaya özel de girilebilir) | TL | 10 |
 
 - Değer yoksa varsayılan gösterilir (`API.parametreSayi`). Kutular `.hucre-girdi` (120 px). Gösterim: ondalıklı değer 6 haneye kadar yazılıp sondaki sıfırlar atılır (`0,00759`); tam sayıya dokunulmaz.
-- Oranlar **ondalık** yazılır (yüzde değil: `0,15`).
+- Oranlar **ondalık** yazılır (yüzde değil: `0,15`; AR-GE eşiği `0,8` = %80).
+- Son beş satır hesabın genel ayarlarıdır (motordaki karşılıkları `P.argeEsik`, `P.mesaiKat1`, `P.mesaiKat2`, `P.gunlukSaat`, `P.zamYuvarla`; "02 — Hesap Motoru"): net mesai = net maaş / 30 / günlük saat × katsayı × saat (FM1 ve FM2 ayrı); çalışmanın AR-GE günü ayarı yalnız GV teşvik oranı bu eşik ve üzerindeki kişilere uygulanır; zam öngörüsü bu adımın en yakın katına yuvarlanır (Çalışma Ayarları'nda çalışmaya özel adım girilmişse o geçerlidir, §3.8.2). Onaylı çalışmalar bunları da onay anındaki değerleriyle kullanır.
 - Her kutu ayrı kaydedilir: `change` olayında değer değiştiyse `API.parametreYaz(yıl, anahtar, trSayi(v))` → "Kaydedildi." (başarı) ve ekran tazelenir.
 
 **Sağ üst — "Asgari Ücret (brüt)"** (`#asgari`): sütunlar "Geçerli olduğu ay" (ay seçimi) · "Brüt" · (🗑). Ocak satırında 🗑 yoktur; sonradan eklenen satırlarda vardır. 🗑 satırı yalnız ekrandan kaldırır (kaydetmeden kalıcı olmaz).
@@ -1286,12 +1361,12 @@ Alt başlık **"Performans Kademeleri"**; not: "Kişinin performans puanı bu ar
 
 ### 3.12 Tanımlar
 
-**Kaynak:** `js/modules/tanim.js` (`ciz`, `oranAlan`, `turForm`, `kanunForm`, `bolumForm`, `grupForm`, `grupSilSor`, `grupDegisti`, sabitler `KOL`, `KURAL`); `api.js:hesapTuruListe, hesapTuruKaydet, hesapTuruSil, kanunListe, kanunKaydet, kanunSil, grupListe, gorunurGruplar, grupKaydet, grupSil, calismaListe, butceBolumuListe, bolumKisiSayilari, butceBolumuKaydet, butceBolumuSil, butceBolumuBirlestir`; `schema.js:BOLUM_TEMIZLE`.
-**Yer:** Tanımlar → 📋 Tanımlar. Sayfa başlığı "Tanımlar", alt başlık "Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri".
-**Yetki:** `parametre.oku`; hesaplama türü, kanun türü ve bütçe bölümünü değiştirmek `parametre.yaz` (bölümde ayrıca o gruba yazma erişimi). **Gruplar** sekmesi yalnız sistem yöneticisine (`sistem.yonet`) görünür ve `parametre.yaz`'dan bağımsızdır. **Tümü:** çalışır (ekranda `calismaGerekli` yok); Bütçe Bölümleri sekmesi bu durumda son seçilen ya da ilk görünür grubu gösterir.
+**Kaynak:** `js/modules/tanim.js` (`ciz`, `oranAlan`, `turForm`, `kanunForm`, `bolumForm`, `grupForm`, `grupSilSor`, `grupDegisti`, sabitler `KOL`, `KURAL`); `api.js:hesapTuruListe, hesapTuruKaydet, hesapTuruSil, kanunListe, kanunKaydet, kanunSil, grupListe, gorunurGruplar, grupKaydet, grupSil, calismaListe, butceBolumuListe, bolumKisiSayilari, butceBolumuKaydet, butceBolumuSil, butceBolumuBirlestir, aktarimSozluk, aktarimSozlukYaz, AKTARIM_ALANLARI`; `schema.js:BOLUM_TEMIZLE, TEMEL_VERI_YAZ`.
+**Yer:** Tanımlar → 📋 Tanımlar. Sayfa başlığı "Tanımlar", alt başlık "Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri, aktarım başlıkları".
+**Yetki:** `parametre.oku`; hesaplama türü, kanun türü, bütçe bölümü ve aktarım başlıklarını değiştirmek `parametre.yaz` (bölümde ayrıca o gruba yazma erişimi). **Gruplar** sekmesi yalnız sistem yöneticisine (`sistem.yonet`) görünür ve `parametre.yaz`'dan bağımsızdır. **Tümü:** çalışır (ekranda `calismaGerekli` yok); Bütçe Bölümleri sekmesi bu durumda son seçilen ya da ilk görünür grubu gösterir.
 **Yıl:** Hesaplama Türleri ve bölüm kişi sayıları üst çubuktaki yılı kullanır (`APP.yil()`, yoksa `API.yillar()[0]`); ekranda ayrı yıl seçici yoktur.
 
-**Amaç:** Hesabı belirleyen sözlükler: SGK / vergi kesintilerini belirleyen hesaplama türleri, teşvik kuralına bağlanan kanun türleri, bütçe grupları ve her grubun bütçe bölümleri.
+**Amaç:** Hesabı belirleyen sözlükler: SGK / vergi kesintilerini belirleyen hesaplama türleri, teşvik kuralına bağlanan kanun türleri, bütçe grupları, her grubun bütçe bölümleri ve Dış Liste Aktarımı'nın tanıdığı sütun başlıkları. Kodda sabit kalanlar: yetki anahtarları, motorun alan kodları, teşvik kurallarının ve SGK kollarının formülleri (türlerin adı ve oranları düzenlenir), yaka türleri (`B` / `M`), 30 günlük ay ve üç sakatlık derecesi (tutarları Parametreler'de düzenlenir).
 
 **Sekme çubuğu** (`.sekme-cubuk`; sekmeler küçük ikincil düğmelerdir, seçili olan `etkin`: vurgu rengi `--accent` zemin, beyaz yazı):
 
@@ -1301,6 +1376,7 @@ Alt başlık **"Performans Kademeleri"**; not: "Kişinin performans puanı bu ar
 | 2 | `kanun` | Kanun / Teşvik Türleri | herkes |
 | 3 | `grup` | Gruplar | yalnız sistem yöneticisi |
 | 4 | `bolum` | Bütçe Bölümleri | herkes |
+| 5 | `baslik` | Aktarım Başlıkları | herkes (değiştirmek `parametre.yaz`) |
 
 - Seçili sekme modül belleğinde tutulur (ekran değişse de oturum boyunca kalır). İlk açılışta: kullanıcı sistem yöneticisiyse ve **hiç grup yoksa** `grup`, değilse `tur`. Yönetici olmayan biri için `grup` seçiliyse `tur`'a düşer.
 - `ciz(kap, param)` `param.sekme` ile belirli sekmeyle açılabilir; programda bu parametreyi veren bir çağrı yoktur (`APP.git('tanim')` hep son sekmeyle açar).
@@ -1361,14 +1437,14 @@ Altında `parametre.yaz` varsa **+ Yeni Kanun Türü**.
 |---|---|
 | Kod (`kod`, `mono`) | düzenlemede `readonly`; kırpılır (büyük harfe çevrilmez) |
 | Ad (`ad`) | |
-| Kural (`kural`) | `YOK` "Teşvik yok" · `05510` "05510 — işveren prim indirimi (oran aşağıda)" · `05746` "05746 — AR-GE (işveren ½ + %2)" · `14857` "14857 — engelli" · `15510` "15510 — emekli %5"; yeni türde `YOK` |
+| Kural (`kural`) | `YOK` "Teşvik yok" · `05510` "05510 — işveren prim indirimi (oran aşağıda)" · `05746` "05746 — AR-GE (işveren payının ½ + 05510 indirimi)" · `14857` "14857 — engelli" · `15510` "15510 — emekli %5"; yeni türde `YOK` |
 | 05510 indirim oranı (%) (`oran`) | yer tutucu "boş = yıl parametresi"; not "Yalnızca kuralı 05510 olan türde kullanılır: imalat dışı %2, imalat %5."; yüzde girilir, boş = `null`. Alan kuraldan bağımsız hep görünür. |
 | Açıklama (`aciklama`) | |
 | Sıra (`sira`) | sayı, varsayılan 0 |
 
 **Kaydet** → `API.kanunKaydet`; hata "Kod ve ad zorunludur." **Silme**: onay "Sil" — "**<kod>** silinecek."; kullanımdaysa "Bu kanun türü N kayıtta kullanılıyor." (bütün yılların bütçe satırları + aylık girdiler).
 
-Kuralların hesaptaki karşılığı için bkz. "02 — Hesap Motoru".
+Kuralların hesaptaki karşılığı için bkz. "02 — Hesap Motoru". Programla gelen kanun türleri yalnız `kanun_turu` tablosu **boşken** yazılır (`schema.js:TEMEL_VERI_YAZ`): kullanıcının sildiği ya da değiştirdiği tür program güncellemesinde geri gelmez.
 
 #### 3.12.3 Gruplar (`sekme = grup`; yalnız sistem yöneticisi)
 
@@ -1440,6 +1516,25 @@ Düzenlemede ve grupta başka bölüm varsa ayraçtan sonra **"Başka bölümle 
 **Silme** (🗑): onay "Sil" — "Bütçe bölümü silinecek." (tehlike) → `API.butceBolumuSil`; hatalar "Bu grupta değişiklik yetkiniz yok." · "Bu bölümde N bütçe satırı var; önce onları başka bölüme alın." Birleştirme hataları: "Birleştirilecek iki farklı bölüm seçin." · "Yalnızca aynı gruptaki bölümler birleştirilebilir."
 
 Ekranlarda bölüm adı her yerde `API.bolumEtiket` ile "NN AD" biçiminde gösterilir.
+
+#### 3.12.5 Aktarım Başlıkları (`sekme = baslik`)
+
+Dış Liste Aktarımı'nın (§3.10) sütunları tanıdığı başlık sözlüğü. Yıldan ve gruptan bağımsızdır; bütün çalışmalarda aynıdır. Açıklama: "Dış Liste Aktarımı, ERP / bordro programından alınan listedeki sütunları **başlık adlarıyla** tanır. Her alan için tanınacak başlıkları virgülle ayırarak yazın; büyük / küçük harf ve Türkçe karakter farkı gözetilmez ("Net Ücret" = "net ucret"). Başlık tam tutmazsa başlığın içinde geçen aday da eşleşir. T.C. sütunu zorunludur."
+
+Tablo (`#baslikTablo`, `API.aktarimSozluk()`; satırlar `api.js:AKTARIM_ALANLARI` sırasıyla, 11 alan):
+
+| Sütun | İçerik |
+|---|---|
+| Alan | alanın etiketi (kalın): T.C. · Ad Soyad · İşe Giriş · Çıkış · Bölüm · Ekip · Görev · Net Maaş · Yaka · Bütçe Bölümü · Gerçekleşen Maliyet; liste varsayılandan farklıysa sarı rozet "değiştirildi" (ipucu "Varsayılandan farklı") |
+| Tanınan başlıklar | tam genişlik metin kutusu (`data-baslik`): geçerli adaylar ", " ile birleşik; `parametre.yaz` yoksa salt okunur |
+| (düğme) | `parametre.yaz` varsa **Varsayılan** (küçük ikincil; ipucu = varsayılan liste): kutuya varsayılan listeyi yazar, kaydetmez |
+
+Altında (`parametre.yaz`) **Başlıkları kaydet** (`#baslikKaydet`):
+- Her kutu `,`, `;` ya da satır sonuyla bölünür; parçalar kırpılır, boşlar atılır. Varsayılanla (sıra dâhil) aynı olan alan için kayıt tutulmaz.
+- T.C. kutusu boşsa: "T.C. alanı için en az bir başlık girilmeli." (hata; kayıt yapılmaz).
+- `API.aktarimSozlukYaz(yeni)` (`parametre.yaz` + yazma kilidi): listesi dolu alan kaydedilir; boş liste ya da `null` o alanın kaydını siler (varsayılana döner); bilinmeyen alan "Bilinmeyen alan: …". `sistem_bilgi` tablosuna `aktarim.sozluk` (JSON, yalnız değiştirilen alanlar) yazılır; işlem kaydı `KAYDET` / `sistem_bilgi` / `aktarim.sozluk` "<N> alan değiştirilmiş". Bildirim "Aktarım başlıkları kaydedildi." (başarı); ekran tazelenir.
+- ⚠ T.C. dışındaki bir alanın kutusu boşaltılıp kaydedilirse alan tanınmaz hâle gelmez, **varsayılan listesine döner**; bir alanın aktarımını kapatmanın ekranda yolu yoktur.
+- Varsayılan listeler ve eşleşme kuralları: §4.2; karşılaştırma `TO.norm` ile yapılır (§4.0).
 
 ---
 
@@ -1593,10 +1688,10 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 | `aylik` | Aylık Girdiler | herkes | `aylik` | `04-aylik` |
 | `ozet` | Özet, Maliyet Tablosu ve Maaş Dağılımı | herkes | `ozet`, `maliyet`, `dagilim` | `09-maliyet`, `10-bordro` |
 | `calisma` | Çalışmalar: taslak, onay ve revize | herkes | `calisma` | `06-calisma` |
-| `perfmesai` | Performans Değerlendirme ve Mesai Öngörüsü | herkes | `performans`, `mesai` | — |
+| `perfmesai` | Performans Değerlendirme ve Mesai Öngörüsü (alt bölümler: Performans Değerlendirme, Değerlendirme modeli, Mesai Öngörüsü) | herkes | `performans`, `mesai` | `14-model` |
 | `rapor` | Yönetim Raporu (Excel) | herkes | `excel` | `11-rapor` |
-| `aktarim` | Dış Liste Aktarımı (ERP / bordro programı) | herkes | `aktarim` | — |
-| `parametre` | Parametreler ve Tanımlar | herkes | `parametre`, `tanim` | — |
+| `aktarim` | Dış Liste Aktarımı (ERP / bordro programı) — Aktarım Başlıkları'na yönlendirir | herkes | `aktarim` | — |
+| `parametre` | Parametreler ve Tanımlar — Genel'deki mesai katsayıları, günlük saat, AR-GE eşiği, yuvarlama adımı ve Aktarım Başlıkları dâhil | herkes | `parametre`, `tanim` | — |
 | `yonetim` | Yönetim için: bütçeyi incelemek ve düzeltmek | Yönetim | `ozet`, `personel`, `maliyet` | `02-personel` |
 | `gruplar` | Gruplar | Sistem yöneticisi | `tanim` | — |
 | `kullanici` | Kullanıcılar ve yetkiler | Sistem yöneticisi | `kullanici` | `12-kullanici` |
@@ -1608,7 +1703,7 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 - `kullanici` bölümündeki yetki tablosu (`#klYetkiler`: sütunlar "Yetki" · "Ne sağlar") `window.YETKILER`'den her çizimde canlı üretilir (§3.13'teki liste).
 - Bölüm içi kutular: 💡 mavi ipucu (`ipucu`), ⚠ sarı dikkat (`dikkat`).
 - Görseller `figure.kl-gorsel` içinde, alt yazılı, tembel yüklenir; tıklanınca görsel `genis` pencerede (başlık = görselin alt metni) tam genişlikte açılır.
-- Konular `img/kilavuz/*.png` görsellerini gösterir; görsel adları: `01-genel`, `02-personel`, `03-kart`, `04-aylik`, `06-calisma`, `07-yeni-calisma`, `08-parametre`, `09-maliyet`, `10-bordro`, `11-rapor`, `12-kullanici`, `13-kilavuz-dugme` (görsellerin güncelliği için bkz. §6).
+- Konular `img/kilavuz/*.png` görsellerini gösterir; görsel adları: `01-genel`, `02-personel`, `03-kart`, `04-aylik`, `06-calisma`, `07-yeni-calisma`, `08-parametre`, `09-maliyet`, `10-bordro`, `11-rapor`, `12-kullanici`, `13-kilavuz-dugme`, `14-model` (görsellerin güncelliği için bkz. §6).
 
 ---
 
@@ -1619,8 +1714,8 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 | Ekran | Çıktı dosyası | İçe alma | Bölüm |
 |---|---|---|---|
 | Yönetim Raporu | `<Y> <grup adı> Zam Çalışması <YYYY-AA-GG>.xlsx` — sayfalar ÖZET, ZAM ÇALIŞMASI, AYLIK MALİYET | aynı dosyanın ZAM ÇALIŞMASI sayfası → yalnız `duzeltme` | §4.1 |
-| Dış Liste Aktarımı | — | ERP / bordro programı listesi: `.xlsx` (ilk sayfa), `.csv`, `.txt` ya da yapıştırılan tablo → kişi kartı + `maas_eski`, `maliyet_onceki`, yaka, bütçe bölümü | §4.0, §4.2 |
-| Performans Değerlendirme | `<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRME.xlsx` — yaka sayfaları + AÇIKLAMA | aynı şablon → `performans_girdi` | §4.3 |
+| Dış Liste Aktarımı | — | ERP / bordro programı listesi: `.xlsx` (ilk sayfa), `.csv`, `.txt` ya da yapıştırılan tablo → kişi kartı + `maas_eski`, `maliyet_onceki`, yaka, bütçe bölümü; sütun başlıkları kullanıcının düzenlediği sözlükle tanınır | §4.0, §4.2 |
+| Performans Değerlendirme | `<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRME.xlsx` — yaka sayfaları + AÇIKLAMA; sütunlar çalışmanın değerlendirme modelinden | aynı şablon (aynı modelin başlıkları) → `performans_girdi` | §4.3 |
 | Mesai Öngörüsü | `<Y> <GRUP ADI> MESAİ ÖNGÖRÜSÜ.xlsx` — tek sayfa MESAİ ÖNGÖRÜSÜ | aynı düzen → `mesai_ongoru` | §4.4 |
 | Sistem (yedek) | `maas-butce-yedek-YYYYAAGG-SSDD.db` (Excel değil) | aynı biçim | §4.5 |
 
@@ -1632,7 +1727,7 @@ Yalnız **Dış Liste Aktarımı** kullanır. Sütunlar konumla değil **başlı
 - **Metin** (`TO.metinSatirlar`; `.csv` / `.txt` ve yapıştırma): satır sonları `\r` atılarak bölünür, boş satırlar atılır; ayraç: ilk satırda sekme varsa sekme (Excel'den kopyala-yapıştır), yoksa `;` sayısı ≥ `,` sayısı ise `;`, değilse `,`. Hücrelerin baş / son tırnağı silinir, kırpılır. (Tırnak içindeki ayraç desteklenmez.)
 - **Başlık eşleme** (`TO.eslestir(satirlar, tanim, zorunlu)`): ilk **15** satır taranır. Başlık metni `TO.norm` = `U.normalize` + `.` ve `_` → boşluk + boşluk sadeleştirme (örn. "T.C. Kimlik No" → "t c kimlik no", "Adı Soyadı" → "adi soyadi"); sözlükteki adaylar da aynı işlemden geçer. Her satırda önce **birebir** eşleşme (aday listesinde aynısı), sonra eşleşmeyen alanlar için **içerir** eşleşmesi (aday uzunluğu > 2, henüz kullanılmamış sütun, başlık adayı içeriyor). Zorunlu alanların hepsi bulunan **ilk satır** başlık satırıdır; veri onun altındaki satırlardır. Dönüş `{ sutun: { alan: indeks }, basliklar, veri }`; uygun satır yoksa `null`. ⚠ İçerir eşleşmesi sözlükteki alan sırasıyla yapılır (önce gelen alan sütunu kapar).
 - **Dönüştürücüler:** `TO.tc` (yalnız rakamlar), `TO.sayi` (sayıysa olduğu gibi, metinse `API.trSayi`; boş → `null`), `TO.tarih` (Date → ISO gün; metin / seri numarası `U.tarihCoz`: `YYYY-AA-GG`, `GG.AA.YYYY`, `/` `.` `-` ayraçları, Excel seri no 1–60000; geçersiz tarih → `null`).
-- Sözlük (`aktarim.js:TANIM`) ve satır dönüştürme: §4.2.
+- Sözlük (`API.aktarimSozluk()`; varsayılanlar `api.js:AKTARIM_ALANLARI`, kullanıcı Tanımlar → Aktarım Başlıkları'ndan değiştirir) ve satır dönüştürme: §4.2.
 
 Diğer içe almalar `TO` kullanmaz, kendi sabit başlıklarıyla okur: Yönetim Raporu (§4.1.4), Performans şablonu (§4.3.2), Mesai Öngörüsü (§4.4.2).
 
@@ -1736,9 +1831,9 @@ Bu içe alma `TO` (§4.0) kullanmaz; sabit başlık adlarıyla okur. Karşılaş
 
 Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve yapıştırma için ayraç kendiliğinden bulunur; başlık satırı ilk 15 satırda aranır; sütunlar başlık adıyla (önce birebir, sonra "içerir") eşleşir. **Zorunlu alan yalnız `tc`.**
 
-**Başlık eşleme sözlüğü** — `aktarim.js:TANIM` (adaylar karşılaştırmadan önce `TO.norm`'dan geçer: küçük harf, Türkçe karakter → ASCII, `.` ve `_` → boşluk; bu yüzden Türkçe karakterli ve karaktersiz yazımlar eşdeğerdir). "İçerir" eşleşmesi aşağıdaki **alan sırasıyla** yapılır ve yalnız 2 karakterden uzun adaylarla:
+**Başlık eşleme sözlüğü — kullanıcı düzenler.** Okumada kullanılan sözlük `API.aktarimSozluk()`'tür: `{ sozluk: { alan: [başlıklar] }, etiket: { alan: ad }, degisen: { alan: true }, varsayilan }`. Varsayılanlar `api.js:AKTARIM_ALANLARI`'dadır (aşağıdaki tablo); kullanıcı Tanımlar → Aktarım Başlıkları sekmesinden (§3.12.5) alan başına listeyi değiştirebilir. Değiştirilen alanlar `sistem_bilgi` tablosunda `aktarim.sozluk` anahtarıyla (JSON, yalnız varsayılandan farklı alanlar) saklanır; kaydı olmayan ya da boş listeli alan varsayılanı kullanır. Alanlar, etiketler ve alan sırası sabittir; yalnız aday başlıklar değişir. Adaylar karşılaştırmadan önce `TO.norm`'dan geçer (küçük harf, Türkçe karakter → ASCII, `.` ve `_` → boşluk); bu yüzden Türkçe karakterli ve karaktersiz yazımlar eşdeğerdir. "İçerir" eşleşmesi aşağıdaki **alan sırasıyla** yapılır ve yalnız 2 karakterden uzun adaylarla:
 
-| Alan | Aday başlıklar (aynen) | Ekran etiketi (`ETIKET`) |
+| Alan | Varsayılan aday başlıklar (aynen, `AKTARIM_ALANLARI`) | Ekran etiketi |
 |---|---|---|
 | `tc` | `tc`, `t c`, `tc kimlik`, `tc kimlik no`, `t c kimlik no`, `kimlik no`, `tckn`, `tc no` | T.C. |
 | `ad` | `ad soyad`, `adi soyadi`, `adı soyadı`, `ad soyadi`, `personel`, `calisan`, `çalışan`, `isim` | Ad Soyad |
@@ -1777,6 +1872,7 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 
 ⚠ Yeniden kurarken dikkat:
 - Önizlemedeki "Değişen" listesi **bütçe bölümü** farkını göstermez; uygulama ise eşleşen bütçe bölümünü yazar (yalnız bölümü değişen kişi "Değişiklik yok" sayılır ama yine güncellenir).
+- Aday listesi kullanıcıya açık olduğundan kısa ya da genel bir aday (örn. `maliyet`, `ücret`) eklemek "içerir" eşleşmesini genişletir; sözlük değiştirildikten sonra önizlemedeki "Tanınan sütunlar" rozetleri denetlenmelidir.
 - "İçerir" eşleşmesi kısa adaylarla beklenmeyen sütuna bağlanabilir: listede net maaş sütunu yoksa `maas` adayları "Brüt Maaş" gibi bir başlığa, `maliyet` adayı metin içeren bir "Maliyet …" sütununa, `yaka` adayı `m b` boşlukla birleşmiş bir başlığa ("Toplam Brüt" → "toplam brut") tutunabilir. Metin içeren bir hücre `TO.sayi`'den 0 olarak döner ve maaş / maliyet 0 yazılır. Önizlemedeki "Tanınan sütunlar" rozetleri hangi başlığın neye bağlandığını gösterir; uygulamadan önce bakılmalıdır.
 - İşaretli yeni kişinin aynı yıl başka bir grupta kayıtlı olması yalnız rozetle uyarılır, engellenmez.
 - Listede aynı T.C. birden çok satırda varsa hepsi sırayla işlenir; sonuncusu kalır.
@@ -1785,18 +1881,18 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 
 ### 4.3 Performans şablonu ve içe alma (`js/modules/performans.js`)
 
-Şablonun sayfa adları, kriter ve ek puan sütunları, ağırlıkları ve AÇIKLAMA sayfasının kuralları `PERF.MODEL` / `PERF.AMIR`'den üretilir (§3.6). Aşağıdaki sütun harfleri **örnek model** içindir; genel kural her tablonun altında verilmiştir.
+Şablonun sayfa adları, amir / kriter / ek puan sütunları, ağırlıkları, giriş denetimleri ve AÇIKLAMA sayfasının kuralları **çalışmanın değerlendirme modelinden** üretilir (`API.calismaPerformansModeli`, §3.6); içe alma da aynı modelin başlıklarıyla eşleştirir. Model değişirse şablon da değişir: eski modelle indirilmiş bir dosyadaki, yeni modelde olmayan başlıklar içe alınmaz. Aşağıdaki sütun harfleri **örnek model** içindir; genel kural her tablonun altında verilmiştir.
 
 #### 4.3.1 Şablon (`sablonIndir`)
 
 - Tetik: Performans Değerlendirme → **Excel şablonu indir**. `API.yetkiIste('excel.aktar')`. Dosya adı: `<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRME.xlsx` (grup adı, yoksa grup kodu, büyük harf tr). İşlem kaydı `DISA_AKTAR` / `performans_girdi` "Excel şablonu". Kitap yazarı "Maaş Bütçe Sistemi".
-- Sayfalar: her yaka için bir sayfa, sırayla mavi (`M`) ve beyaz (`B`) — adı `PERF.MODEL[yaka].sayfa` (örnek modelde **MAVİ YAKA**, **BEYAZ YAKA**) — ve sonda **AÇIKLAMA**.
+- **Sayfalar:** her yaka için bir sayfa, sırayla mavi (`M`) ve beyaz (`B`), sonda **AÇIKLAMA**. Yaka sayfasının adı (`sayfaAdlari`): modeldeki Excel sayfa adı (boşsa yaka adının büyük harfi); Excel'de geçersiz karakterler (`\ / ? * [ ] :`) boşluğa çevrilir, boşluklar sadeleşir, en çok 28 karakter; sonuç boşsa "MAVİ YAKA" / "BEYAZ YAKA". Mavi sayfanın adı "AÇIKLAMA" ise sonuna " 1", beyaz sayfanınki "AÇIKLAMA" ya da mavininkiyle aynıysa " 2" eklenir (büyük / küçük harf farkı gözetilmez). Örnek modelde **MAVİ YAKA**, **BEYAZ YAKA**.
 - Yaka sayfası: ilk 2 sütun ve ilk 4 satır dondurulmuş.
   - **A1:** "`<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRMESİ — <SAYFA> (dönem <O>)`" (kalın, 13 pt, `FF1F3A5F`).
   - **A2:** "Sarı hücreleri doldurun. Kriter puanları 0–100. T.C. KİMLİK NO sütununu silmeyin; programa alırken satırlar buna göre eşleşir. Sütun başlıklarını değiştirmeyin. Boş bırakılan hücre programda da boşaltılır." (italik, 9 pt, `FF7A5210`).
-  - **Satır 3 — amir grupları:** her amirin kriter sütunları birleştirilir; metin "`<amir başlığı> (ağırlık <a>)`" (örnek modelde "1. AMİR (ağırlık 50)", "2. AMİR (ağırlık 30)", "İDARİ AMİR (ağırlık 20)"); kalın, ortalı, lacivert yazı, zemin `FFE9EFF7`. İlk kriter sütunu = 5 sabit + 1 + amir sayısı + 1 = örnek modelde **J**.
-  - **Satır 4 — başlıklar:** kalın beyaz 9 pt, zemin `FF1F3A5F`, kaydırmalı, ortalı; satır yüksekliği 54. Kriter başlıklarına kriter ağırlığı eklenir: "`<amir başlığı> - <kriter başlığı> (<ağırlık>)`".
-- Sütun düzeni (`SABIT` + `sutunlar(yaka)`):
+  - **Satır 3 — amir grupları:** her amirin kriter sütunları birleştirilir (kriter sayısı 1'se birleştirme yok); metin "`<amir adı> (ağırlık <a>)`" (sayı en çok 3 ondalık, ondalık virgül; örnek modelde "1. AMİR (ağırlık 50)", "2. AMİR (ağırlık 30)", "İDARİ AMİR (ağırlık 20)"); kalın, ortalı, lacivert yazı, zemin `FFE9EFF7`. İlk kriter sütunu = 5 sabit + 1 + amir sayısı + 1 (örnek modelde **J**).
+  - **Satır 4 — başlıklar:** kalın beyaz 9 pt, zemin `FF1F3A5F`, kaydırmalı, ortalı; satır yüksekliği 54. Kriter başlıklarına kriter ağırlığı eklenir: "`<amir adı> - <kriter adı> (<ağırlık>)`".
+- Sütun düzeni (`SABIT` + `sutunlar(model, yaka)`):
 
 | Sütun (örnek model) | Başlık | Genişlik | Doldurulur mu | Doğrulama kuralı (Excel) |
 |---|---|---|---|---|
@@ -1805,37 +1901,37 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 | C | BÜTÇE BÖLÜMÜ | 22 | hayır (`kp.butce_bolumu`) | — |
 | D | GÖREVİ | 24 | hayır | — |
 | E | İŞE GİRİŞ | 11 | hayır — **metin** `GG.AA.YYYY` | — |
-| F | DEĞERLENDİRME BÖLÜMÜ | 24 | **sarı** | liste = mevcut bölüm adları (bu yakanın girdileri ∪ önceki dönemin bütün bölümleri), yalnız liste dolu ve birleşik metni 250 karakterden kısaysa; uyarı türü, metin "Var olan bölümlerden biri değil — yeni bölüm olarak alınır." |
-| G, H, I | `<amir başlığı> ADI` (her amir için bir sütun) | 20 | sarı | — |
-| J … | `<amir başlığı> - <kriter başlığı> (<ağırlık>)` — önce 1. amirin bütün kriterleri, sonra 2. amirin, … | 11 | sarı | ondalık 0–100, **durdurur**, "0 ile 100 arasında bir sayı girin." |
-| sonra | ek puan alanları (`PERF.MODEL[yaka].ek` sırasıyla; başlık = `ad`) | 12 (metin alanı 16) | sarı | liste tanımlı alan (MEZUNİYET): liste `PERF.EGITIM`, uyarı türü, "Listeden seçin."; sayı alanı: ondalık aralık (`devam` 0–100, `tutanak` ve `kidem` 0–99, tanımsız alan 0–100), durdurur, "a ile b arasında bir sayı girin." |
+| F | DEĞERLENDİRME BÖLÜMÜ | 24 | **sarı** | liste = mevcut bölüm adları (bu yakanın girdileri ∪ önceki dönemin bütün bölümleri, alfabetik); uyarı türü, metin "Var olan bölümlerden biri değil — yeni bölüm olarak alınır." |
+| G, H, I | `<amir adı> ADI` (her amir için bir sütun) | 20 | sarı | — |
+| J … | `<amir adı> - <kriter adı> (<ağırlık>)` — önce 1. amirin bütün kriterleri, sonra 2. amirin, … | 11 | sarı | ondalık 0–100, **durdurur**, "0 ile 100 arasında bir sayı girin." |
+| sonra | ek puan alanları (model sırasıyla; başlık = alanın adı) | liste türü 16, diğerleri 12 | sarı | liste türü: liste = seçenekler, uyarı türü, "Listeden seçin."; sayı alanı: giriş sınırı varsa ondalık aralık, durdurur, "a ile b arasında bir sayı girin.", sınırı yoksa −1e9…1e9, durdurur, "Bir sayı girin." |
 
-  Sütun sayısı = 5 + 1 + amir sayısı + amir sayısı × kriter sayısı + ek puan alanı sayısı. Örnek modelde mavi yaka 5 + 1 + 3 + 15 + 4 = **28** (A–AB; ek puan alanları Y DEVAMLILIK ORANI (%), Z TUTANAK SAYISI, AA KIDEM (YIL), AB MEZUNİYET); beyaz yaka 5 + 1 + 3 + 18 + 2 = **29** (A–AC; AB KIDEM (YIL), AC MEZUNİYET).
-- Satırlar 5'ten başlar: o yakanın kişileri, çalışmadaki sırayla. F'den itibaren her hücre sarı (`FFFFF2CC`), ince (hair) sol ve alt çizgi `FFBBBBBB`; kişinin kayıtlı girdisi varsa yazılır (metin alanları metin, diğerleri sayı).
-- **Önceki dönemden önden doldurma:** kişinin bu çalışmada **hiç** girdisi yoksa ve önceki dönemde değeri varsa `grup`, amir adları, `egitim`, `kidem` önceki dönemden yazılır. Önceki dönem (`api.js:performansOncekiDonem`): aynı grubun bir önceki yıl çalışmaları, onaylı olan önce; girdisi olan ilk çalışma.
+  Liste kuralı (bölüm ve seçenek listeleri) yalnız liste doluysa, virgülle birleşik metni 250 karakterden kısaysa ve öğelerde virgül ya da tırnak yoksa eklenir (`listeUygun`); değilse hücreye kural konmaz. Sütun sayısı = 5 + 1 + amir sayısı + amir sayısı × kriter sayısı + ek puan alanı sayısı. Örnek modelde mavi yaka 5 + 1 + 3 + 15 + 4 = **28** (A–AB; ek puan alanları Y DEVAMLILIK ORANI (%), Z TUTANAK SAYISI, AA KIDEM (YIL), AB MEZUNİYET); beyaz yaka 5 + 1 + 3 + 18 + 2 = **29** (A–AC; AB KIDEM (YIL), AC MEZUNİYET).
+- Satırlar 5'ten başlar: o yakanın kişileri, çalışmadaki sırayla. F'den itibaren her hücre sarı (`FFFFF2CC`), ince (hair) sol ve alt çizgi `FFBBBBBB`; kişinin kayıtlı girdisi varsa yazılır (metin alanları metin, diğerleri sayı; sayıya çevrilemeyen değer metin).
+- **Önceki dönemden önden doldurma** (`kaliciAlanlar`): kişinin bu çalışmada **hiç** girdisi yoksa ve önceki dönemde değeri varsa değerlendirme bölümü, amir adları ve modelde *önceki dönemden taşınsın* işaretli ek puan alanları (örnek modelde kıdem, mezuniyet) önceki dönemden yazılır. Önceki dönem (`api.js:performansOncekiDonem`): aynı grubun bir önceki yıl çalışmaları, onaylı olan önce; girdisi olan ilk çalışma.
 - **AÇIKLAMA** sayfası (sütun genişlikleri A 46, B 12, C 90; başlık satırları kalın lacivert):
   1. "PUANLAMA (programın hesabı)"
   2. "1) Amir puanı = Σ kriter puanı × kriter ağırlığı / 100"
-  3. "2) Değerlendirme = <amir başlığı> <ağırlık>, … ağırlıklı ortalama; puanı olmayan amirin ağırlığı diğerlerine dağıtılır" (örnek modelde "1. AMİR 50, 2. AMİR 30, İDARİ AMİR 20")
+  3. "2) Değerlendirme = <amir adı> <ağırlık>, … ağırlıklı ortalama; puanı olmayan amirin ağırlığı diğerlerine dağıtılır" (örnek modelde "1. AMİR 50, 2. AMİR 30, İDARİ AMİR 20")
   4. "3) Bölüm katsayısı = bölüm ortalamalarının ortalaması / kişinin bölümünün ortalaması"
-  5. "4) Toplam puan = değerlendirme × katsayı × (<mavi yaka adı> <degAgirlik> / <beyaz yaka adı> <degAgirlik>) / 100 + ek puanlar" (örnek modelde "(mavi yaka 80 / beyaz yaka 80)")
+  5. "4) Toplam puan = değerlendirme × katsayı × (<mavi yaka adı> <degAgirlik> / <beyaz yaka adı> <degAgirlik>) / 100 + ek puanlar" (yaka adları küçük harf; örnek modelde "(mavi yaka 80 / beyaz yaka 80)")
   6. "5) Zam çarpanı = toplam puan / yakanın ortalama toplam puanı (değerlendirilmeyen kişi: 1)"
-  - Her yaka için: boş satır; "<SAYFA> — kriterler | Ağırlık" (başlık) + her kriter "başlık | ağırlık"; "<SAYFA> — ek puanlar | | Kural" (başlık) + her ek puan alanı "ad | | açıklama".
-  - Önden doldurma yapıldıysa: boş satır, "Not" (başlık) ve "Henüz değerlendirmesi girilmemiş kişilerde bölüm, amir adları, mezuniyet ve kıdem <önceki yıl> değerlendirmesinden önceden dolduruldu; kontrol edin. Kıdem geçen yılın değeridir — işyerindeki bütün çalışma dönemlerinin toplamı olarak güncelleyin."
+  - Her yaka için: boş satır; başlık "<SAYFA> — kriterler | Ağırlık" + her kriter "ad | ağırlık" + italik "Toplam | <ağırlık toplamı>"; başlık "<SAYFA> — ek puanlar | Giriş | Kural" + her ek puan alanı "ad | giriş | açıklama" — giriş: liste türünde "listeden", sınır varsa "a–b", yoksa "sayı"; açıklama `PERF.aciklama` metni (+ taşınan alanda " (Önceki dönemden taşınır.)"); ek puan alanı yoksa "(ek puan alanı yok)".
+  - Önden doldurma yapıldıysa: boş satır, "Not" (başlık) ve "Henüz değerlendirmesi girilmemiş kişilerde <taşınan bilgiler> <önceki yıl> değerlendirmesinden önceden dolduruldu; kontrol edin. Taşınan değerler geçen yılın değeridir; zamanla değişenleri (ör. süreye bağlı sayılar) güncelleyin." (<taşınan bilgiler>: §3.6 Kart 1'deki liste).
 
 #### 4.3.2 İçe alma (`oku`, `onizlemeHtml`, `baglaOnizleme`)
 
 - Tetik: Performans Değerlendirme → **Excel'den içe al…** (`.xlsx`). Dosya okunur, **hiçbir şey yazılmadan** önizleme kartı gösterilir.
-- **Sayfa ve başlık bulma:** dosyanın **bütün** sayfaları taranır. Bir sayfanın ilk 10 satırında normalize metni "T.C. KİMLİK NO" olan hücre aranır; bulunduğu satır başlık satırıdır. O satırdaki başlıkların sonundaki "`(sayı)`" eki silinir, normalize edilir ve iki yakanın şablon başlıklarıyla (`sutunlar('M') ∪ sutunlar('B')`, yani ek puan alanları ve amir/kriter başlıkları; A–E sabit sütunları hariç) eşleştirilir. Başlık satırı ya da eşleşen başlığı olmayan sayfa (örn. AÇIKLAMA) atlanır. Sütun sırası önemli değildir.
+- **Sayfa ve başlık bulma:** dosyanın **bütün** sayfaları taranır. Bir sayfanın ilk 10 satırında normalize metni "T.C. KİMLİK NO" olan hücre aranır; bulunduğu satır başlık satırıdır. O satırdaki başlıkların sonundaki ağırlık eki "`(sayı)`" silinir, normalize edilir (`U.normalize` + boşluk sadeleştirme) ve iki yakanın şablon başlıklarıyla (`sutunlar(model, 'M') ∪ sutunlar(model, 'B')`: değerlendirme bölümü, amir adları, kriterler, ek puan alanları; A–E sabit sütunları hariç) eşleştirilir. Başlık satırı ya da eşleşen başlığı olmayan sayfa (örn. AÇIKLAMA) atlanır. Sütun ve sayfa sırası önemli değildir.
 - Hiçbir sayfa uygun değilse: "Dosyada "T.C. KİMLİK NO" ve değerlendirme başlıkları olan bir sayfa bulunamadı. Programdan indirilen şablonu kullanın."
 - **Satırlar** (başlık satırının altındakiler):
   - T.C. maskeli biçimdeyse (`123*****901`) satır atlanır ve sayılır. Dosyadaki bütün T.C.'ler maskeliyse ve başka satır okunamadıysa hata: "Bu dosyadaki T.C. numaraları maskeli (dosya, T.C. Kimlik No'yu tam görme yetkisi olmayan bir kullanıcı tarafından alınmış). Kişiler T.C. ile eşleştirildiği için içeri alınamaz; dosyayı bu yetkiye sahip bir kullanıcıya aldırın." ⚠ Satırların yalnız bir kısmı maskeliyse maskeli satırlar önizlemede hiçbir uyarı olmadan atlanır.
   - Rakamlar dışındaki karakterler atılır; 11 hane değilse satır sessizce atlanır.
   - Çalışmada olmayan T.C. → "bulunamayan" listesi (ad = T.C.'nin sağındaki hücre).
-  - Yalnız kişinin **kendi yakasının** alanları (`PERF.alanlar(yaka)`) alınır; her değer §3.6.1'deki `denetle` ile çözülür. Hata → "<Ad> — <hata>"; **boş hücre `null` olur ve kayıtlı değeri siler**. Tarih biçimli hücre boş sayılır.
-  - Uyarılar: "<Ad>: mezuniyet "X" listede yok" (`PERF.EGITIM`'de olmayan değer) · "<Ad> <sayfa> sayfasında ama <yaka adı>" (kişi kendi yakasının sayfasında değilse).
+  - Yalnız kişinin **kendi yakasının** modeldeki alanları (`model.alanlar(yaka)`) alınır; her değer §3.6.1'deki `denetle` ile çözülür (kriter 0–100, ek puan alanında modelin giriş sınırı; liste türü büyük harfe). Hata → "<Ad> — <hata>"; **boş hücre `null` olur ve kayıtlı değeri siler**. Tarih biçimli hücre boş sayılır.
+  - Uyarılar: liste türü ek puan alanında listede olmayan değer — "<Ad>: <alan adı (küçük harf)> "X" listede yok (N puan sayılır)" (N = modelin "listede olmayan" puanı); kişi kendi yakasının sayfasında değilse — "<Ad> <sayfa> sayfasında ama <yaka adı>" (sayfa adı `sayfaAdlari` ile karşılaştırılır).
   - Aynı kişi birden çok sayfada varsa alanlar birleştirilir.
-- **Değişiklik:** metin alanlarında metin farkı, sayı alanlarında `PERF.sayi` farkı olan alanlar. **Etki:** yeni girdilerle `PERF.hesapla` yeniden çalıştırılır; çarpanı (yoksa 1) değişecek kişiler listelenir.
+- **Değişiklik:** metin alanlarında metin farkı, sayı alanlarında `PERF.sayi` farkı olan alanlar. **Etki:** yeni girdilerle `PERF.hesapla` çalışmanın modeliyle yeniden çalıştırılır; çarpanı (yoksa 1) değişecek kişiler listelenir.
 - **Önizleme kartı** "İçe alma önizlemesi — <dosya adı>":
   - Açıklama: "N kişi okundu · **K** kişide A alan değişecek · sonrasında S kişi değerlendirilmiş olacak. Onaylamadan hiçbir şey yazılmaz."
   - Düğmeler: **Vazgeç** (önizleme silinir) · **İçe al** (yalnız `yaz`; değişiklik yoksa ya da **hata varsa kapalı**).
@@ -1844,7 +1940,7 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
   - Uyarı kutusu (sarı): ilk 20 uyarı.
   - "Çarpanı değişecek kişiler (N)" tablosu (ilk 300 satır): Adı soyadı · Yaka (`M`/`B`) · Şimdiki çarpan (3 ondalık; yoksa "1,000 (yok)") · Yeni puan (2 ondalık) · Yeni çarpan (kalın; yoksa "1,000 (yok)").
   - Değişiklik var ama çarpan etkilenmiyorsa: "Değişiklikler çarpanı etkilemiyor (ad, bölüm adı gibi bilgiler)."
-- **İçe al** → `API.performansGirdiYaz(c.id, liste, 'Excel: <dosya>')` (tek işlem; işlem kaydı `KAYDET` / `performans_girdi`) → bildirim "K kişinin değerlendirmesi içe alındı. Çarpanları zam hesabına uygulamayı unutmayın." Çarpanlar kendiliğinden uygulanmaz (§3.6 **Çarpanları uygula**).
+- **İçe al** → `API.performansGirdiYaz(c.id, liste, 'Excel: <dosya>')` (tek işlem; alanlar çalışmanın modeline göre yeniden denetlenir; işlem kaydı `KAYDET` / `performans_girdi`) → bildirim "K kişinin değerlendirmesi içe alındı. Çarpanları zam hesabına uygulamayı unutmayın." Çarpanlar kendiliğinden uygulanmaz (§3.6 **Çarpanları uygula**).
 
 ---
 
@@ -1943,6 +2039,9 @@ Aylık Girdiler ── ay düğmesi ──► aynı ekran, başka ay; "<Ay> ayı
 Performans ── satır ──► Kişinin değerlendirmesi penceresi ──"Değerlendirmeyi sil"──► onay
            ── Çarpanları zam hesabına uygula ──► onay ──► aynı ekran
            ── Excel'den içe al… ──► önizleme (aynı ekran) ──İçe al / Vazgeç──► aynı ekran
+           ── Değerlendirme modeli… ──► Değerlendirme modeli penceresi (yetkisizde salt okunur)
+                 ├─ Kaydet ──► (kaldırılan tanım varsa) "Kaldırılan tanımlar" onayı ──► aynı ekran, yeni modelle
+                 └─ Varsayılan modele dön ──► onay ──► aynı ekran, örnek modelle
 Mesai Öngörüsü ── Öngörüyü aç ──► onay; <O> tablosunu kopyala ──► onay (tablo doluysa)
                ── Excel'den al… ──► önizleme (aynı ekran)
 Yönetim Raporu ── Dosya seç… ──► önizleme ──"K Değişikliği Uygula"──► Personel ve Zam
@@ -1950,7 +2049,9 @@ Dış Liste Aktarımı ── dosya / "Yapıştırılanı oku" ──► önizle
 Parametreler ── yıl seçimi ──► üst çubuğun yılı değişir
              ── "<hedef> parametrelerini oluştur" ──► onay ──► üst çubuk hedef yıla geçer
              ── "Resmî rakamlar girildi" ──► onay
+Dış Liste Aktarımı ·· "Tanınan başlıklar" notu ··> Tanımlar → Aktarım Başlıkları (yalnız yönlendirme metni, bağlantı değil)
 Tanımlar ── sekmeler; "Gruplar sekmesine geç" ──► aynı ekran, Gruplar sekmesi
+         ── Aktarım Başlıkları: "Varsayılan" (kutuya yazar) / "Başlıkları kaydet" ──► aynı ekran
          ── ✎ / + Yeni ──► Hesaplama Türü / Kanun Türü / Grup / Bütçe Bölümü penceresi (Bölüm: Birleştir ──► onay)
          ── Gruplar: ekle / düzenle / sil ──► seçili grup geçersiz kaldıysa üst çubuk yeni ya da ilk gruba geçer
          ── Bütçe Bölümleri: grup seçimi ──► üst çubuğun grubu değişir
@@ -1970,6 +2071,9 @@ Veri bağları (bir ekranın girdisi başka ekranda görünür):
 - **Tanımlar → Gruplar** ──► üst çubuk grup düğmeleri, Kullanıcılar'daki grup erişim tablosu, Yeni Çalışma'daki grup listesi.
 - **Tanımlar → Bütçe Bölümleri** ──► kişi kartı ve süzgeçlerdeki bölüm listeleri, Özet'in bölüm tablosu, Yönetim Raporu, Dış Liste Aktarımı'nın bütçe bölümü eşlemesi ("NN AD" etiketi).
 - **Çalışmalar → Revize aç** ──► personel, düzeltmeler, aylık girdiler, performans girdileri ve mesai tablosu revizeye kopyalanır.
+- **Değerlendirme modeli** (yılın parametresi) ──► Performans ekranının sütunları, kişi penceresi, Excel şablonu ve içe alma, dolayısıyla çarpanlar ("uygula" ile Personel ve Zam'ın zam öngörüsü). Yeni Yıl Öngörüsü ile yeni yıla kopyalanır; çalışma onaylanınca dondurulur.
+- **Parametreler → Genel** ──► mesai katsayıları ve günlük saat: Maliyet Tablosu / Bordro Dökümü'nün mesai satırları; AR-GE eşiği: çalışmanın AR-GE günü ayarının hangi kişilere uygulandığı (Aylık Girdiler'deki AR-GE günü); yuvarlama adımı: Personel ve Zam'ın zam öngörüsü (Çalışma Ayarları'nda çalışmaya özel adım yoksa).
+- **Tanımlar → Aktarım Başlıkları** ──► Dış Liste Aktarımı'nın sütun eşlemesi (bütün gruplar ve yıllar).
 - **Maaş Dağılımı**'nın Çıkar / Ekle seçimi yalnız o ekranı etkiler; sabit maaş aralıkları grup düzeyindedir (bütün yıllarda ortak).
 - **Kullanıcılar** ──► kullanıcının menüsü ve grup düğmeleri (her ekran geçişinde yeniden okunur). **Sistem → Otomatik Kapanma** ──► hareketsizlik perdesi (§1.2).
 
@@ -1978,10 +2082,10 @@ Veri bağları (bir ekranın girdisi başka ekranda görünür):
 ## 6. Doğrulanamayan ve dikkat edilecek noktalar
 
 **Görseller**
-1. `program/img/kilavuz/*.png` görselleri güncel arayüzden, örnek veriyle (2027 · Ofis / Üretim) 1366×820 pencerede çekilmiştir; pencere görselleri yalnız açık pencerenin kırpmasıdır. Arayüz değiştiğinde yeniden çekilmeleri gerekir; Kılavuz bu görselleri gösterir.
+1. `program/img/kilavuz/*.png` görselleri (§3.15'teki 13 ad) Kılavuz'da gösterilir; `kilavuz.js` onları adlarıyla çağırır ve örnek veriden çekildiklerini söyler. Arayüz değiştikçe aynı adlarla yeniden çekilmeleri gerekir. Bu belge görsellere dayanmaz: görsel ile anlatım ayrışırsa kod esastır.
 
 **Doğrulanamadı**
-2. Düzenler koddan çıkarıldı; görsellerde yer almayan ekranlarda CSS kurallarının görsel sonucu tek tek denenmedi.
+2. Ekranların güncel görüntüsü yoktur; düzenler yalnız koddan çıkarıldı (CSS kurallarının görsel sonucu tek tek denenmedi).
 3. `.hucre-girdi.hata` sınıfının (Mesai Öngörüsü'nde geçersiz değerde eklenir) CSS kuralı yoktur; kutu görsel olarak işaretlenmiyor olabilir (`mesai.js:ciz`).
 4. Sunucu uçlarının (`/veri-bilgi`, `/kilit`, `/yedek-kaydet`, `DELETE /veri`) yanıt biçimi yalnız ekranın kullandığı alanlarla verildi; otomatik yedek kuralları (son 20 kopya, en çok 10 dakikada bir; `yedek-elle` son 30 kopya) `Sunucuyu-Baslat.ps1`'den okundu.
 5. Bordro Dökümü satırlarının anlamı ekran etiketlerinden verildi; kesin tanımlar "02 — Hesap Motoru", §3.12'dedir (`maliyet.js:DOKUM`).
@@ -2020,29 +2124,35 @@ Veri bağları (bir ekranın girdisi başka ekranda görünür):
 28. "Çarpanları uygula" çalışmadaki her kişinin `performans_carpani` alanını yeniden yazar, değerlendirilmeyenlerinkini boşaltır; kişi kartına elle yazılmış çarpan da değişir. Boş çarpanda motor kişinin puanına ve Parametreler → Performans Kademeleri'ne bakar; ekrandaki "değerlendirilmeyenin çarpanı 1" her zaman gerçekleşmez (`api.js:performansCarpanUygula, performansCarpani`).
 29. Performans araması T.C. ile aramaz (ad, değerlendirme bölümü, bütçe bölümü).
 30. Performans ve Mesai içe almalarının `excel.aktar` kapısı yalnız arayüzdedir; API yalnız `zam.yaz` / `aylik.yaz` ister (`performans.js:oku`, `mesai.js:oku`).
-31. Ek puan alanlarının sayı aralıkları ve bazı alan adları modülde sabittir, `PERF.MODEL`'den okunmaz: `performans.js:ARALIK` (`devam`, `tutanak`, `kidem`; tanımsız alan şablonda 0–100, pencerede 0–1e9), `sablonIndir` içindeki önden doldurulan alanlar, `core/performans.js:metinAlan` (`egitim`); ekrandaki bilgi kutusu ve AÇIKLAMA notu "mezuniyet ve kıdem" metnini sabit yazar. Model değiştirilirken bunlar da uyarlanmalıdır.
+31. Değerlendirme modeli penceresi seçili çalışmanın **yılının** modelini düzenler ve yalnız `parametre.yaz` ister (`zam.yaz` ya da gruba yazma erişimi gerekmez); onaylı çalışmadan açılsa da yılın modelini değiştirir, onaylı çalışma dondurulmuş modelle kalır (`performans.js:modelAc`).
+32. Model kaydında değişiklik denetimi yoktur: varsayılan modelle açılan pencerede hiçbir şey değiştirmeden Kaydet'e basmak yıla özel bir kayıt oluşturur (`performans.js:modelAc`).
+33. Model değişince puan ve çarpanlar hemen yeniden hesaplanır ama zam hesabına geçmez; "Zamda uygulanan" sütunu ⚠ gösterir. Kaldırılan amir / kriter / ek puan alanının girilmiş değerleri `performans_girdi`'de kalır ve aynı kodla yeniden eklenince geri gelir (`performans.js:kaldirilanlar`).
+34. Eski modelle indirilmiş bir şablon yeni modelle içe alınırsa yeni modelde olmayan başlıklar uyarısız alınmaz; ağırlığı değişen kriterin başlığı ise ağırlık eki silindiği için yine eşleşir (`performans.js:oku`).
+35. Liste türü ek puan alanlarında Excel liste kuralı yalnız seçenekler virgül / tırnak içermiyorsa ve birleşik metin 250 karakterden kısaysa eklenir; değilse hücre serbest kalır, listede olmayan değer içe almada uyarıyla "listede olmayan" puanını alır (`performans.js:sablonIndir, oku`).
 
 *Mesai Öngörüsü*
-32. Mesai Excel çıktısı girilmemiş kişi sayılarına kadro yazar; dosya geri alınınca bunlar açık değer olur ("boş = kadro" davranışı o hücrelerde kalkar) (`mesai.js:aktar`).
-33. Mesai içe almasında dosyada olmayan hücreler (takvim ve kişi sayısı dâhil) programda boşaltılır; 0 olan saat ve kişi sayısı okunmaz; metin "12.5" değeri 125 olur (noktalar binlik sayılır) (`mesai.js:oku, sayi`).
-34. Kadro sayısı kişinin o ay çalışıp çalışmadığına bakmaz (`api.js:mesaiKisiBasi`). Hücre kaydından sonra üstteki "Aylık özet", uyum bilgisi ve brüt mesai ekran yeniden çizilene kadar eski kalır (`mesai.js:toplamGuncelle`).
-35. "<O> tablosunu kopyala" saat tablosu boşken onay sormaz; yalnız takvim girilmişse takvimi de sessizce değiştirir (`mesai.js:ciz`, `api.js:mesaiKopyala`). Bölüm adının yazımı dosyada farklıysa yeni satır eklenir ama eski satır silinmez.
+36. Mesai Excel çıktısı girilmemiş kişi sayılarına kadro yazar; dosya geri alınınca bunlar açık değer olur ("boş = kadro" davranışı o hücrelerde kalkar) (`mesai.js:aktar`).
+37. Mesai içe almasında dosyada olmayan hücreler (takvim ve kişi sayısı dâhil) programda boşaltılır; 0 olan saat ve kişi sayısı okunmaz; metin "12.5" değeri 125 olur (noktalar binlik sayılır) (`mesai.js:oku, sayi`).
+38. Kadro sayısı kişinin o ay çalışıp çalışmadığına bakmaz (`api.js:mesaiKisiBasi`). Hücre kaydından sonra üstteki "Aylık özet", uyum bilgisi ve brüt mesai ekran yeniden çizilene kadar eski kalır (`mesai.js:toplamGuncelle`).
+39. "<O> tablosunu kopyala" saat tablosu boşken onay sormaz; yalnız takvim girilmişse takvimi de sessizce değiştirir (`mesai.js:ciz`, `api.js:mesaiKopyala`). Bölüm adının yazımı dosyada farklıysa yeni satır eklenir ama eski satır silinmez.
 
 *Çalışmalar, Yönetim Raporu, Dış Liste Aktarımı*
-36. Çalışmalar'da 🗑 onaylı çalışmada da görünür; onaydan sonra API "onaylı ve kilitli" hatasıyla reddeder (`calisma.js:ciz`, `api.js:calismaSil`).
-37. Yeni çalışmanın açılması ile personelin kopyalanması ayrı işlemlerdir; kopyalama hata verirse boş çalışma kalır (`calisma.js:form`).
-38. Çalışma Ayarları kutularına sayı olmayan metin yazılırsa 0 kaydedilir (`calisma.js:ayarOku`); motorun okuduğu `zam.yuvarla_ongoru` ve `tesvik.k05746 / k14857 / k15510` ayarlarının ekranda girişi yoktur.
-39. Yönetim Raporu dosya adındaki tarih UTC günüdür (gece yarısından sonraki ilk saatlerde bir önceki gün yazılabilir) (`excel.js:aktar`). Maskeli ve tam T.C.'li satırlar karışıksa maskeliler sessizce atlanır (`excel.js:oku`).
-40. Dış liste önizlemesi bütçe bölümü farkını göstermez ama uygulama yazar; bitiş bildirimindeki "güncellendi" sayısı değişmeyen kişileri de sayar (`aktarim.js:onizlemeHtml`, `api.js:erpAktar`).
-41. Dış listede "içerir" eşleşmesi yanlış sütuna tutunabilir (örn. metin içeren bir "Maliyet …" sütunu 0 olarak okunur; "Toplam Brüt" başlığı yaka adayı `m b`'yi içerir); önizlemedeki "Tanınan sütunlar" rozetlerine bakılmalıdır (`tablooku.js:eslestir`, `aktarim.js:TANIM`). Aynı yıl başka grupta kayıtlı kişinin eklenmesi yalnız rozetle uyarılır.
+40. Çalışmalar'da 🗑 onaylı çalışmada da görünür; onaydan sonra API "onaylı ve kilitli" hatasıyla reddeder (`calisma.js:ciz`, `api.js:calismaSil`).
+41. Yeni çalışmanın açılması ile personelin kopyalanması ayrı işlemlerdir; kopyalama hata verirse boş çalışma kalır (`calisma.js:form`).
+42. Çalışma Ayarları kutularına sayı olmayan metin yazılırsa 0 kaydedilir (`calisma.js:ayarOku`); yuvarlama adımına 0 yazılması da böyle kaydedilir. Motorun okuduğu `tesvik.k05746 / k14857 / k15510` ayarlarının ekranda girişi yoktur.
+43. Yönetim Raporu dosya adındaki tarih UTC günüdür (gece yarısından sonraki ilk saatlerde bir önceki gün yazılabilir) (`excel.js:aktar`). Maskeli ve tam T.C.'li satırlar karışıksa maskeliler sessizce atlanır (`excel.js:oku`).
+44. Dış liste önizlemesi bütçe bölümü farkını göstermez ama uygulama yazar; bitiş bildirimindeki "güncellendi" sayısı değişmeyen kişileri de sayar (`aktarim.js:onizlemeHtml`, `api.js:erpAktar`).
+45. Dış listede "içerir" eşleşmesi yanlış sütuna tutunabilir (örn. metin içeren bir "Maliyet …" sütunu 0 olarak okunur; "Toplam Brüt" başlığı yaka adayı `m b`'yi içerir); önizlemedeki "Tanınan sütunlar" rozetlerine bakılmalıdır (`tablooku.js:eslestir`, `API.aktarimSozluk`). Sözlük kullanıcıya açık olduğundan genel bir aday eklemek bu riski artırır. Aynı yıl başka grupta kayıtlı kişinin eklenmesi yalnız rozetle uyarılır.
+46. Tanımlar → Aktarım Başlıkları'nda T.C. dışındaki bir alanın kutusu boşaltılıp kaydedilirse alan kapanmaz, varsayılan başlıklarına döner; bir alanın aktarımını kapatmanın ekranda yolu yoktur (`tanim.js:ciz`, `api.js:aktarimSozlukYaz`).
 
 *Parametreler, Tanımlar, Kullanıcılar, Sistem, Kılavuz*
-42. Parametreler'deki yıl seçici üst çubuğun yılını değiştirir; öngörü önizlemesi yıl üst çubuktan değişince eski kaynak / hedef yılı göstermeye devam eder; "Oluştur" formu yeniden okur (önizlemeden sonra değiştirilen alan önizlenmeden uygulanır) (`parametre.js:ongoruKarti, ongoruBagla`).
-43. Oranların giriş biçimi karışıktır: Parametreler'in genel oranları **ondalık** (`0,00759`), zam oranları, GV dilim oranları, hesaplama türü oranları ve 05510 oranları **yüzde** girilir. Asgari ücret, dilim ve kademe satırlarındaki 🗑 satırı yalnız ekrandan kaldırır; kalıcı olması için ilgili "kaydet" düğmesi gerekir. Performans kademelerinde aralık denetimi yoktur.
-44. Parametreler'deki 🔒 bandı kullanıcının göremediği gruplar dâhil yılın bütün onaylı çalışmalarını adıyla listeler (`api.js:yilOnayliCalismalar`).
-45. Hesaplama ve kanun türü kaydı var olanın üzerine yazar: "Yeni" pencereye var olan bir kod yazılırsa o tür sessizce değişir (`api.js:hesapTuruKaydet, kanunKaydet`). Silme denetimi kanun türünde bütün yıllara, hesaplama türünde yalnız seçili yıla bakar.
-46. Grup kodu Türkçe kurala göre büyük harfe çevrilir ("i" → "İ"); düzenlemede boş bırakılan sıra 0 olur (`api.js:grupKaydet`). Tanımlar'ın `param.sekme` girişini kullanan çağrı yoktur; Kılavuz'un "Gruplar" bölümündeki "Ekranı aç" Tanımlar'ı Gruplar sekmesiyle açmaz.
-47. Bütçe bölümü adını değiştirmek ya da bölüm birleştirmek grubun bütün yıllarındaki bütçe satırlarını günceller; onaylı çalışmalar da buna dâhildir (`api.js:butceBolumuKaydet, butceBolumuBirlestir`).
-48. Kullanıcı penceresinde "Sistem yöneticisi" işaretliyken de grup erişimi ve yetkiler kaydedilir; yeni kullanıcı eklenip erişim yazımı hata verirse kullanıcı erişimsiz kalır (yeniden Kaydet "Bu kullanıcı adı zaten kayıtlı." der) (`kullanici.js:form`).
-49. Sistem → Yedek kartı "her kayıttan önce otomatik kopya alınır" der; sunucu en çok 10 dakikada bir kopya alır. Geri yükleme onayından vazgeçilince dosya alanı sıfırlanmaz (aynı dosya yeniden seçilirse işlem tetiklenmez). Sistem ekranı yalnız `.db` kabul eder, giriş ekranı `.db`, `.sqlite`, `.sqlite3` (`sistem.js:ciz`).
-50. Kılavuz'da bölümlerin hedef kitlesi ("Yönetim", "Sistem yöneticisi") yalnız rozettir; bütün bölümler herkese görünür. "Yeni yıl" ve "Parametreler" bölümlerindeki "kaynak yıl her zaman seçili yılın bir öncekidir" ifadesi kodla tam uyuşmaz (önceki yıl yoksa kaynak seçili yıldır ve kaynak elle seçilebilir); "Çalışmalar" bölümü AR-GE çalışılan gün ayarını anmaz (`kilavuz.js:BOLUMLER`).
+47. Parametreler'deki yıl seçici üst çubuğun yılını değiştirir; öngörü önizlemesi yıl üst çubuktan değişince eski kaynak / hedef yılı göstermeye devam eder; "Oluştur" formu yeniden okur (önizlemeden sonra değiştirilen alan önizlenmeden uygulanır) (`parametre.js:ongoruKarti, ongoruBagla`).
+48. Oranların giriş biçimi karışıktır: Parametreler'in genel oranları **ondalık** (`0,00759`), zam oranları, GV dilim oranları, hesaplama türü oranları ve 05510 oranları **yüzde** girilir. Asgari ücret, dilim ve kademe satırlarındaki 🗑 satırı yalnız ekrandan kaldırır; kalıcı olması için ilgili "kaydet" düğmesi gerekir. Performans kademelerinde aralık denetimi yoktur.
+49. Parametreler → Genel'deki "günlük çalışma saati" 0 ya da boş girilirse motor sessizce 7,5 kullanır (`hesap.js:ayHesapla`, `P.gunlukSaat || 7.5`). AR-GE eşiği yılın parametresidir (`arge_gv_esik`); Aylık Girdiler'deki AR-GE günü ipucu ve Çalışma Ayarları'ndaki AR-GE notu bu parametreyi okur (`aylik.js:ciz`, `calisma.js:ayarHtml`).
+50. Parametreler'deki 🔒 bandı kullanıcının göremediği gruplar dâhil yılın bütün onaylı çalışmalarını adıyla listeler (`api.js:yilOnayliCalismalar`).
+51. Hesaplama ve kanun türü kaydı var olanın üzerine yazar: "Yeni" pencereye var olan bir kod yazılırsa o tür sessizce değişir (`api.js:hesapTuruKaydet, kanunKaydet`). Silme denetimi kanun türünde bütün yıllara, hesaplama türünde yalnız seçili yıla bakar.
+52. Grup kodu Türkçe kurala göre büyük harfe çevrilir ("i" → "İ"); düzenlemede boş bırakılan sıra 0 olur (`api.js:grupKaydet`). Tanımlar'ın `param.sekme` girişini kullanan çağrı yoktur; Kılavuz'un "Gruplar" bölümündeki "Ekranı aç" Tanımlar'ı Gruplar sekmesiyle açmaz.
+53. Bütçe bölümü adını değiştirmek ya da bölüm birleştirmek grubun bütün yıllarındaki bütçe satırlarını günceller; onaylı çalışmalar da buna dâhildir (`api.js:butceBolumuKaydet, butceBolumuBirlestir`).
+54. Kullanıcı penceresinde "Sistem yöneticisi" işaretliyken de grup erişimi ve yetkiler kaydedilir; yeni kullanıcı eklenip erişim yazımı hata verirse kullanıcı erişimsiz kalır (yeniden Kaydet "Bu kullanıcı adı zaten kayıtlı." der) (`kullanici.js:form`).
+55. Sistem → Yedek kartı "her kayıttan önce otomatik kopya alınır" der; sunucu en çok 10 dakikada bir kopya alır. Geri yükleme onayından vazgeçilince dosya alanı sıfırlanmaz (aynı dosya yeniden seçilirse işlem tetiklenmez). Sistem ekranı yalnız `.db` kabul eder, giriş ekranı `.db`, `.sqlite`, `.sqlite3` (`sistem.js:ciz`).
+56. Kılavuz'da bölümlerin hedef kitlesi ("Yönetim", "Sistem yöneticisi") yalnız rozettir; bütün bölümler herkese görünür. "Yeni yıl" ve "Parametreler" bölümlerindeki "kaynak yıl her zaman seçili yılın bir öncekidir" ifadesi kodla tam uyuşmaz (önceki yıl yoksa kaynak seçili yıldır ve kaynak elle seçilebilir); "Çalışmalar" bölümü AR-GE çalışılan gün ayarını anmaz (`kilavuz.js:BOLUMLER`).

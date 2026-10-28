@@ -30,6 +30,25 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
 - **Excel.** Yönetim raporu çıktısı ve geri dönen dosyanın içe alınması; performans ve mesai şablonları; ERP ya
   da bordro programından alınan personel listesinin aktarımı (Dış Liste Aktarımı).
 - **Kullanıcılar.** Rol yerine kişi bazında yetki ve grup erişimi; işlem kaydı; hareketsizlikte otomatik çıkış.
+
+### Tanımlar ekrandan düzenlenir
+
+Kurumdan kuruma değişen her tanım kod değiştirmeden, ekrandan girilir:
+
+| Ne | Nerede |
+|---|---|
+| Asgari ücret, gelir vergisi dilimleri, SGK tavanı, damga vergisi, BES ve teşvik oranları, sakatlık indirimi | Parametreler (yıl bazında) |
+| Mesai katsayıları (hafta içi / hafta sonu), günlük çalışma saati, AR-GE günü eşiği, zam yuvarlama adımı | Parametreler → Genel |
+| Zam kademesi (eşikler, oranlar), performans puanı → çarpan kademesi | Parametreler; gruba özel kademe Çalışmalar → ✎ |
+| Performans değerlendirme modeli: amirler, kriterler, ağırlıklar, ek puan kuralları | Performans Değerlendirme → Değerlendirme modeli (yıl bazında) |
+| Hesaplama türleri (SGK oranları), kanun / teşvik türleri | Tanımlar |
+| Gruplar, bütçe bölümleri | Tanımlar |
+| Dış listenin (ERP / bordro programı) sütun başlıkları | Tanımlar → Aktarım Başlıkları |
+| Çalışmaya özel gün, AR-GE günü, 05510 oranı, yuvarlama | Çalışmalar → ✎ Çalışma Ayarları |
+| Kullanıcılar, yetkiler, otomatik kapanma süresi | Kullanıcılar, Sistem |
+
+Bilerek kodda kalanlar: teşvik ve sigorta kollarının formülleri (adları ve oranları düzenlenir), yaka türleri (beyaz /
+mavi), 30 günlük ay ve üç sakatlık derecesi (tutarları düzenlenir), yetki anahtarları.
 - **Veri güvenliği.** İsteğe bağlı şifreleme (AES-256-GCM, paroladan PBKDF2 ile anahtar), otomatik ve elle
   yedek, aynı anda birden çok kişi ya da sekme açtığında yazma kilidi.
 

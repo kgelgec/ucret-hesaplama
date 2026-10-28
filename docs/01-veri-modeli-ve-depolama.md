@@ -37,7 +37,7 @@
 | Başlangıç verisi | `data/seed.js` | `window.SEED_YUKLE`, `ORNEK_VERI_YUKLE` | Yeni veritabanına yasal parametreler; isteğe bağlı örnek veri |
 | Örnek veri | `data/ornek-veri.js` (üretici: `tools/ornek-veri-uret.mjs`) | `window.ORNEK_VERI` | Uydurma iki grup, 56 kişi, değerlendirme ve mesai tablosu (§5.6) |
 | Hesap motoru | `js/core/hesap.js` | `window.HESAP` | Brüt, prim, vergi, maliyet hesabı (02 numaralı belgenin konusu). **Hesap sonuçları veritabanında saklanmaz.** |
-| Performans modeli | `js/core/performans.js` | `window.PERF` | Değerlendirme alanlarının listesi ve puan → zam çarpanı hesabı. **Puan ve çarpan saklanmaz.** |
+| Performans modeli | `js/core/performans.js` | `window.PERF` | Değerlendirme modelinin varsayılanı (`VARSAYILAN`), denetimi ve derlenmesi (`hazirla`), puan → zam çarpanı hesabı (`hesapla`). Modelin kendisi **veridir**: yıl bazında `parametre` tablosunda (`perf.model`, §2.21). **Puan ve çarpan saklanmaz.** |
 
 `engine.js` ve `api.js` başlıklarında "sunucuya geçiş" notu vardır: üst katmanlar değişmeden yalnız bu iki dosyanın gövdesi HTTP çağrılarıyla değiştirilecek şekilde tasarlanmıştır (`engine.js` dosya başı yorumu, `api.js` dosya başı yorumu).
 
@@ -88,8 +88,11 @@ Tanımların tek kaynağı `js/db/schema.js` → `window.SEMA_SQL`'dir: **23 tab
 | `son_yedek` | Son yedeğin ISO zamanı | `engine.js:sonYedekYaz` (yedek indirme / `yedek-elle` kaydı) | `engine.js:yedekDurumu` → "son yedek kaç gün önce" bilgisi |
 | `son_yedek_yol` | `yedek-elle` klasörü + `\` + dosya adı | `engine.js:yedekSunucuyaKaydet` | — (yalnız kayıt) |
 | `oturum_zaman_asimi_dk` | Dakika, `0`–`240`, `0` = kapalı. Kayıt yoksa **5** | `api.js:oturumZamanAsimiYaz` (`sistem.yonet`) | `api.js:oturumZamanAsimi` → `app.js:zamanAsimiDakika` |
+| `aktarim.sozluk` | JSON: `{ "<alan>": ["başlık", …] }` — dış liste aktarımının başlık sözlüğünde **yalnız değiştirilen** alanlar. Kayıt yoksa ya da alanın listesi boşsa o alanın varsayılan başlıkları geçerlidir | `api.js:aktarimSozlukYaz` (`parametre.yaz`; boş liste / `null` = o alan varsayılana döner; bilinmeyen alan reddedilir; işlem kaydı `KAYDET sistem_bilgi aktarim.sozluk`) | `api.js:aktarimSozluk` → `{ sozluk, etiket, degisen, varsayilan }` |
 
 Genel amaçlı `api.js:ayarOku/ayarYaz` işlevleri de bu tabloyu kullanır; kod taramasında yukarıdakilerden başka anahtar bulunmadı.
+
+**Dış liste başlık sözlüğü:** Dosyadaki sütun başlığı → aktarım alanı eşlemesidir. Varsayılanlar `api.js:AKTARIM_ALANLARI`'ndadır (`[alan, etiket, [başlıklar]]`): `tc`, `ad`, `ise_giris`, `isten_ayrilis`, `bolum`, `ekip`, `gorev`, `maas`, `yaka`, `butce_bolumu`, `maliyet` — `erpAktar`'ın satır alanlarıyla aynı (§2.19). `aktarim.sozluk` yalnız varsayılandan farklı listeleri tutar. Dosyadaki sütun başlığıyla eşleşme `js/core/tablooku.js:eslestir` ile yapılır: büyük/küçük harf, Türkçe karakter, nokta ve alt çizgi farkı gözetilmez; T.C. sütunu zorunludur.
 
 ### 2.2 `kullanici` — program kullanıcıları
 
@@ -206,7 +209,7 @@ Kişide yalnız `kod` saklanır (`calisma_personel.hesap_turu`, `aylik_girdi` al
 | `sira` | INTEGER | NOT NULL, 0 | |
 | `oran` | REAL | NULL | Yalnız `kural = '05510'` türünde: o türün indirim oranı (imalat dışı 0.02, imalat 0.05). NULL = çalışma ayarı `tesvik.k05510`, o da yoksa yılın `t05510` parametresi |
 
-**Yazan:** `schema.js:TEMEL_VERI_YAZ` (`INSERT OR IGNORE`), `api.js:kanunKaydet` (`INSERT OR REPLACE`), `kanunSil` (bir kişi satırında ya da aylık girdide kullanılıyorsa silinemez); ikisi de `parametre.yaz`. Kişide `kod` saklanır; hesapta `kod → kural` ve `kod → oran` eşlemesi yapılır (`api.js:hesapParametre` → `P.kanunKural`, `P.kanunOran`). Tanımsız kod `YOK` sayılır (teşvik yok).
+**Yazan:** `schema.js:TEMEL_VERI_YAZ` (yalnız tablo **boşken**, §5.2), `api.js:kanunKaydet` (`INSERT OR REPLACE`), `kanunSil` (bir kişi satırında ya da aylık girdide kullanılıyorsa silinemez); ikisi de `parametre.yaz`. Kişide `kod` saklanır; hesapta `kod → kural` ve `kod → oran` eşlemesi yapılır (`api.js:hesapParametre` → `P.kanunKural`, `P.kanunOran`). Tanımsız kod `YOK` sayılır (teşvik yok).
 
 **05510 oranının önceliği** (`hesap.js:ayHesapla`, `api.js:calismaHesapla`):
 - Kanunu `kural = '05510'` olan kişide: `kanun_turu.oran` → `calisma_ayar.tesvik.k05510` → `parametre.t05510` → 0.02.
@@ -232,7 +235,7 @@ PK: (`yil`, `derece`). **Yazan:** `seed.js:SEED_YUKLE`; `api.js:sakatlikYaz` (y�
 
 PK: (`yil`, `anahtar`). Bir yılın parametrelerinin "var" sayılması için `asgari_ucret`'te o yıla satır olmalıdır (`api.js:parametreDurumu.var`). Yıl listesi `parametre` ve `calisma` yıllarının birleşimidir (`api.js:yillar`).
 
-**Bütün anahtarlar** (kaynak: `api.js:PARAMETRE_TANIM`, `ZAM_TANIM`, `hesapParametre`, `parametreDurumu`, `ongoruUygula`; `seed.js:SEED_YUKLE`):
+**Bütün anahtarlar** (kaynak: `api.js:PARAMETRE_TANIM`, `ZAM_TANIM`, `hesapParametre`, `parametreDurumu`, `ongoruUygula`, `performansModeliYaz`; `seed.js:SEED_YUKLE`):
 
 | Anahtar | Anlamı | Kod içi varsayılan (kayıt yoksa) | Yazan |
 |---|---|---|---|
@@ -245,6 +248,11 @@ PK: (`yil`, `anahtar`). Bir yılın parametrelerinin "var" sayılması için `as
 | `t05746` | 05746 AR-GE SGK teşvik oranı (işveren %19,75 × ½) | 0.09875 | aynı |
 | `t14857` | 14857 engelli teşvik oranı | 0.1975 | aynı |
 | `t15510` | 15510 teşvik oranı | 0.05 | aynı |
+| `arge_gv_esik` | Çalışmanın AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı (kişiye aylık AR-GE günü girilmemişse, §3.4 madde 8) | 0.8 | `parametreYaz` |
+| `mesai_fm1_kat` | Hafta içi fazla mesai (FM1) katsayısı (× saat ücreti) | 1.5 | `parametreYaz` |
+| `mesai_fm2_kat` | Hafta sonu / tatil mesaisi (FM2) katsayısı (× saat ücreti) | 2 | `parametreYaz` |
+| `mesai_gun_saat` | Saat ücretinde günlük çalışma saati: saat ücreti = net maaş / 30 / bu değer | 7.5 | `parametreYaz` |
+| `zam_yuvarla` | Zam öngörüsünün yuvarlama adımı (TL); çalışmaya özel `calisma_ayar.zam.yuvarla_ongoru` önce gelir | 10 | `parametreYaz` |
 | `zam.M.alt_esik` / `zam.B.alt_esik` | Zam kademesi alt eşiği (önceki yıl net maaşı), mavi (M) / beyaz (B) yaka | 50000 | `SEED_YUKLE`, `parametreYaz` |
 | `zam.M.ust_esik` / `zam.B.ust_esik` | Zam kademesi üst eşiği | 100000 | aynı |
 | `zam.M.ust_oran` / `zam.B.ust_oran` | **Alt eşiğin altındaki** maaşa uygulanan (yüksek) oran | 0.30 | aynı |
@@ -259,8 +267,11 @@ PK: (`yil`, `anahtar`). Bir yılın parametrelerinin "var" sayılması için `as
 | `ongoru.dilim_adim` | Dilim sınırı yuvarlama adımı | — | `ongoruUygula` |
 | `ongoru.sakatlik_adim` | Sakatlık tutarı yuvarlama adımı | — | `ongoruUygula` |
 | `ongoru.tarih` | Öngörünün uygulandığı an (ISO) | — | `ongoruUygula` |
+| `perf.model` | O yılın **performans değerlendirme modeli**, JSON (ham biçim, §2.21) | Kayıt yoksa `PERF.VARSAYILAN()` (örnek model) | `api.js:performansModeliYaz` (`null` = kaydı siler, varsayılana döner; hatalı model `PERF.hazirla` denetiminden geçmez, kaydedilmez) |
 
-Hepsi `parametre.yaz` ister. **Yıl parametresi olarak AR-GE günü yoktur:** AR-GE günü yalnız çalışma ayarı (`calisma_ayar.arge_gun`) ya da kişiye girilen aylık `arge_gun`'dür; ikisi de yoksa 0 (`api.js:hesapParametre` → `argeGun: 0`; §3.4 madde 8).
+Hepsi `parametre.yaz` ister. Başlangıç verisi beş yeni hesap anahtarını (`arge_gv_esik` … `zam_yuvarla`) ve `perf.model`'i yazmaz; kayıt yoksa kod içi varsayılan geçerlidir (§5.3). `parametre` tablosundaki **her** anahtar — `perf.model` dâhil — yeni yıla `yilKopyalaIc` ile (yıl kopyası ve yeni yıl öngörüsü, yalnız eksikse) kopyalanır ve onaylı çalışmada `calisma_parametre` görüntüsüyle dondurulur (§2.23). Onaylı çalışma bu yüzden onay anındaki katsayılarla hesaplanır ve onay anındaki modelle değerlendirilir; onaydan önce `perf.model` kaydı yoksa sonradan yazılan model değil varsayılan model geçerlidir (`api.js:calismaPerformansModeli`).
+
+**Yıl parametresi olarak AR-GE günü yoktur:** AR-GE günü yalnız çalışma ayarı (`calisma_ayar.arge_gun`) ya da kişiye girilen aylık `arge_gun`'dür; ikisi de yoksa 0 (`api.js:hesapParametre` → `argeGun: 0`; §3.4 madde 8).
 
 > Zam kademesi anahtar adları terstir: `ust_oran` alt dilimin, `alt_oran` üst dilimin oranıdır (`api.js:ZAM_TANIM` etiketleri ve `hesap.js:zamHesapla`). Başka bir sistemde ad değiştirilecekse eşleme dikkatle yapılmalı.
 
@@ -373,10 +384,10 @@ PK: (`calisma_id`, `anahtar`). Kayıt yoksa yılın parametresi / kod içi varsa
 |---|---|---|---|---|
 | `zam.B.alt_esik`, `zam.B.ust_esik`, `zam.B.ust_oran`, `zam.B.alt_oran`, `zam.M.…` (8 anahtar) | sayı (oran kesir) | Bu çalışmaya özel zam kademesi; boş = yılın `parametre.zam.*` (`calismaZamKademe`) | `calismaAyarYaz`; örnek veri (iki grupta da) | Evet |
 | `gun.B.1` … `gun.B.12`, `gun.M.1` … `gun.M.12` (24 anahtar) | gün sayısı | Yaka × ay **varsayılan çalışılan gün** (kişiye o ay gün girilmemişse). Boş = 30 (`hesap.js:ayHesapla`) | `calismaAyarYaz` | **Hayır** (yalnız `KOPYA`'da) |
-| `arge_gun` | gün | Çalışmanın AR-GE günü: aylık `arge_gun`'ü olmayan ve GV teşvik oranı ≥ 0,8 olan kişilerde kullanılır. Boş = 0 | `calismaAyarYaz` | **Hayır** — o yılın kararıdır |
+| `arge_gun` | gün | Çalışmanın AR-GE günü: aylık `arge_gun`'ü olmayan ve GV teşvik oranı yılın `arge_gv_esik`'ine (vars. 0,8) eşit ya da büyük olan kişilerde kullanılır. Boş = 0 | `calismaAyarYaz` | **Hayır** — o yılın kararıdır |
 | `tesvik.k05510` | oran | 05510 indirim oranı bu çalışmada (ör. imalat işyerinde 0.05); önceliği §2.9 | `calismaAyarYaz` | **Evet** (işyerinin niteliğidir) |
 | `tesvik.k05746`, `tesvik.k14857`, `tesvik.k15510` | oran | Teşvik oranının çalışmaya özel geçersiz kılınması | `calismaAyarYaz` (örnek veri kullanmaz) | Hayır |
-| `zam.yuvarla_ongoru` | sayı | Zam öngörüsünün yuvarlama adımı (TL); boş = 10 (`hesap.js:zamHesapla`) | `calismaAyarYaz`; örnek veri (Üretim grubu) | Evet |
+| `zam.yuvarla_ongoru` | sayı | Zam öngörüsünün yuvarlama adımı (TL); boş = yılın `parametre.zam_yuvarla`, o da yoksa 10 (`api.js:calismaHesapla`, `hesap.js:zamHesapla`) | `calismaAyarYaz`; örnek veri (Üretim grubu) | Evet |
 | `mesai.ongoru` | `'1'` | Açıkken kişilerin aylık mesaisi mesai öngörüsü tablosundan gelir (§2.22) | `api.js:mesaiAktifYaz` (`aylik.yaz`; kapatınca satır silinir); örnek veri (Üretim grubu) | Evet |
 | `dagilim.haric` | T.C. listesi, `,` ile | Maaş dağılımı tablosundan elle çıkarılan kişiler | `calismaAyarYaz` | Hayır |
 | `dagilim.dahil` | T.C. listesi, `,` ile | Varsayılan olarak dışarıda olup (yıl içinde girenler) elle eklenenler | `calismaAyarYaz` | Hayır |
@@ -409,7 +420,7 @@ Ocak'ın **sürekli** aylık girdileri (hesap türü, kanun, sakatlık…) bu sa
 | `ozurlu_indirimi` | REAL | NOT NULL, 0 | Ocak'taki özürlü indirimi tutarı. Derece doluysa hesap tutarı o yılın `sakatlik_derece` tablosundan alır; bu alan yalnız derecesiz kişide kullanılır (`api.js:calismaHesapla`) |
 | `bes` | TEXT | NULL | `EVET` = BES'e katılıyor, `HAYIR`, NULL = belirtilmemiş (katılmıyor gibi hesaplanır) |
 | `kanun` | TEXT | NULL | Ocak'taki kanun türü kodu (`kanun_turu.kod`) |
-| `gv_tesvik` | REAL | NOT NULL, 0 | GV (AR-GE) teşvik oranı (ör. 0.8–1); ≥ 0.8 iken çalışmanın AR-GE günü kullanılır |
+| `gv_tesvik` | REAL | NOT NULL, 0 | GV (AR-GE) teşvik oranı (ör. 0.8–1); yılın `arge_gv_esik`'ine (vars. 0.8) ulaşınca çalışmanın AR-GE günü kullanılır |
 | `yol` | REAL | NOT NULL, 0 | Yol parası |
 | `not_metni` | TEXT | NULL | Serbest not |
 | `onay_sabit` | INTEGER | NOT NULL, 0 | Tarih dondurma: **0** = personel kartının güncel tarihleri; **1** = çalışma onaylandığı andaki tarihler; **2** = çalışmanın kendi dönem tarihleri (kişi sonra başka dönemde/grupta yeniden girdi) |
@@ -459,6 +470,8 @@ PK: (`calisma_id`, `tc_kimlik_no`, `ay`, `alan`). İndeks: `ix_aylik_calisma (ca
 > Ocak (ay 1) için sürekli kişi alanları normalde `calisma_personel`'dedir; `aylik_girdi`'de ay 1 kaydı varsa motor onu da uygular (`api.js:calismaHesapla` döngüsü 1. aydan başlar). Örnek veri `fm2` ve `arge_gun`'ı bu yolla, ay 1 kaydı olarak yazar (Ocak'tan geçerli, bütün yıla devreder).
 >
 > Mesai öngörüsü açıkken (`calisma_ayar.mesai.ongoru = '1'`) kişinin o ayki `fm1/fm2`'si tablodan gelir; yalnız **o aya** elle girilmiş değer önceliklidir, önceki aydan devralınan değer değil (`api.js:calismaHesapla`).
+>
+> `fm1/fm2` saattir; tutara yılın `mesai_gun_saat`, `mesai_fm1_kat`, `mesai_fm2_kat` parametreleriyle çevrilir (§2.11; formül 02 numaralı belgede).
 
 ### 2.21 `performans_girdi` — performans değerlendirmesi (kişi başına alan/değer)
 
@@ -471,29 +484,46 @@ Her grupta kullanılabilir.
 | `alan` | TEXT | NOT NULL | Alan adı (aşağıda) |
 | `deger` | TEXT | NULL | Puan (sayı metni) ya da metin |
 
-PK: (`calisma_id`, `tc_kimlik_no`, `alan`). **Puan ve çarpan saklanmaz**, her açılışta `js/core/performans.js:PERF.hesapla` ile hesaplanır; zam hesabına `performansCarpanUygula` ile `calisma_personel.performans_carpani` olarak geçer.
+PK: (`calisma_id`, `tc_kimlik_no`, `alan`). **Puan ve çarpan saklanmaz**, her açılışta `js/core/performans.js:PERF.hesapla(kisiler, model)` ile çalışmanın modeline göre hesaplanır; zam hesabına `performansCarpanUygula` ile `calisma_personel.performans_carpani` olarak geçer.
 
-**Geçerli alan adları** `PERF.MODEL` ve `PERF.AMIR` tablolarından türetilir (`performans.js:alanlar`, `alanGecerli`; başka ad reddedilir):
+**Alan adları çalışmanın modeline bağlıdır.** Model, çalışmanın yılının `parametre.perf.model` kaydıdır (onaylı çalışmada onay anındaki dondurulmuş kopya; kayıt yoksa `PERF.VARSAYILAN()`) — `api.js:calismaPerformansModeli`. Geçerli alanlar modelin içeriğinden türetilir (`PERF.hazirla(ham).alanlar(yaka)`, `alanGecerli`); `performansGirdiYaz` başka adı reddeder:
 
-| Alan | Yaka | Anlamı | Tür |
-|---|---|---|---|
-| `grup` | M, B | Değerlendirme bölümü (bölüm katsayısı bu gruba göre hesaplanır; bütçe grubu değildir) | metin |
-| `amir1`, `amir2`, `amir3` | M, B | 1. amir, 2. amir, idari amir **adı** | metin |
-| `a1.<kriter>`, `a2.<kriter>`, `a3.<kriter>` | M, B | Amir 1/2/3'ün kriter puanı (0–100) | sayı |
-| Yakanın ek puan alanları (`MODEL.<yaka>.ek`) | | Aşağıda | sayı / metin |
+| Alan | Anlamı | Tür |
+|---|---|---|
+| `grup` | Değerlendirme bölümü (bölüm katsayısı buna göre hesaplanır; bütçe grubu değildir). Ayrılmış ad | metin |
+| `amirN` (modeldeki her amirin `alan`'ı: `amir1`, `amir2`…) | O amirin **adı** | metin |
+| `aN.<kriter kodu>` | Amir N'nin o kriterdeki puanı (0–100). **Önekteki sayı, amirin listedeki sırası değil kendi numarasıdır:** `amir3` → `a3.`; `amir1` ile `amir4` tanımlıysa öneki `a1.` ve `a4.` olur | sayı |
+| Ek puan alanının `alan` kodu (ör. `devam`, `kidem`) | Ek puan girdisi; `liste` türünde seçenek metni, diğerlerinde sayı | sayı / metin |
 
-Programla gelen model **bir örnektir**; kurum kendi kriterlerine ve ağırlıklarına göre `MODEL` ve `AMIR` tablolarını değiştirir. Alan adları değişirse eski girdiler okunmaz (`performans.js` başlık yorumu). Örnek modelin şu anki içeriği:
+**Kaldırılan tanımların verisi kalır:** model değiştirilip bir amir, kriter ya da ek puan alanı çıkarılınca o alanlara girilmiş satırlar silinmez, yalnız hesaba girmez. `performansGirdiYaz` bu alanlara değer yazmayı "Bilinmeyen performans alanı" diye reddeder, ama boş değerle silmeye izin verir; ekranda görünmedikleri için bu satırlar pratikte kişinin bütün değerlendirmesi silinince (`performansGirdiSil`) ya da kişi çalışmadan çıkarılınca gider. `KOPYA` ve grup değiştirme bu satırları da kopyalar. Aynı kodla yeniden tanımlanan alan eski değerleri yeniden okur.
+
+**Modelin ham biçimi** (`parametre.perf.model` JSON'u; denetim ve derleme `PERF.hazirla`, hatalıysa "Değerlendirme modeli: …" hatası):
+
+```
+{ "amirler": [ { "alan": "amir1", "ad": "1. AMİR", "agirlik": 50 }, … ],          // 1–5 amir, alan "amirN"
+  "yaka": {
+    "M": { "ad": "Mavi yaka", "sayfa": "MAVİ YAKA", "degAgirlik": 80,
+           "kriter": [ { "kod": "is_bilgisi", "ad": "İŞ BİLGİSİ", "agirlik": 25 }, … ],
+           "ek":     [ { "alan": "devam", "ad": "…", "tur": "esik", …türün alanları, "sinir": [0, 100], "not": "…", "kalici": true }, … ] },
+    "B": { … } } }
+```
+
+- Kodlar (`kriter.kod`, `ek.alan`): `^[a-z][a-z0-9_]{0,29}$`; `grup` ve `amirN` biçimi ek puan alanına verilemez; aynı yakada tekrar edemez. En az bir amirin ağırlığı sıfırdan büyük olmalı; her yakada en az bir kriter. `sayfa`, Excel şablonundaki sayfa adıdır.
+- **Ek puan kural türleri** (`PERF.TURLER`): `esik` (değer ≥ `esik` → `puan`; altında değer × `katsayi`), `kademe` (`kademeler: [[en az, puan], …]`; ulaşılan en yüksek kademenin puanı), `carpan` (değer × `katsayi`, en çok `enCok`), `liste` (`secenek: [[seçenek, puan], …]`; listede olmayan → `bos`). İsteğe bağlı: `sinir` [en az, en çok] (giriş denetimi), `not` (açıklamanın başına), `kalici` (yeni dönemin şablonuna önceki dönemden taşınır). Puan formülleri 02 numaralı belgededir.
+- Önceki dönemden şablona taşınan alanlar: `grup`, amir adları ve `kalici` işaretli ek puan alanları (`api.js:performansOncekiDonem`: aynı grup, bir önceki yıl, onaylı çalışma öncelikli).
+
+Programla gelen **varsayılan model bir örnektir** (`PERF.VARSAYILAN()`); kurum kendi kriterlerine ve ağırlıklarına göre yıl bazında değiştirir (`api.js:performansModeliYaz`, `parametre.yaz`). İçeriği:
 
 | | Mavi yaka (`M`) | Beyaz yaka (`B`) |
 |---|---|---|
 | Kriterler (ağırlık) | `is_bilgisi` (25), `gorev` (25), `kural` (20), `iletisim` (15), `gelisim` (15) | `is_bilgisi` (20), `kalite` (20), `planlama` (20), `iletisim` (15), `gelisim` (10), `yonetici` (15) |
 | Değerlendirmenin toplam puandaki ağırlığı (`degAgirlik`) | 80 | 80 |
-| Ek puan alanları | `devam` (devamlılık %), `tutanak` (sayı), `kidem` (yıl, elle), `egitim` (mezuniyet) | `kidem`, `egitim` |
-| Amir ağırlıkları (`AMIR`) | `amir1` 50, `amir2` 30, `amir3` 20 (puanı olmayan amirin ağırlığı kalanlara dağıtılır) | aynı |
+| Ek puan alanları (tür) | `devam` (`esik`), `tutanak` (`kademe`), `kidem` (`carpan`, kalıcı), `egitim` (`liste`, kalıcı) | `kidem`, `egitim` |
+| Amirler (`amirler`) | `amir1` 50, `amir2` 30, `amir3` 20 (puanı olmayan amirin ağırlığı kalanlara dağıtılır) | aynı |
 
-`egitim` değerleri (`PERF.EGITIM`): `OKUR YAZAR`, `İLK OKUL`, `ORTA OKUL`, `LİSE`, `MESLEK LİSESİ`, `ÖN LİSANS`, `LİSANS`, `YÜKSEK LİSANS`, `DOKTORA`.
+Varsayılan `egitim` seçenekleri: `OKUR YAZAR`, `İLK OKUL`, `ORTA OKUL`, `LİSE`, `MESLEK LİSESİ`, `ÖN LİSANS`, `LİSANS`, `YÜKSEK LİSANS`, `DOKTORA`.
 
-**Yazan:** `seed.js:ORNEK_VERI_YUKLE` (Üretim grubunun 2026 çalışması); `api.js:performansGirdiYaz` (`zam.yaz`; yalnız çalışmada bulunan kişiye; boş değer satırı siler; `aciklama` işlem kaydına yazılır), `performansGirdiSil` (kişinin değerlendirmesi). `KOPYA` ve grup değiştirme satırları kopyalar; `YENI_YIL` kopyalamaz. Önceki yılın değerlendirmesi yeni değerlendirmeyi önceden doldurmak için okunur (`api.js:performansOncekiDonem`: aynı grup, bir önceki yıl, onaylı çalışma öncelikli).
+**Yazan:** `seed.js:ORNEK_VERI_YUKLE` (Üretim grubunun 2026 çalışması); `api.js:performansGirdiYaz` (`zam.yaz`; yalnız çalışmada bulunan kişiye ve modelde bulunan alana; boş değer satırı siler; `aciklama` işlem kaydına yazılır), `performansGirdiSil` (kişinin bütün değerlendirmesi). `KOPYA` ve grup değiştirme satırları kopyalar; `YENI_YIL` kopyalamaz.
 
 ### 2.22 `mesai_ongoru` — mesai öngörüsü (bütçe bölümü değil, **personel bölümü** × ay)
 
@@ -532,7 +562,7 @@ Kişi başı mesai = bölüm saati / kişi sayısı (`api.js:mesaiKisiBasi`). Ta
 
 ```json
 {
-  "parametre":  [{ "anahtar": "dv", "deger": "0.00759" }, …],
+  "parametre":  [{ "anahtar": "dv", "deger": "0.00759" }, …, { "anahtar": "perf.model", "deger": "{\"amirler\":[…],\"yaka\":{…}}" }],
   "dilim":      [{ "yil": 2026, "sira": 1, "ust_sinir": 190000, "oran": 0.15 }, …, { "ust_sinir": null, … }],
   "asgari":     [{ "yil": 2026, "baslangic_ay": 1, "brut": 33030 }],
   "tur":        [{ "yil": 2026, "kod": "SSK", "ad": "…", "kol": "SSK", "sgk_isci": 0.14, … , "aciklama": "…" }, …],
@@ -544,7 +574,8 @@ Kişi başı mesai = bölüm saati / kişi sayısı (`api.js:mesaiKisiBasi`). Ta
 
 - **Yazan:** `schema.js:PARAMETRE_DONDUR` (`INSERT OR IGNORE` — var olanın üzerine yazmaz): durum `TASLAK → ONAYLI` yapılırken (`api.js:calismaKaydet`) ve örnek verinin 2026 çalışmaları onaylanırken (`seed.js:ORNEK_VERI_YUKLE`).
 - **Silen:** `ONAYLI → TASLAK` geçişi.
-- **Kullanan:** `api.js:calismaHesapla` — `durum = 'ONAYLI'` ise `hesapParametre(yil, calismaParametreAnlik(id))`; değilse yılın güncel tabloları. `calisma_ayar` dondurulmaz (onaylı çalışmada zaten yazılamaz).
+- **Kullanan:** `api.js:calismaHesapla` — `durum = 'ONAYLI'` ise `hesapParametre(yil, calismaParametreAnlik(id))`; değilse yılın güncel tabloları. `api.js:calismaPerformansModeli` — onaylı çalışmanın değerlendirme modeli görüntüdeki `perf.model` satırıdır (yoksa varsayılan model). `calisma_ayar` dondurulmaz (onaylı çalışmada zaten yazılamaz).
+- `parametre` dizisi o yılın **bütün** anahtarlarını içerir; ileride eklenen bir parametre de kendiliğinden dondurulur. Görüntüde olmayan anahtar (ör. onaydan sonra eklenmiş) için hesap kod içi varsayılanı kullanır.
 
 ### 2.24 İndeksler
 
@@ -568,7 +599,8 @@ Kişi başı mesai = bölüm saati / kişi sayısı (`api.js:mesaiKisiBasi`). Ta
 | `parametre(durum)` | `RESMI`, `ONGORU` | `api.js:parametreDurumu` |
 | `sakatlik_derece.derece` | 1, 2, 3 | `seed.js:SEED_YUKLE` |
 | `mesai_ongoru.alan` | `fm1`, `fm2`, `kisi`, `gun`, `tatil_mesai`, `tatil_tam`, `tatil_yok` | `api.js:mesaiYaz` |
-| `performans_girdi(egitim)` | §2.21 listesi | `performans.js:EGITIM` |
+| Performans ek puan kural türü (`perf.model` → `ek[].tur`) | `esik`, `kademe`, `carpan`, `liste` | `performans.js:TURLER` |
+| `performans_girdi` `liste` türü alanlar | Modeldeki seçenekler (varsayılan modelde `egitim`, §2.21); büyük harfe çevrilerek karşılaştırılır | `performans.js:hazirla` |
 | Ay alanları | 1–12 | |
 
 ---
@@ -613,8 +645,9 @@ Bağımsız (FK'siz) tablolar: sistem_bilgi, islem_log, kanun_turu,
 | `calisma_personel.kanun`, `aylik_girdi(alan='kanun').deger` | `kanun_turu` | `kod` | Karşılıksız kod = teşvik yok |
 | `calisma_personel.sakatlik_derece`, `aylik_girdi(sakatlik_derece)` | `sakatlik_derece` | (`calisma.yil`, `derece`) | Derece doluysa tutar tablodan |
 | `calisma_personel.performans_puani` | `performans_kademe` | (`calisma.yil`, `alt_puan ≤ puan ≤ ust_puan`) | |
-| `performans_girdi.alan` | `PERF.MODEL`, `PERF.AMIR` | ad | Alan listesi kodda, tabloda değil |
+| `performans_girdi.alan` | Çalışmanın değerlendirme modeli (`parametre.perf.model`, onaylıda dondurulmuş kopya; yoksa `PERF.VARSAYILAN()`) | amir alanı, `aN.<kriter kodu>`, ek puan alanı kodu | Modelde artık olmayan alanın satırları kalır, hesaba girmez (§2.21) |
 | `kullanici_yetki.yetki_kod` | `window.YETKILER` | kod | Liste kodda, tabloda değil |
+| `sistem_bilgi(aktarim.sozluk)` anahtarları | `api.js:AKTARIM_ALANLARI` | alan adı | Bilinmeyen alan yazılamaz |
 | `mesai_ongoru.bolum` | `personel.bolum` | normalleştirilmiş ad | Bütçe bölümü DEĞİL |
 | `calisma_ayar(dagilim.haric/dahil)` | `personel.tc_kimlik_no` | `,` ayrılmış metin | T.C. değişince güncellenmez |
 | `calisma_parametre.veri` | `parametre`, `gv_dilim`, `asgari_ucret`, `hesap_turu`, `kanun_turu`, `sakatlik_derece`, `performans_kademe` | JSON kopya | Bilerek bağımsız (dondurma) |
@@ -640,10 +673,10 @@ Bağımsız (FK'siz) tablolar: sistem_bilgi, islem_log, kanun_turu,
    - `2` → çalışmanın **kendi dönem** tarihleri. Kişi kartında tarih değişirken (`api.js:donemTarihleriniKoru`; kişi kartı ve dış liste aktarımı çağırır), kişinin **diğer** çalışmalarındaki `onay_sabit = 0` satırlarına eski tarihler yazılıp `2` yapılır. Bir çalışmanın satırı `2` ise o çalışmadan yapılan tarih düzenlemesi **satıra** yazılır, karta dokunulmaz. Taslağa almak bunu çözmez.
    - Kural: hesapta tarih = `onay_sabit > 0 ? onay_giris/onay_cikis : personel.ise_giris/isten_ayrilis` (`api.js:calismaHesapla`, `calismaPersonelListe`, `personelGecmis`).
    - Grup değiştirmede (`calismaPersonelTasi`) `onay_sabit = 1` hedefte `0` olur; `2` ve tarihler aynen kopyalanır.
-5. **Onaylı çalışma her zaman dondurulmuş parametreyle hesaplanır** (`calismaHesapla`: `c.durum === 'ONAYLI' ? calismaParametreAnlik(id) : null`). Yeni yılın resmî rakamları sonradan girilse de onaylı maliyet değişmez; resmî rakamlarla yeni hesap için **revize** açılır.
+5. **Onaylı çalışma her zaman dondurulmuş parametreyle hesaplanır** (`calismaHesapla`: `c.durum === 'ONAYLI' ? calismaParametreAnlik(id) : null`) ve **dondurulmuş modelle değerlendirilir** (`calismaPerformansModeli`). Yeni yılın resmî rakamları, mesai katsayıları ya da değerlendirme modeli sonradan değişse de onaylı maliyet değişmez; güncel değerlerle yeni hesap için **revize** açılır.
 6. **Revize** (`api.js:calismaRevizeAc`): herhangi bir çalışmanın (genellikle onaylının) birebir **TASLAK** kopyası; ad `"<yıl> Revize"`, çakışırsa `"<yıl> Revize 2"`, `3`…; `zam_kademe`, `zam_performans` kaynaktan; `KOPYA` türü veri aktarımı (madde 9). Tek işlemdir: kopya yarıda kalırsa boş revize de oluşmaz. Revize yılın **güncel** parametreleriyle hesaplanır.
 7. **Öngörü onaylı yılı ezemez** (`api.js:ongoruUygula`): hedef yılda (herhangi bir grupta) onaylı çalışma varsa yeni yıl öngörüsü reddedilir. Öngörü önce yasal olmayan tabloları kopyalar (`yilKopyalaIc`, yalnız eksikleri), sonra asgari ücret / dilim / sakatlık satırlarını yeniden yazar ve `durum = 'ONGORU'` + `ongoru.*` anahtarlarını kaydeder. Kaynak yılda dilim ya da sakatlık tutarı yoksa durur. Asgari ücrette kaynak yılın **son** dönemi esas alınır.
-8. **AR-GE günü varsayılansız:** motor yıl parametresinden AR-GE günü almaz (`P.argeGun = 0`); `calisma_ayar.arge_gun` varsa o geçerli; kişiye `aylik_girdi.arge_gun` girilir ve sonraki aylara devreder (`api.js:calismaHesapla`, `AYLIK_SUREKLI`). Kişinin aylık AR-GE günü yoksa çalışma ayarı yalnız GV teşvik oranı ≥ 0,8 olan kişide kullanılır (`hesap.js:ayHesapla`, `r.AP`).
+8. **AR-GE günü varsayılansız:** motor yıl parametresinden AR-GE günü almaz (`P.argeGun = 0`); `calisma_ayar.arge_gun` varsa o geçerli; kişiye `aylik_girdi.arge_gun` girilir ve sonraki aylara devreder (`api.js:calismaHesapla`, `AYLIK_SUREKLI`). Kişinin aylık AR-GE günü yoksa çalışma ayarı yalnız GV teşvik oranı yılın `arge_gv_esik` parametresine (vars. 0,8) ulaşan kişide kullanılır (`hesap.js:ayHesapla`, `r.AP`).
 9. **Çalışma kopyalama** (`api.js:calismaPersonelKopyala`; kaynak ve hedef aynı grupta olmalı; hedef taslak olmalı; `tur` `'KOPYA'` değilse `YENI_YIL` kuralı uygulanır):
    - `KOPYA` (aynı yıl, senaryo/revize): `calisma_personel` (`CP_ALANLAR` — `onay_*` sütunları **hariç**), `aylik_girdi`, `calisma_ozet`, `performans_girdi`, `mesai_ongoru` birebir; `calisma_ayar` tamamı. Hepsi `INSERT OR IGNORE`.
    - `YENI_YIL` (önceki yıldan): kaynak yılın **zamlı** maaşı hedefin `maas_eski`'si; kaynak yılın hesaplanan yıllık maliyeti `maliyet_onceki`; `zam_ayi = 1`, `duzeltme = 0`, performans puanı/çarpanı ve `karsilastirma` boş; `sira`, `butce_bolumu`, `yaka`, `not_metni` aynen; hesap türü / kanun / sakatlık / özürlü / BES / GV teşvik / yol **Aralık'taki geçerli değerle** (Şubat–Aralık aylık girdilerinden son değişiklik, yoksa satırdaki değer). Kaynak yıl içinde (ya da daha önce) ayrılanlar (çıkış tarihi kartta güncel okunur; kartta yoksa dönem çıkışı) ve hedef yılda başka grupta kaydı olanlar aktarılmaz. `calisma_ayar` kopyalanır **ama** `gun.%`, `dagilim.%`, `arge_gun` ve `tesvik.k05510` dışındaki `tesvik.%` hariç. Aylık girdiler, özet, performans girdileri ve mesai tablosu taşınmaz (mesai tablosu gerekiyorsa `mesaiKopyala` ile ayrıca kopyalanır).
@@ -654,7 +687,8 @@ Bağımsız (FK'siz) tablolar: sistem_bilgi, islem_log, kanun_turu,
 14. **En az bir etkin yönetici** kalmalı.
 15. **Performans çarpanı önceliği:** `performans_carpani` doluysa o; değilse `performans_puani` → `performans_kademe`; hiçbiri yoksa 1. Çarpan yalnız `calisma.zam_performans = 1` iken zam oranını çarpar (`api.js:performansCarpani`, `hesap.js:zamHesapla`).
 16. **Mesai öngörüsü önceliği:** `mesai.ongoru = '1'` iken kişinin `fm1/fm2`'si tablodan; kişiye o ay elle girilmişse elle girilen.
-17. **Yeni yıl parametre kopyası:** `yilKopyalaIc` yalnız eksik satırları (`INSERT OR IGNORE`) kopyalar: `parametre`, `gv_dilim`, `asgari_ucret`, `hesap_turu`, `sakatlik_derece`, `performans_kademe`. (`kanun_turu` yıldan bağımsızdır.)
+17. **Yeni yıl parametre kopyası:** `yilKopyalaIc` yalnız eksik satırları (`INSERT OR IGNORE`) kopyalar: `parametre` (değerlendirme modeli `perf.model` ve mesai / AR-GE / yuvarlama katsayıları dâhil), `gv_dilim`, `asgari_ucret`, `hesap_turu`, `sakatlik_derece`, `performans_kademe`. (`kanun_turu` yıldan bağımsızdır.)
+18. **Değerlendirme modeli yıl bazındadır:** her yılın modeli ayrıdır; bir yılın modelini değiştirmek diğer yılları etkilemez. Taslak çalışma yılının güncel modeliyle, onaylı çalışma onay anındaki modelle değerlendirilir. Modelde artık olmayan alanların girdileri silinmez (§2.21).
 
 ---
 
@@ -670,7 +704,7 @@ Dosyadaki sürüm `sistem_bilgi.sema_surum`'dadır (kayıt yoksa 0 sayılır). D
 2. `tabloGocleriUygula()` — `TABLO_GOC` (tablo yeniden kurma, §4.3).
 3. `db.exec(SEMA_SQL)` — `CREATE TABLE/INDEX IF NOT EXISTS` ile **yeni tablolar ve indeksler** eklenir.
 4. `eksikSutunlariEkle()` yeniden (yeni kurulan tabloya dayanan sütunlar için).
-5. `TEMEL_VERI_YAZ` — kanun türleri (`INSERT OR IGNORE`); hata verirse konsola yazılır, devam edilir.
+5. `TEMEL_VERI_YAZ` — kanun türleri, yalnız `kanun_turu` tablosu **boşsa** (§5.2); hata verirse konsola yazılır, devam edilir.
 6. `VERI_GOCLERI` içinden `eski sürüm < g.surum ≤ SEMA_SURUM` olanlar sırayla, **her biri ayrı işlemde** (BEGIN/COMMIT). Bir göç hata verirse ROLLBACK, sonraki göçler çalışmaz ve **sürüm yükseltilmez** (bir sonraki açılışta eski sürümden itibaren hepsi yeniden denenir).
 7. `sema_surum = SEMA_SURUM` yazılır, kayıt planlanır.
 
@@ -709,8 +743,9 @@ Biçim: `{ surum, ad, calistir(calistir, tumu) }` (`schema.js` yorumu, `engine.j
 3. `SEMA_SURUM`'u bir artırın. Artırılmazsa var olan dosyalarda hiçbir adım çalışmaz.
 4. `api.js`'teki sütun listelerini güncelleyin: `CP_ALANLAR`, `CP_SAYISAL`, `CP_BOS_OLABILIR` (kişi satırı), `AYLIK_SUREKLI` / `AYLIK_TEK` / `AYLIK_KISI_ALANLARI` (aylık alanlar), `calismaPersonelKopyala` ve `calismaPersonelTasi`'nın kopyaladığı sütunlar, yıl tablosuysa `yilKopyalaIc` listesi ve `PARAMETRE_ANLIK_AL`.
 5. Yeni yetki gerekiyorsa `YETKILER`'e ekleyin (§5.7).
-6. `TEMEL_VERI_YAZ`'a eklenen temel kayıtlar var olan dosyalara yalnız bir sürüm yükseltmesinde ulaşır (yalnız yükseltmede çağrılır).
-7. Eski sürümlü bir dosyayla ve eski bir yedekten geri yüklemeyle deneyin (geri yükleme de `surumKontrol` çalıştırır).
+6. `TEMEL_VERI_YAZ` yalnız boş `kanun_turu` tablosuna yazar; ona eklenen yeni bir kanun türü var olan dosyalara **ulaşmaz** (kullanıcının sildiği ya da değiştirdiği türler de geri gelmez). Var olan dosyalara yeni temel kayıt eklemek gerekiyorsa `INSERT OR IGNORE` kullanan bir `VERI_GOCLERI` kaydı yazılır.
+7. Yeni bir yıl parametresi eklerken `PARAMETRE_TANIM`'a varsayılanıyla ekleyin ve `hesapParametre`'de okuyun: kayıt yoksa (eski yıllar, eski onay görüntüleri) varsayılan geçerli olur, göç gerekmez. Yeni yıla kopyalanması ve onayda dondurulması kendiliğindendir (§2.11).
+8. Eski sürümlü bir dosyayla ve eski bir yedekten geri yüklemeyle deneyin (geri yükleme de `surumKontrol` çalıştırır).
 
 ---
 
@@ -726,11 +761,11 @@ Biçim: `{ surum, ad, calistir(calistir, tumu) }` (`schema.js` yorumu, `engine.j
 4. `kaydetHemen(true)` ile dosyaya yazılır.
 5. Kullanıcı tablosu boş olduğundan **ilk kurulum** açılır (`app.js:ilkKurulumEkrani`): ilk yönetici hesabı oluşturulur, oturum açılır ve başlangıç seçeneğine göre örnek veri yüklenir ya da boş başlanır (§5.4).
 
-`TEMEL_VERI_YAZ`, `SEED_YUKLE` ve `ORNEK_VERI_YUKLE`'nin bütün yazmaları **yeniden çalıştırılabilir**dir: var olan kayıtlar `INSERT OR IGNORE` ile atlanır (`seed.js` başlık yorumu).
+Üçü de **yeniden çalıştırılabilir**dir: `SEED_YUKLE` ve `ORNEK_VERI_YUKLE` var olan kayıtları `INSERT OR IGNORE` ile atlar (`seed.js` başlık yorumu); `TEMEL_VERI_YAZ` tablo doluysa hiçbir şey yazmaz.
 
-### 5.2 `TEMEL_VERI_YAZ` (`schema.js`) — her yeni veritabanında ve her sürüm yükseltmesinde
+### 5.2 `TEMEL_VERI_YAZ` (`schema.js`) — her yeni veritabanında ve her sürüm yükseltmesinde çağrılır
 
-Yalnız kanun türlerini yazar; **grup açmaz** (gruplar kullanıcıdan ya da örnek veriden gelir).
+Yalnız kanun türlerini yazar, o da yalnız `kanun_turu` tablosu **boşsa** (`INSERT … SELECT … WHERE NOT EXISTS (SELECT 1 FROM kanun_turu)`): kullanıcı Tanımlar'dan bir türü silmiş ya da değiştirmişse sürüm yükseltmesi onu geri getirmez; tablo tamamen boşaltılmışsa altı tür yeniden yazılır (node:sqlite ile denendi). **Grup açmaz** (gruplar kullanıcıdan ya da örnek veriden gelir).
 
 | kod | ad | kural | aciklama | sira | oran |
 |---|---|---|---|---|---|
@@ -763,7 +798,7 @@ Yıl kodda sabittir (`YIL = 2026`). Sonraki yıllar programın kendi işlemleriy
 | `zam.M.ust_oran`, `zam.B.ust_oran` | 0.30 |
 | `zam.M.alt_oran`, `zam.B.alt_oran` | 0.25 |
 
-Zam kademesi değerleri yasal değildir, **örnek başlangıç değeridir** (dosya yorumu); kurum kendi zam politikasına göre değiştirir.
+Zam kademesi değerleri yasal değildir, **örnek başlangıç değeridir** (dosya yorumu); kurum kendi zam politikasına göre değiştirir. `arge_gv_esik`, `mesai_fm1_kat`, `mesai_fm2_kat`, `mesai_gun_saat`, `zam_yuvarla` ve `perf.model` yazılmaz: kayıt eklenene kadar kod içi varsayılanlar (0.8, 1.5, 2, 7.5, 10, varsayılan değerlendirme modeli) geçerlidir (§2.11, §5.8).
 
 **`gv_dilim` (2026):** 1: ≤ 190.000 → %15 · 2: ≤ 400.000 → %20 · 3: ≤ 1.500.000 → %27 · 4: ≤ 5.300.000 → %35 · 5: sınırsız (NULL) → %40.
 
@@ -800,7 +835,7 @@ Yeni bir veritabanında bu adımdan sonraki satır sayıları: `kanun_turu` 6, `
 
 Girdi: `window.ORNEK_VERI` (§5.6). Yasal parametrelerin (`SEED_YUKLE`) yüklenmiş olması gerekir. Adımlar:
 
-1. **Tek işlemde, her grup için:** grup (`INSERT OR IGNORE`); grubun hiç bölümü yoksa bölümler `sira = 1, 2, …` ile; `<yıl> Bütçe` adlı çalışma zaten varsa grup atlanır. Yoksa çalışma `TASLAK` olarak açılır (`zam_kademe = 1`, `zam_performans` = grubun `performans` bayrağı, açıklama `Örnek veri — onaylı bütçe`); grubun `ayar`'ı `calisma_ayar`'a; her kişi için `personel` (`kaynak = 'ORNEK'`, `ekip` NULL), `calisma_personel` (`sira` = listedeki sıra) ve `ay` alanından `aylik_girdi` (ay 1 dâhil). Grubun `performans` bayrağı varsa değerlendirme girdileri `performans_girdi`'ye yazılır ve çarpanlar örnek modelle hesaplanıp (`PERF.hesapla`) `performans_carpani`'ye yazılır (`performansCarpanUygula` ile aynı sonuç). Grubun `mesai` bayrağı varsa mesai öngörüsü tablosu (`ORNEK_VERI.mesai`) o grubun çalışmasına yazılır.
+1. **Tek işlemde, her grup için:** grup (`INSERT OR IGNORE`); grubun hiç bölümü yoksa bölümler `sira = 1, 2, …` ile; `<yıl> Bütçe` adlı çalışma zaten varsa grup atlanır. Yoksa çalışma `TASLAK` olarak açılır (`zam_kademe = 1`, `zam_performans` = grubun `performans` bayrağı, açıklama `Örnek veri — onaylı bütçe`); grubun `ayar`'ı `calisma_ayar`'a; her kişi için `personel` (`kaynak = 'ORNEK'`, `ekip` NULL), `calisma_personel` (`sira` = listedeki sıra) ve `ay` alanından `aylik_girdi` (ay 1 dâhil). Grubun `performans` bayrağı varsa değerlendirme girdileri `performans_girdi`'ye yazılır ve çarpanlar **yılın değerlendirme modeliyle** hesaplanıp (`API.performansModeli(2026)` → `PERF.hesapla(girdi, model)`; örnek kurulumda 2026'nın `perf.model` kaydı olmadığından varsayılan model) `performans_carpani`'ye yazılır (`performansCarpanUygula` ile aynı sonuç). Örnek verinin değerlendirme alanları (`a1.`/`a2.` önekleri, kriter ve ek puan alanı kodları) varsayılan modele göre üretilmiştir. Grubun `mesai` bayrağı varsa mesai öngörüsü tablosu (`ORNEK_VERI.mesai`) o grubun çalışmasına yazılır.
 2. **Her yeni çalışma için ayrı işlemde:** çalışma hesaplanır; `calisma_ozet`'e bütçelenen (maliyetin %2 fazlası, bine yuvarlı) ve önceki yıl (`maliyet_onceki` toplamı) rakamları yazılır; durum `ONAYLI` yapılır, `ONAY_TARIH_DONDUR` ve `PARAMETRE_DONDUR` uygulanır.
 3. 2027'nin asgari ücreti yoksa **yeni yıl öngörüsü**: `ongoruUygula({ kaynakYil: 2026, hedefYil: 2027, oran: 0.25, dilimAdim: 1000, sakatlikAdim: 100 })`.
 4. Her grup için 2027'de çalışması yoksa: `calismaKaydet` ile `2027 Bütçe` (TASLAK, açıklama `Örnek veri — taslak`), `calismaPersonelKopyala(…, 'YENI_YIL')`; kaynakta mesai tablosu varsa `mesaiKopyala`; Ocak'ta AR-GE günü girilmiş kişilere 2027 Ocak'ı için `aylikGirdiToplu(…, 'arge_gun', 22, …)` (AR-GE günü yeni yıla kendiliğinden geçmez, madde 9 / §3.4); kaynakta düzeltmesi olan ve yıl içinde ayrılmamış kişilere aynı düzeltme `calismaPersonelAlanYaz(…, 'duzeltme', …)` ile yeniden girilir (düzeltme de yeni yıla kendiliğinden geçmez).
@@ -870,7 +905,7 @@ Girdi: `window.ORNEK_VERI` (§5.6). Yasal parametrelerin (`SEED_YUKLE`) yüklenm
 | `personel.yaz` | Çalışma açma/düzenleme/silme/revize, çalışma ayarı, özet rakamı, kişi satırı ve kartı, kişi silme/taşıma/kopyalama, dış liste aktarımı (`erpAktar`), aylık girdilerdeki kişi alanları (hesap türü, kanun, sakatlık, özürlü, BES, GV teşvik, yol) |
 | `zam.yaz` | `duzeltme`, `performans_puani`, `performans_carpani`; performans girdileri ve çarpan uygulama |
 | `aylik.yaz` | Aylık tutarlar (ayni, prim, yakıt, çalışılan gün), mesai saatleri, AR-GE günü, mesai öngörüsü tablosu ve açma/kapama |
-| `parametre.yaz` | Yıl parametreleri, GV dilimi, asgari ücret, sakatlık, performans kademesi, yıl kopyası, öngörü, parametre durumu, hesap türü, kanun türü, bütçe bölümü, maaş aralığı |
+| `parametre.yaz` | Yıl parametreleri, GV dilimi, asgari ücret, sakatlık, performans kademesi, değerlendirme modeli (`performansModeliYaz`), yıl kopyası, öngörü, parametre durumu, hesap türü, kanun türü, bütçe bölümü, maaş aralığı, dış liste başlık sözlüğü (`aktarimSozlukYaz`) |
 | `sistem.yonet` | Grup ekleme/düzenleme/silme, kullanıcılar ve erişimleri, oturum zaman aşımı, örnek veri, "Genel" grubu, şifreleme kurma/kaldırma, sıfırlama, (oturum açıkken) yedekten geri yükleme, işlem kaydını okuma |
 
 **Okuma kapıları** (`api.js` "OKUMA KAPILARI"): kişi verisi döndüren işlevler dışarıya sarmalanmış olarak açılır ve kullanıcıda listelenen yetkilerden en az biri yoksa reddeder (yönetici muaf):
@@ -886,7 +921,7 @@ Girdi: `window.ORNEK_VERI` (§5.6). Yasal parametrelerin (`SEED_YUKLE`) yüklenm
 
 ### 5.8 Varsayılanların koddaki kopyaları
 
-Parametre satırı yoksa motor şu varsayılanları kullanır (`api.js:hesapParametre`, `PARAMETRE_TANIM`, `ZAM_TANIM`): `tavan_carpan` 9, `dv` 0.00759, `bes_orani` 0.03, `istisna_kesinti` 0.15, `t05510` 0.02, `t05746` 0.09875, `t14857` 0.1975, `t15510` 0.05, zam kademesi 50000 / 100000 / 0.30 / 0.25. AR-GE günü 0 (`hesapParametre`, `argeGun: 0`). Zam öngörüsü yuvarlama adımı 10 TL (`hesap.js:zamHesapla`). Varsayılan çalışılan gün 30 (`hesap.js:ayHesapla`). Oturum zaman aşımı 5 dk (`api.js:ZAMAN_ASIMI_VARSAYILAN`). Gelir vergisi dilimi ya da asgari ücret yoksa hesap hata verir ("… girilmemiş").
+Parametre satırı yoksa motor şu varsayılanları kullanır (`api.js:hesapParametre`, `PARAMETRE_TANIM`, `ZAM_TANIM`): `tavan_carpan` 9, `dv` 0.00759, `bes_orani` 0.03, `istisna_kesinti` 0.15, `t05510` 0.02, `t05746` 0.09875, `t14857` 0.1975, `t15510` 0.05, `arge_gv_esik` 0.8, `mesai_fm1_kat` 1.5, `mesai_fm2_kat` 2, `mesai_gun_saat` 7.5, `zam_yuvarla` 10, zam kademesi 50000 / 100000 / 0.30 / 0.25; `perf.model` yoksa `PERF.VARSAYILAN()`. Aynı sayılar `hesap.js:ayHesapla` / `zamHesapla` içinde de ikinci kez varsayılan olarak durur (parametre nesnesinde değer yoksa). AR-GE günü 0 (`hesapParametre`, `argeGun: 0`). Zam öngörüsü yuvarlama adımının önceliği: `calisma_ayar.zam.yuvarla_ongoru` → `parametre.zam_yuvarla` → 10 (`api.js:calismaHesapla`). Varsayılan çalışılan gün 30 (`hesap.js:ayHesapla`). Oturum zaman aşımı 5 dk (`api.js:ZAMAN_ASIMI_VARSAYILAN`). Gelir vergisi dilimi ya da asgari ücret yoksa hesap hata verir ("… girilmemiş").
 
 ---
 
@@ -1223,19 +1258,19 @@ console.log(ozet);
 | `calisma_ayar` | Anahtarlar §2.18; değerler metin. `dagilim.haric/dahil` (T.C. listesi) ayrı bir tabloya açılması önerilir |
 | `calisma_ozet` | Anahtarlar §2.17; REAL |
 | `calisma_parametre` | `veri` JSON'u **olduğu gibi** saklanmalı (onaylı çalışmanın hesabı buna bağlı). Hedef bunu ayrı tablolara açacaksa da onaylı çalışma başına ayrı kopya korunmalı; yılın güncel parametre tablolarıyla birleştirilmemeli |
-| `parametre`, `gv_dilim`, `asgari_ucret`, `hesap_turu`, `sakatlik_derece`, `performans_kademe` | Yıl anahtarıyla aynen. `gv_dilim.ust_sinir` NULL = son dilim |
+| `parametre`, `gv_dilim`, `asgari_ucret`, `hesap_turu`, `sakatlik_derece`, `performans_kademe` | Yıl anahtarıyla aynen. `gv_dilim.ust_sinir` NULL = son dilim. `parametre(perf.model)` değeri bir JSON belgesidir (değerlendirme modeli, §2.21): hedefte JSON sütunu ya da ayrı model tabloları olarak tutulabilir; yıl başına ayrı kopya korunmalı. Kaydı olmayan yıl varsayılan modeli kullanır |
 | `kanun_turu` | Yıldan bağımsız; `kural` ve `oran` hesabın parçası |
 | `butce_bolumu` | Hedefte çalışma satırının bölüme **id ile** bağlanması önerilir; eşleme (`calisma.grup_kod`, `ad`) ile yapılır |
-| `performans_girdi` | Anahtar-değer; alan listesi §2.21 (kurumun modeline göre değişmiş olabilir). Hesaplanan puan/çarpan saklanmaz (çarpan `calisma_personel.performans_carpani`'dedir) |
+| `performans_girdi` | Anahtar-değer; alan adları çalışmanın yılının modeline bağlıdır (§2.21). Modelde artık olmayan alanların satırları da bulunabilir: hedefte ya arşivlenmeli ya da çalışmanın modeline göre süzülmeli. Hesaplanan puan/çarpan saklanmaz (çarpan `calisma_personel.performans_carpani`'dedir) |
 | `mesai_ongoru` | Takvim satırları (`yaka=''`, `bolum=''`) ayrıştırılmalı; `bolum` = personel bölümü |
 | `kullanici`, `kullanici_yetki`, `kullanici_grup` | Özet uyumu için §6.10. Yetki kodları hedefin yetki modeline eşlenmeli |
 | `islem_log` | Denetim izi olarak arşivlenmeli; kişisel veri içerir |
-| `sistem_bilgi` | `sema_surum`, `son_yedek*` hedefte anlamsız; `oturum_zaman_asimi_dk` ayarı aktarılabilir |
+| `sistem_bilgi` | `sema_surum`, `son_yedek*` hedefte anlamsız; `oturum_zaman_asimi_dk` ve `aktarim.sozluk` (yalnız değiştirilen başlık listeleri; varsayılanlar `api.js:AKTARIM_ALANLARI`'nda) ayarları aktarılabilir |
 | `sqlite_sequence` | AUTOINCREMENT sayaçları; id'ler korunacaksa hedef sayaçlar en büyük id'den başlatılmalı |
 
 ### 8.5 Hedefte dikkat edilecekler
 
-1. **Hesaplanan değer saklanmaz.** Veritabanında brüt, prim, vergi, aylık/yıllık maliyet, zam miktarı ve yeni maaş yoktur; her açılışta motor üretir. Hedef aynı rakamları görmek için aynı hesap motorunu (`hesap.js`, `performans.js` — dışa bağımlılığı olmayan saf JavaScript; 02 numaralı belge) kurmalı ya da aktarma anında programın ürettiği sonuçları ayrıca dışa almalıdır (programın Excel çıktıları).
+1. **Hesaplanan değer saklanmaz.** Veritabanında brüt, prim, vergi, aylık/yıllık maliyet, zam miktarı, yeni maaş ve performans puanı yoktur; her açılışta motor üretir. Hedef aynı rakamları görmek için aynı hesap motorunu (`hesap.js`, `performans.js` — dışa bağımlılığı olmayan saf JavaScript; 02 numaralı belge) kurmalı ya da aktarma anında programın ürettiği sonuçları ayrıca dışa almalıdır (programın Excel çıktıları). Motor, `parametre` tablosundaki katsayıları (mesai, AR-GE eşiği, yuvarlama) ve `perf.model`'i kod içi varsayılanlarıyla birlikte okumalıdır: kayıt olmayan yılda varsayılan geçerlidir.
 2. **Onaylı çalışmalar** hedefte de kilitli olmalı; dondurulmuş parametreler ve tarihler korunmalı (§3.4 madde 1–5).
 3. **Tarih biçimi** `YYYY-MM-DD`; zaman damgaları UTC.
 4. **T.C. No** metin; maskeleme/yetki kuralı (`alan.tc`) hedefte yeniden kurulmalı.
@@ -1248,7 +1283,7 @@ console.log(ozet);
 
 ### 8.6 Hedefte artık gerekmeyen mekanizmalar
 
-IndexedDB depo ve tarayıcıdan dosyaya geçiş, `sendBeacon` ile kapanışta yazma, `VERI_GOCLERI` / `EKSIK_SUTUNLAR` / `TABLO_GOC` (veri aktarıldığı sürümdeki hâliyle alınır), `TEMEL_VERI_YAZ`, `data/seed.js` ve `data/ornek-veri.js` (temel veri zaten veritabanında), `sistem_bilgi.sema_surum`, `son_yedek*`, kilit dosyası ve şifreleme işareti (hedefin kendi güvenlik/eşzamanlılık modeli varsa). **Kalıcı olanlar:** §3.4'teki iş kuralları, yetki listesi, anahtar-değer anahtarlarının anlamları, onaylı çalışma dondurmaları.
+IndexedDB depo ve tarayıcıdan dosyaya geçiş, `sendBeacon` ile kapanışta yazma, `VERI_GOCLERI` / `EKSIK_SUTUNLAR` / `TABLO_GOC` (veri aktarıldığı sürümdeki hâliyle alınır), `TEMEL_VERI_YAZ`, `data/seed.js` ve `data/ornek-veri.js` (temel veri zaten veritabanında), `sistem_bilgi.sema_surum`, `son_yedek*`, kilit dosyası ve şifreleme işareti (hedefin kendi güvenlik/eşzamanlılık modeli varsa). **Kalıcı olanlar:** §3.4'teki iş kuralları, yetki listesi, anahtar-değer anahtarlarının anlamları, onaylı çalışma dondurmaları, yıl bazında değerlendirme modeli ve kod içi varsayılanlar (§5.8).
 
 ---
 
@@ -1257,7 +1292,7 @@ IndexedDB depo ve tarayıcıdan dosyaya geçiş, `sendBeacon` ile kapanışta ya
 ### 9.1 Doğrulanamayanlar
 
 1. **sql.js / SQLite sürümü** (`js/vendor/sql-wasm.js`, `sql-wasm-binary.js`) dosyalardan belirlenemedi. SQLite dosya biçimi standart olduğundan aktarmayı etkilemesi beklenmez.
-2. **`gv_tesvik` değer aralığı:** Kodda yalnız `≥ 0.8` eşiği ve çarpan olarak kullanımı görüldü (`hesap.js:ayHesapla`); izin verilen değerlerin listesi (ör. 0.80 / 0.90 / 0.95 / 1) kodda tanımlı değil, girişte denetlenmiyor.
+2. **`gv_tesvik` değer aralığı:** Kodda yalnız yılın `arge_gv_esik` eşiğiyle karşılaştırılması (vars. 0.8) ve çarpan olarak kullanımı görüldü (`hesap.js:ayHesapla`); izin verilen değerlerin listesi (ör. 0.80 / 0.90 / 0.95 / 1) kodda tanımlı değil, girişte denetlenmiyor.
 3. **Görüntüleme → yazar geçişinde yeniden okuma yapılmaması** (§6.4 notu) koddan çıkarımdır; ekranda denenmedi.
 4. **Yedeklerin hangi parolayla şifreli olduğu:** parola hiç değiştirilmediyse hepsi aynı paroladır; değiştirildiyse eski yedekler eski parolayı ister. Hangisinin geçerli olduğu dosyadan bilinemez (tuz karşılaştırması ipucu verir: aynı tuz = aynı parola kurulumu).
 5. **`Sunucuyu-Baslat.ps1`'de HEAD isteği** yolu program klasörüne sınırlamadan `Test-Path` yapar (yalnız var/yok bilgisi sızar); güvenlik açısından önemsiz ama başka bir sunucuda tekrarlanmamalı.
@@ -1269,6 +1304,9 @@ IndexedDB depo ve tarayıcıdan dosyaya geçiş, `sendBeacon` ile kapanışta ya
 3. **`YENI_YIL` ve ay 1 kaydı:** Hesap, `aylik_girdi`'deki ay 1 sürekli kayıtlarını uygular (§2.20 notu); `calismaPersonelKopyala`'nın `YENI_YIL` kolu ise "Aralık'taki geçerli değeri" bulurken 2. aydan başlar (`son()` döngüsü). Kişi alanı (hesap türü, kanun, sakatlık, BES, GV teşvik, yol) yalnız ay 1 kaydı olarak girilmişse yeni yıla satırdaki eski değer geçer. Örnek veri ay 1'e yalnız `fm2` ve `arge_gun` yazdığından (ikisi de yeni yıla zaten geçmez) etkilenmez.
 4. **Geri yükleme yorumu:** `engine.js:yedektenYukle` yorumu giriş ekranından "yalnız aynı veri parolasıyla şifrelenmiş yedek" der; kod herhangi bir şifreli yedeği kabul eder ve tuzu farklıysa yedeğin kendi parolasını sorar. Giriş ekranına ulaşmak için veri parolası zaten gerektiğinden yorumdaki amaç (parolayı bilmeyen yönetici olamasın) korunur.
 5. **`aylikGirdiYaz` ay aralığını denetlemez** (1–12 denetimi yalnız `aylikGirdiToplu` ve `mesaiYaz`'da vardır); ekranlar yalnız 1–12 gönderir.
+6. **Bozuk değerlendirme modeli sessizce varsayılana döner:** `performansModeliYaz` hatalı modeli reddeder ve genel `parametreYaz` `perf.model` anahtarını kabul etmez; model yalnız doğrudan veritabanı düzenlemesiyle bozulabilir. O durumda `performansModeli` / `calismaPerformansModeli` hatayı yutar ve uyarı vermeden varsayılan modeli kullanır.
+7. **Modelde artık olmayan alanların satırları:** `performansGirdiYaz` alan denetimini yalnız değer yazarken yapar; boş değerle silme, modelde artık olmayan alanda da yapılabilir (kaldırılan tanımın eski verisi temizlenebilir). Ekranda bu alanlar görünmediği için silme ancak API'den ya da kişinin bütün değerlendirmesi silinerek (`performansGirdiSil`) yapılır (§2.21).
+8. **Sıfır girilen katsayı varsayılana döner:** `zam_yuvarla` / `zam.yuvarla_ongoru` = 0 ise yuvarlama adımı 10 olur (`hesap.js:zamHesapla`, `yv.ongoru || 10`); `mesai_gun_saat` = 0 ise 7.5 olur (`hesap.js:ayHesapla`, `P.gunlukSaat || 7.5`). `parametreYaz` değerleri denetlemez.
 
 ---
 
@@ -1288,11 +1326,12 @@ IndexedDB depo ve tarayıcıdan dosyaya geçiş, `sendBeacon` ile kapanışta ya
 | Yetki listesi | `js/db/schema.js:YETKILER`; `js/db/api.js:yetkiVar`, `yetkiIste`, `grupGorebilir`, `grupYazabilir`, `calismaOkuIste`, `calismaYazIste`, `okumaIste` (`OKU_HESAP`, `OKU_PERSONEL`, `OKU_PERFORMANS`) |
 | Onay dondurma | `js/db/schema.js:ONAY_TARIH_DONDUR`, `PARAMETRE_ANLIK_AL`, `PARAMETRE_DONDUR`; `js/db/api.js:calismaKaydet`, `calismaParametreAnlik`, `donemTarihleriniKoru` |
 | Bölüm adı | `js/db/schema.js:BOLUM_TEMIZLE`; `js/db/api.js:butceBolumuKaydet`, `butceBolumuBirlestir`, `butceBolumuSil`, `bolumEtiket` |
-| Parametre anahtarları | `js/db/api.js:PARAMETRE_TANIM`, `ZAM_TANIM`, `hesapParametre`, `parametreDurumu`, `ongoruUygula`, `yilKopyalaIc` |
+| Parametre anahtarları | `js/db/api.js:PARAMETRE_TANIM`, `ZAM_TANIM`, `hesapParametre`, `parametreYaz`, `parametreDurumu`, `ongoruUygula`, `yilKopyalaIc` |
+| Dış liste başlık sözlüğü | `js/db/api.js:AKTARIM_ALANLARI`, `aktarimSozluk`, `aktarimSozlukYaz`, `erpAktar`; `js/core/tablooku.js:eslestir` |
 | Çalışma ayarı anahtarları | `js/db/api.js:calismaHesapla`, `calismaZamKademe`, `calismaAyarYaz`, `calismaPersonelKopyala`, `mesaiAktifYaz` |
 | Özet anahtarları | `js/db/api.js:calismaOzetYaz`, `calismaOzetOku`, `birlesikHesapla` |
 | Aylık girdi alanları | `js/db/api.js:AYLIK_SUREKLI`, `AYLIK_TEK`, `AYLIK_KISI_ALANLARI`, `AYLIK_ETIKET`, `aylikGirdiYaz`, `aylikGirdiToplu` |
-| Performans alanları | `js/core/performans.js:MODEL`, `AMIR`, `EGITIM`, `alanlar`, `alanGecerli`, `hesapla`; `js/db/api.js:performansGirdiYaz`, `performansCarpanUygula`, `performansOncekiDonem` |
+| Değerlendirme modeli ve alanları | `js/core/performans.js:VARSAYILAN`, `TURLER`, `hazirla` (`alanlar`, `alanGecerli`, `metinAlan`), `hesapla`, `aciklama`, `kodUret`; `js/db/api.js:performansModeliHam`, `performansModeli`, `calismaPerformansModeli`, `performansModeliYaz`, `performansGirdiYaz`, `performansGirdiSil`, `performansCarpanUygula`, `performansOncekiDonem` |
 | Mesai öngörüsü | `js/db/api.js:mesaiOku`, `mesaiYaz`, `mesaiKopyala`, `mesaiAktifYaz`, `mesaiKisiBasi` |
 | Kişi satırı alanları | `js/db/api.js:CP_ALANLAR`, `CP_SAYISAL`, `CP_BOS_OLABILIR`, `calismaPersonelKaydet`, `calismaPersonelAlanYaz`, `calismaPersonelTasi`, `erpAktar`, `trSayi` |
 | Depo, okuma/yazma | `js/db/engine.js:depoOku`, `depoYaz`, `sunucudanOku`, `sunucuyaYaz`, `kaydetGecikmeli`, `kaydetHemen`, `yazmaIsi`, `ikiliAl`, `islem` |

@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS aylik_girdi (
 CREATE INDEX IF NOT EXISTS ix_aylik_calisma ON aylik_girdi(calisma_id, ay);
 
 /* Performans değerlendirmesi — kişi başına alan/değer. Alanlar js/core/performans.js'te
-   (amir1..3, a1.<kriter>…a3.<kriter>, devamlılık, tutanak, kıdem, eğitim…). Puan ve çarpan
+   (amir1…amir5, a<N>.<kriter>, ek alanlar — hepsi çalışmanın değerlendirme modelinden). Puan ve çarpan
    kayıtlı değildir, her açılışta hesaplanır; zam hesabına "Çarpanları uygula" ile geçer. */
 CREATE TABLE IF NOT EXISTS performans_girdi (
   calisma_id   INTEGER NOT NULL REFERENCES calisma(id) ON DELETE CASCADE,
@@ -380,19 +380,22 @@ window.PARAMETRE_DONDUR = function (calistir, tumu, calismaId) {
    betiklerini çalıştırır, eski tabloyu silip yenisini yerine adlandırır. Şimdilik yok. */
 window.TABLO_GOC = [];
 
-/* Temel veri — hem ilk kurulumda hem sürüm yükseltmesinde çalışır (var olanın üzerine yazmaz).
+/* Temel veri — hem ilk kurulumda hem sürüm yükseltmesinde çalışır. Kanun türleri yalnız tablo
+   BOŞSA yazılır: kullanıcı Tanımlar'dan bir türü silmiş ya da değiştirmişse yükseltme onu geri getirmez.
    05510: 2026'dan itibaren işveren prim indirimi imalat dışında 2 puan, imalatta 5 puan;
    iki ayrı tür tanımlıdır. Gruplar burada açılmaz: Tanımlar → Gruplar'dan ya da örnek veriyle gelir. */
 window.TEMEL_VERI_YAZ = function (calistir) {
-  [
+  const satirlar = [
     ['YOK',     'TABİ DEĞİL',            'YOK',   'Teşvik yok', 1, null],
     ['05510',   '05510 - %2',            '05510', 'SGK işveren payında 2 puan indirim (imalat dışı)', 2, 0.02],
     ['05510-5', '05510 - %5',            '05510', 'SGK işveren payında 5 puan indirim (imalat sektörü)', 3, 0.05],
     ['05746',   '05746 - ARGE',          '05746', 'AR-GE: işveren SGK payının yarısı + 05510 indirimi', 4, null],
     ['14857',   '14857 - ENGELLİ %100',  '14857', 'Engelli: asgari ücret üzerinden işveren payı', 5, null],
     ['15510',   '15510 - %5',            '15510', 'Emekli (SGDP) çalışanda %5 indirim', 6, null],
-  ].forEach(k => calistir(
-    `INSERT OR IGNORE INTO kanun_turu (kod, ad, kural, aciklama, sira, oran) VALUES (?,?,?,?,?,?)`, k));
+  ];
+  calistir(`INSERT INTO kanun_turu (kod, ad, kural, aciklama, sira, oran)
+            SELECT * FROM (VALUES ${satirlar.map(() => '(?,?,?,?,?,?)').join(',')})
+            WHERE NOT EXISTS (SELECT 1 FROM kanun_turu)`, [].concat(...satirlar));
 };
 
 /* =====================================================================

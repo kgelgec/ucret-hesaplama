@@ -422,6 +422,8 @@ window.API = (function () {
     const kod = String(k.kod || '').trim().toUpperCase();
     if (!kod) throw new Error('Kod boş olamaz.');
     if (!U.bicimAd(k.ad)) throw new Error('Ad boş olamaz.');
+    /* Sigorta kolu motorun tanıdığı üç koldan biri olmalı (formüller kodda) */
+    if (['SSK', 'SGDP', 'YOK'].indexOf(k.kol || 'SSK') < 0) throw new Error('SGK kolu SSK, SGDP ya da YOK olmalı.');
     db.calistir(`INSERT OR REPLACE INTO hesap_turu
       (yil, kod, ad, kol, sgk_isci, issizlik_isci, sgk_isveren, issizlik_isveren, gv, dv, istisna, sira, aciklama)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -450,6 +452,9 @@ window.API = (function () {
     yetkiIste('parametre.yaz');
     const kod = String(k.kod || '').trim();
     if (!kod || !U.bicimAd(k.ad)) throw new Error('Kod ve ad zorunludur.');
+    /* Ad serbesttir; hesabı belirleyen kural motorun tanıdığı kurallardan biri olmalı */
+    if (['YOK', '05510', '05746', '14857', '15510'].indexOf(k.kural || 'YOK') < 0)
+      throw new Error('Kural motorun tanıdığı kurallardan biri olmalı: YOK, 05510, 05746, 14857, 15510.');
     db.calistir(`INSERT OR REPLACE INTO kanun_turu (kod, ad, kural, aciklama, sira, oran) VALUES (?,?,?,?,?,?)`,
                 [kod, U.bicimAd(k.ad), k.kural || 'YOK', k.aciklama || null, Number(k.sira) || 0,
                  k.oran === '' || k.oran == null ? null : Number(k.oran)]);
@@ -485,6 +490,11 @@ window.API = (function () {
     { anahtar: 't05746',         ad: '05746 AR-GE SGK teşvik oranı (işveren %19,75 × ½)', birim: 'oran', vars: 0.09875 },
     { anahtar: 't14857',         ad: '14857 engelli teşvik oranı', birim: 'oran', vars: 0.1975 },
     { anahtar: 't15510',         ad: '15510 teşvik oranı',         birim: 'oran', vars: 0.05 },
+    { anahtar: 'arge_gv_esik',   ad: 'AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı', birim: 'oran', vars: 0.8 },
+    { anahtar: 'mesai_fm1_kat',  ad: 'Hafta içi fazla mesai (FM1) katsayısı', birim: '× saat ücreti', vars: 1.5 },
+    { anahtar: 'mesai_fm2_kat',  ad: 'Hafta sonu / tatil mesaisi (FM2) katsayısı', birim: '× saat ücreti', vars: 2 },
+    { anahtar: 'mesai_gun_saat', ad: 'Saat ücretinde günlük çalışma saati (net maaş / 30 / saat)', birim: 'saat', vars: 7.5 },
+    { anahtar: 'zam_yuvarla',    ad: 'Zam öngörüsü yuvarlama adımı (çalışmaya özel de girilebilir)', birim: 'TL', vars: 10 },
   ];
   /* Zam öngörüsü kademesi — varsayılanlar yalnızca başlangıç değeridir; Parametreler'den değiştirilir */
   const ZAM_TANIM = [
@@ -509,6 +519,8 @@ window.API = (function () {
   }
   function parametreYaz(yil, anahtar, deger) {
     yetkiIste('parametre.yaz');
+    /* Değerlendirme modeli yalnız denetimli yoldan yazılır */
+    if (anahtar === 'perf.model') throw new Error('Değerlendirme modeli Performans Değerlendirme → Değerlendirme modeli ekranından değiştirilir.');
     db.calistir(`INSERT OR REPLACE INTO parametre (yil, anahtar, deger) VALUES (?,?,?)`,
                 [yil, anahtar, deger == null ? null : String(deger)]);
     log('KAYDET', 'parametre', yil + '/' + anahtar, String(deger));
@@ -1120,6 +1132,48 @@ window.API = (function () {
      Boş gelen alana dokunulmaz.
      yeniEklensin: { tc: true } — çalışmada olmayıp eklenecekler
      --------------------------------------------------------------- */
+  /* Başlık sözlüğü: alan → dosyadaki olası sütun başlıkları. Varsayılanlar aşağıda; kullanıcı
+     Tanımlar → Aktarım Başlıkları'ndan alan başına listeyi değiştirebilir (sistem_bilgi 'aktarim.sozluk', JSON). */
+  const AKTARIM_ALANLARI = [
+    ['tc', 'T.C.', ['tc', 't c', 'tc kimlik', 'tc kimlik no', 't c kimlik no', 'kimlik no', 'tckn', 'tc no']],
+    ['ad', 'Ad Soyad', ['ad soyad', 'adi soyadi', 'adı soyadı', 'ad soyadi', 'personel', 'calisan', 'çalışan', 'isim']],
+    ['ise_giris', 'İşe Giriş', ['ise giris', 'işe giriş', 'ise giris tarihi', 'işe giriş tarihi', 'giris tarihi', 'giriş tarihi']],
+    ['isten_ayrilis', 'Çıkış', ['cikis tarihi', 'çıkış tarihi', 'isten cikis', 'işten çıkış', 'ayrilis', 'ayrılış', 'cikis', 'çıkış']],
+    ['bolum', 'Bölüm', ['bolum', 'bölüm', 'departman', 'birim']],
+    ['ekip', 'Ekip', ['ekip']],
+    ['gorev', 'Görev', ['gorev', 'görev', 'pozisyon', 'unvan', 'meslek']],
+    ['maas', 'Net Maaş', ['net maas', 'net maaş', 'net ucret', 'net ücret', 'maas', 'maaş', 'ucret', 'ücret']],
+    ['yaka', 'Yaka', ['yaka', 'm b', 'm / b', 'm/b']],
+    ['butce_bolumu', 'Bütçe Bölümü', ['butce bolumu', 'bütçe bölümü', 'masraf merkezi']],
+    ['maliyet', 'Gerçekleşen Maliyet', ['gerceklesen maliyet', 'gerçekleşen maliyet', 'toplam maliyet', 'yillik maliyet', 'yıllık maliyet', 'maliyet']],
+  ];
+  /* Dönüş: { sozluk: {alan: [başlıklar]}, etiket: {alan: ad}, degisen: {alan: true} } */
+  function aktarimSozluk() {
+    let kayit = {};
+    try { kayit = JSON.parse(ayarOku('aktarim.sozluk', '{}')) || {}; } catch (e) { kayit = {}; }
+    const sozluk = {}, etiket = {}, degisen = {};
+    AKTARIM_ALANLARI.forEach(a => {
+      const k = Array.isArray(kayit[a[0]]) ? kayit[a[0]].map(x => String(x).trim()).filter(Boolean) : null;
+      sozluk[a[0]] = k && k.length ? k : a[2].slice();
+      etiket[a[0]] = a[1];
+      if (k && k.length) degisen[a[0]] = true;
+    });
+    return { sozluk: sozluk, etiket: etiket, degisen: degisen, varsayilan: Object.fromEntries(AKTARIM_ALANLARI.map(a => [a[0], a[2].slice()])) };
+  }
+  /* degerler = { alan: [başlıklar] | null } — null ya da boş liste = varsayılana dön */
+  function aktarimSozlukYaz(degerler) {
+    yetkiIste('parametre.yaz');
+    let kayit = {};
+    try { kayit = JSON.parse(ayarOku('aktarim.sozluk', '{}')) || {}; } catch (e) { kayit = {}; }
+    Object.keys(degerler || {}).forEach(a => {
+      if (!AKTARIM_ALANLARI.some(x => x[0] === a)) throw new Error('Bilinmeyen alan: ' + a);
+      const l = (degerler[a] || []).map(x => String(x).trim()).filter(Boolean);
+      if (l.length) kayit[a] = l; else delete kayit[a];
+    });
+    ayarYaz('aktarim.sozluk', JSON.stringify(kayit));
+    log('KAYDET', 'sistem_bilgi', 'aktarim.sozluk', Object.keys(kayit).length + ' alan değiştirilmiş');
+  }
+
   function erpAktar(id, satirlar, yeniEklensin) {
     const c = calismaYazIste(id, 'personel.yaz');
     let guncel = 0, eklenen = 0;
@@ -1184,7 +1238,8 @@ window.API = (function () {
   /* Sürekli alanlar girildiği aydan itibaren sonraki aylara devreder. Mesai (fm1/fm2) da süreklidir:
      Ocak'a girilen mesai saatleri, değiştirilmedikçe bütün aylarda geçerlidir (aylık standart mesai öngörüsü).
      arge_gun da DEVREDER: girildiği aydan itibaren sonraki aylarda geçerlidir. Girilmemişse çalışmanın
-     AR-GE günü ayarı (Çalışma Ayarları) kullanılır; o da yoksa 0 — varsayılan yoktur. */
+     AR-GE günü ayarı (Çalışma Ayarları) kullanılır — yalnız GV teşviki yılın 'arge_gv_esik' parametresine
+     (vars. %80) eşit ya da üstündeki kişilerde; o da yoksa 0 — varsayılan yoktur. */
   const AYLIK_SUREKLI = ['hesap_turu', 'kanun', 'sakatlik_derece', 'ozurlu_indirimi', 'bes', 'gv_tesvik', 'yol', 'fm1', 'fm2', 'arge_gun'];
   const AYLIK_TEK = ['ayni', 'prim', 'yakit', 'calisilan_gun'];
   /* Kişinin hesaplama bilgisi olan alanlar: yazmak için personel.yaz gerekir (aylık tutarlar aylik.yaz ister) */
@@ -1197,8 +1252,46 @@ window.API = (function () {
   };
 
   /* ---------------------------------------------------------------
-     PERFORMANS DEĞERLENDİRME — girdiler; hesap js/core/performans.js
+     PERFORMANS DEĞERLENDİRME — model ve girdiler; hesap js/core/performans.js
+     Model yıl bazındadır (parametre 'perf.model', JSON). Kayıt yoksa örnek
+     (varsayılan) model geçerlidir. Onaylı çalışma, onay anındaki modelle
+     (dondurulmuş parametreler) değerlendirilir.
      --------------------------------------------------------------- */
+  function modelCoz(metin) {
+    if (metin == null || metin === '') return null;
+    try { return JSON.parse(metin); } catch (e) { return null; }
+  }
+  /* Ekrandaki düzenleyici için: { model (ham), varsayilan (kayıt yok mu) } */
+  function performansModeliHam(yil) {
+    const m = modelCoz(parametreOku(yil)['perf.model']);
+    return { model: m || window.PERF.VARSAYILAN(), varsayilan: !m };
+  }
+  function performansModeli(yil) {
+    const m = modelCoz(parametreOku(yil)['perf.model']);
+    try { return window.PERF.hazirla(m); } catch (e) { return window.PERF.hazirla(null); }
+  }
+  /* Çalışmanın modeli: onaylı çalışmada dondurulmuş parametrelerdeki model (onaydan önce model kaydı yoksa varsayılan) */
+  function calismaPerformansModeli(id) {
+    const c = calismaGetir(id);
+    if (!c) throw new Error('Çalışma bulunamadı.');
+    const anlik = c.durum === 'ONAYLI' ? calismaParametreAnlik(id) : null;
+    if (!anlik) return performansModeli(c.yil);
+    const satir = (anlik.parametre || []).find(r => r.anahtar === 'perf.model');
+    try { return window.PERF.hazirla(modelCoz(satir && satir.deger)); } catch (e) { return window.PERF.hazirla(null); }
+  }
+  /* ham = model nesnesi; null = kaydı sil (varsayılan modele dön). Hatalı model kaydedilmez. */
+  function performansModeliYaz(yil, ham) {
+    yetkiIste('parametre.yaz');
+    if (ham == null) {
+      db.calistir(`DELETE FROM parametre WHERE yil = ? AND anahtar = 'perf.model'`, [yil]);
+      log('SIL', 'parametre', yil + '/perf.model', 'varsayılan modele dönüldü');
+    } else {
+      const m = window.PERF.hazirla(ham);   // denetim: hatalıysa atar
+      db.calistir(`INSERT OR REPLACE INTO parametre (yil, anahtar, deger) VALUES (?, 'perf.model', ?)`, [yil, JSON.stringify(m.ham)]);
+      log('KAYDET', 'parametre', yil + '/perf.model', 'değerlendirme modeli');
+    }
+    onbellekTemizle();
+  }
   function performansGirdiHarita(id) {
     calismaOkuIste(id);
     const h = {};
@@ -1212,8 +1305,11 @@ window.API = (function () {
     calismaYazIste(id, 'zam.yaz');
     const kisi = {};
     db.tumu(`SELECT tc_kimlik_no FROM calisma_personel WHERE calisma_id = ?`, [id]).forEach(r => { kisi[r.tc_kimlik_no] = 1; });
+    const model = calismaPerformansModeli(id);
     liste.forEach(x => {
-      if (!window.PERF.alanGecerli(x.alan)) throw new Error('Bilinmeyen performans alanı: ' + x.alan);
+      /* Silme (boş değer) modelde artık olmayan alanda da yapılabilir: kaldırılan tanımın eski verisi temizlenebilsin */
+      const sil = x.deger == null || String(x.deger).trim() === '';
+      if (!sil && !model.alanGecerli(x.alan)) throw new Error('Bilinmeyen performans alanı: ' + x.alan);
       if (!kisi[x.tc]) throw new Error(x.tc + ' bu çalışmada yok.');
     });
     db.islem(() => liste.forEach(x => {
@@ -1404,11 +1500,13 @@ window.API = (function () {
       s('zam.' + y + '.' + z.anahtar, z.vars); }));
     const P = HESAP.parametreHazirla({
       yil: yil, dilimler: dilimler, asgariUcret: au, tavanCarpan: s('tavan_carpan', 9),
-      dv: s('dv', 0.00759), besOrani: s('bes_orani', 0.03), argeGun: 0,
+      dv: s('dv', 0.00759), besOrani: s('bes_orani', 0.03), argeGun: 0, argeEsik: s('arge_gv_esik', 0.8),
+      mesaiKat1: s('mesai_fm1_kat', 1.5), mesaiKat2: s('mesai_fm2_kat', 2), gunlukSaat: s('mesai_gun_saat', 7.5),
       istisnaKesinti: s('istisna_kesinti', 0.15), turler: turler,
       tesvik: { k05510: s('t05510', 0.02), k05746: s('t05746', 0.09875),
                 k14857: s('t14857', 0.1975), k15510: s('t15510', 0.05) },
     });
+    P.zamYuvarla = s('zam_yuvarla', 10);
     P.kanunKural = kanunKural;
     P.kanunOran = kanunOran;
     P.zamKademe = zam;
@@ -1488,9 +1586,9 @@ window.API = (function () {
        niteliğidir ve yeni yıla geçer. */
     P.tesvik = Object.assign({}, P.tesvik);
     ['k05510', 'k05746', 'k14857', 'k15510'].forEach(k => { if (ayarSayi('tesvik.' + k) != null) P.tesvik[k] = ayarSayi('tesvik.' + k); });
-    /* Zam öngörüsünün yuvarlama adımı da çalışmaya özel (boş = 10 TL) */
+    /* Zam öngörüsünün yuvarlama adımı: çalışmaya özel girilmişse o, yoksa yılın parametresi (vars. 10 TL) */
     const Z = { yontem: { kademe: !!c.zam_kademe, performans: !!c.zam_performans }, kademe: calismaZamKademe(c, P),
-      yuvarla: { ongoru: ayarSayi('zam.yuvarla_ongoru') } };
+      yuvarla: { ongoru: ayarSayi('zam.yuvarla_ongoru') != null ? ayarSayi('zam.yuvarla_ongoru') : P.zamYuvarla } };
     const varsayilanGun = (yaka, m) => {
       const v = ayar['gun.' + yaka + '.' + m];
       return v == null || v === '' ? null : Number(v);
@@ -1654,6 +1752,7 @@ window.API = (function () {
 
     grupListe, gorunurGruplar, grupKaydet, grupSil, aralikOner, maasAraliklari, maasAralikYaz,
     performansGirdiHarita, performansGirdiYaz, performansGirdiSil, performansCarpanUygula, performansOncekiDonem,
+    performansModeliHam, performansModeli, calismaPerformansModeli, performansModeliYaz,
     calismaRevizeAc, calismaParametreDondurulmusMu, yilOnayliCalismalar,
     personelGecmis, personelOnDoldur, tasimaHedefleri, calismaPersonelTasi,
     mesaiOku, mesaiYaz, mesaiKopyala, mesaiAktifYaz, mesaiKisiBasi,
@@ -1670,7 +1769,7 @@ window.API = (function () {
     calismaAyarOku, calismaAyarYaz, calismaZamKademe,
 
     personelGetir, calismaPersonelListe, calismaPersonelGetir, calismaPersonelKaydet,
-    calismaPersonelAlanYaz, calismaPersonelSil, calismaPersonelKopyala, erpAktar, tcBaskaGrupta,
+    calismaPersonelAlanYaz, calismaPersonelSil, calismaPersonelKopyala, erpAktar, aktarimSozluk, aktarimSozlukYaz, tcBaskaGrupta,
 
     AYLIK_SUREKLI, AYLIK_TEK, AYLIK_ETIKET, aylikGirdiHarita, aylikGirdiYaz, aylikGirdiToplu,
 

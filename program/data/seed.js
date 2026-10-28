@@ -97,7 +97,8 @@ window.ORNEK_VERI_YUKLE = function (db) {
           girdi.push({ tc: p.tc, yaka: p.yaka, g: pg });
         });
         /* Çarpanlar örnek modelden hesaplanıp zam hesabına uygulanır ("Çarpanları uygula" ile aynı) */
-        const sonuc = window.PERF ? window.PERF.hesapla(girdi) : { kisi: {} };
+        const model = window.API ? window.API.performansModeli(YIL) : null;
+        const sonuc = window.PERF ? window.PERF.hesapla(girdi, model) : { kisi: {} };
         Object.keys(sonuc.kisi).forEach(tc => c(`UPDATE calisma_personel SET performans_carpani = ? WHERE calisma_id = ? AND tc_kimlik_no = ?`,
                                                 [sonuc.kisi[tc].carpan, id, tc]));
       }

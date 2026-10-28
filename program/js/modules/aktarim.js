@@ -14,21 +14,9 @@
 (function () {
   'use strict';
 
-  const TANIM = {
-    tc: ['tc', 't c', 'tc kimlik', 'tc kimlik no', 't c kimlik no', 'kimlik no', 'tckn', 'tc no'],
-    ad: ['ad soyad', 'adi soyadi', 'adı soyadı', 'ad soyadi', 'personel', 'calisan', 'çalışan', 'isim'],
-    ise_giris: ['ise giris', 'işe giriş', 'ise giris tarihi', 'işe giriş tarihi', 'giris tarihi', 'giriş tarihi'],
-    isten_ayrilis: ['cikis tarihi', 'çıkış tarihi', 'isten cikis', 'işten çıkış', 'ayrilis', 'ayrılış', 'cikis', 'çıkış'],
-    bolum: ['bolum', 'bölüm', 'departman', 'birim'],
-    ekip: ['ekip'],
-    gorev: ['gorev', 'görev', 'pozisyon', 'unvan', 'meslek'],
-    maas: ['net maas', 'net maaş', 'net ucret', 'net ücret', 'maas', 'maaş', 'ucret', 'ücret'],
-    yaka: ['yaka', 'm b', 'm / b', 'm/b'],
-    butce_bolumu: ['butce bolumu', 'bütçe bölümü', 'masraf merkezi'],
-    maliyet: ['gerceklesen maliyet', 'gerçekleşen maliyet', 'toplam maliyet', 'yillik maliyet', 'yıllık maliyet', 'maliyet'],
-  };
-  const ETIKET = { tc: 'T.C.', ad: 'Ad Soyad', ise_giris: 'İşe Giriş', isten_ayrilis: 'Çıkış', bolum: 'Bölüm', ekip: 'Ekip',
-    gorev: 'Görev', maas: 'Net Maaş', yaka: 'Yaka', butce_bolumu: 'Bütçe Bölümü', maliyet: 'Gerçekleşen Maliyet' };
+  /* Sütun başlığı sözlüğü (alan → olası başlıklar) ve alan adları API'den gelir; kullanıcı
+     Tanımlar → Aktarım Başlıkları'ndan değiştirebilir. */
+  const sozluk = () => API.aktarimSozluk();
 
   let durum = null;   // { calismaId, kaynak, sutun, satirlar, onizleme }
 
@@ -49,7 +37,8 @@
         <div class="izgara izgara-2">
           <div>
             <div class="alan"><label>ERP / bordro programı listesi (.xlsx / .csv)</label><input type="file" id="dosya" accept=".xlsx,.csv,.txt"></div>
-            <div class="kucuk soluk">Tanınan başlıklar: ${Object.keys(ETIKET).map(k => ETIKET[k]).join(', ')}.
+            <div class="kucuk soluk">Tanınan başlıklar: ${(E => Object.keys(E).map(k => E[k]).join(', '))(sozluk().etiket)}
+              (sütun adları Tanımlar → Aktarım Başlıkları'ndan değiştirilebilir).
               Yalnızca T.C. zorunludur; boş sütunlar mevcut bilgiye dokunmaz.</div>
           </div>
           <div class="alan"><label>…ya da Excel'den kopyalayıp yapıştırın (başlık satırıyla birlikte)</label>
@@ -70,7 +59,7 @@
   }
 
   function oku(c, ham, kaynak) {
-    const e = TO.eslestir(ham, TANIM, ['tc']);
+    const e = TO.eslestir(ham, sozluk().sozluk, ['tc']);
     if (!e) throw new Error('Başlık satırında T.C. sütunu bulunamadı.');
     const s = e.sutun, al = (row, a) => s[a] == null ? null : row[s[a]];
     const satirlar = e.veri.map(row => ({
@@ -95,6 +84,7 @@
     const baska = API.tcBaskaGrupta(c.yil, c.grup_kod, durum.satirlar.map(r => r.tc));
     const degisen = [], yeni = [], ayni = [];
     const dosyada = {};
+    const ETIKET = sozluk().etiket;
     durum.satirlar.forEach(r => {
       dosyada[r.tc] = 1;
       const k = mevcut[r.tc];
@@ -115,7 +105,7 @@
     return `
       <div class="ayrac"></div>
       <div class="uyari uyari-bilgi"><span class="ik">ℹ</span><div><strong>${U.esc(durum.kaynak)}</strong>: ${durum.satirlar.length} satır okundu.
-        Tanınan sütunlar: ${Object.keys(durum.sutun).map(a => `<span class="rz rz-mavi">${ETIKET[a]} ← ${U.esc(durum.basliklar[durum.sutun[a]])}</span>`).join(' ')}
+        Tanınan sütunlar: ${Object.keys(durum.sutun).map(a => `<span class="rz rz-mavi">${sozluk().etiket[a]} ← ${U.esc(durum.basliklar[durum.sutun[a]])}</span>`).join(' ')}
         ${durum.sutun.maas == null ? '<br><strong>Net maaş sütunu tanınmadı</strong> — maaşlar güncellenmeyecek.' : ''}</div></div>
       <div class="izgara izgara-4 ust-bosluk">
         <div class="stat"><div class="kucuk soluk">Güncellenecek</div><div class="gosterge">${degisen.length}</div></div>

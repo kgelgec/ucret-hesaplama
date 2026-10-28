@@ -1,6 +1,6 @@
 /* =====================================================================
    TANIMLAR — hesaplama türleri, kanun (teşvik) türleri, gruplar,
-   bütçe bölümleri
+   bütçe bölümleri, dış liste aktarımının tanıdığı sütun başlıkları
    ===================================================================== */
 (function () {
   'use strict';
@@ -9,7 +9,7 @@
   const KOL = [{ deger: 'SSK', etiket: 'SSK — tüm sigorta kolları' }, { deger: 'SGDP', etiket: 'SGDP — emekli' },
                { deger: 'YOK', etiket: 'SGK yok (huzur hakkı / danışman)' }];
   const KURAL = [{ deger: 'YOK', etiket: 'Teşvik yok' }, { deger: '05510', etiket: '05510 — işveren prim indirimi (oran aşağıda)' },
-    { deger: '05746', etiket: '05746 — AR-GE (işveren ½ + %2)' }, { deger: '14857', etiket: '14857 — engelli' },
+    { deger: '05746', etiket: '05746 — AR-GE (işveren payının ½ + 05510 indirimi)' }, { deger: '14857', etiket: '14857 — engelli' },
     { deger: '15510', etiket: '15510 — emekli %5' }];
 
   function ciz(kap, param) {
@@ -56,6 +56,19 @@
               <button class="ikon-btn satir-sil" data-kanun-sil="${U.esc(k.kod)}">🗑</button>` : '' },
         ], API.kanunListe())}
         ${yaz ? '<button class="btn ust-bosluk" id="yeniKanun">+ Yeni Kanun Türü</button>' : ''}`;
+    } else if (sekme === 'baslik') {
+      const S = API.aktarimSozluk();
+      icerik = `<div class="kart-aciklama">Dış Liste Aktarımı, ERP / bordro programından alınan listedeki sütunları
+          <strong>başlık adlarıyla</strong> tanır. Her alan için tanınacak başlıkları virgülle ayırarak yazın; büyük / küçük harf
+          ve Türkçe karakter farkı gözetilmez ("Net Ücret" = "net ucret"). Başlık tam tutmazsa başlığın içinde geçen aday da
+          eşleşir. T.C. sütunu zorunludur.</div>
+        <table class="genis-tablo ust-bosluk" id="baslikTablo"><thead><tr><th>Alan</th><th>Tanınan başlıklar</th><th></th></tr></thead>
+          <tbody>${Object.keys(S.sozluk).map(a => `<tr><td class="kalin" style="white-space:nowrap">${U.esc(S.etiket[a])}
+              ${S.degisen[a] ? ' <span class="rz rz-sari" title="Varsayılandan farklı">değiştirildi</span>' : ''}</td>
+            <td><input class="hucre-girdi" style="width:100%; text-align:left" data-baslik="${a}" value="${U.esc(S.sozluk[a].join(', '))}"${yaz ? '' : ' readonly'}></td>
+            <td>${yaz ? `<button class="btn btn-ikincil btn-kucuk" data-baslik-sifirla="${a}" title="${U.esc(S.varsayilan[a].join(', '))}">Varsayılan</button>` : ''}</td></tr>`).join('')}
+          </tbody></table>
+        ${yaz ? '<button class="btn ust-bosluk" id="baslikKaydet">Başlıkları kaydet</button>' : ''}`;
     } else if (sekme === 'grup') {
       const gl = API.grupListe();
       const calSay = {}, bolSay = {};
@@ -101,7 +114,8 @@
     kap.innerHTML = `
       <div class="kart">
         <div class="sekme-cubuk">
-          ${[['tur', 'Hesaplama Türleri'], ['kanun', 'Kanun / Teşvik Türleri'], ['grup', 'Gruplar'], ['bolum', 'Bütçe Bölümleri']]
+          ${[['tur', 'Hesaplama Türleri'], ['kanun', 'Kanun / Teşvik Türleri'], ['grup', 'Gruplar'], ['bolum', 'Bütçe Bölümleri'],
+             ['baslik', 'Aktarım Başlıkları']]
             .filter(s => s[0] !== 'grup' || yonetici).map(s =>
             `<button class="btn btn-ikincil btn-kucuk${sekme === s[0] ? ' etkin' : ''}" data-sekme="${s[0]}">${s[1]}</button>`).join('')}
         </div>
@@ -122,6 +136,25 @@
     }
     if (!yaz) return;
 
+    if (sekme === 'baslik') {
+      const S = API.aktarimSozluk();
+      kap.querySelectorAll('[data-baslik-sifirla]').forEach(b => b.onclick = () => {
+        const a = b.getAttribute('data-baslik-sifirla');
+        kap.querySelector(`[data-baslik="${a}"]`).value = S.varsayilan[a].join(', ');
+      });
+      U.el('baslikKaydet').onclick = () => {
+        const yeni = {};
+        kap.querySelectorAll('[data-baslik]').forEach(inp => {
+          const a = inp.getAttribute('data-baslik');
+          const l = inp.value.split(/[,;\n]/).map(x => x.trim()).filter(Boolean);
+          yeni[a] = l.join('|') === S.varsayilan[a].join('|') ? null : l;   // varsayılanla aynıysa kayıt tutulmaz
+        });
+        if (!(yeni.tc || S.varsayilan.tc).length) return U.bildir('T.C. alanı için en az bir başlık girilmeli.', 'hata');
+        try { API.aktarimSozlukYaz(yeni); U.bildir('Aktarım başlıkları kaydedildi.', 'basari'); APP.tazele(); }
+        catch (e) { U.bildir(e.message, 'hata'); }
+      };
+      return;
+    }
     const yt = U.el('yeniTur'); if (yt) yt.onclick = () => turForm(yil, null);
     const yk = U.el('yeniKanun'); if (yk) yk.onclick = () => kanunForm(null);
     const yb = U.el('yeniBolum'); if (yb) yb.onclick = () => bolumForm(null);
@@ -283,7 +316,7 @@
 
   APP.modulKaydet({
     id: 'tanim', ad: 'Tanımlar', ikon: '📋', grup: 'Tanımlar',
-    baslik: 'Tanımlar', altBaslik: 'Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri',
+    baslik: 'Tanımlar', altBaslik: 'Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri, aktarım başlıkları',
     yetki: 'parametre.oku', ciz: ciz,
   });
 })();

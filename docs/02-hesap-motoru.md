@@ -29,8 +29,8 @@ Kaynak dosyalar (`program/` klasörü):
 | Dosya | İçerik |
 |---|---|
 | `js/core/hesap.js` | Asıl motor: `parametreHazirla`, `ayHesapla`, `yilHesapla`, `zamHesapla`, `vergi`, `mround` |
-| `js/core/performans.js` | Performans değerlendirmesinin **örnek modeli** → zam çarpanı (`PERF.hesapla`) |
-| `js/db/api.js` | Veritabanından motora köprü: `hesapParametre`, `calismaHesapla`, `calismaZamKademe`, `performansCarpani`, `ayOf`, `AYLIK_SUREKLI` / `AYLIK_TEK`, `mesaiKisiBasi`, `birlesikHesapla`, `calismaPersonelKopyala`, `ongoruHesapla` |
+| `js/core/performans.js` | Performans değerlendirmesi: modelin denetimi ve derlenmesi (`PERF.hazirla`), hesap → zam çarpanı (`PERF.hesapla`), varsayılan örnek model (`PERF.VARSAYILAN`) |
+| `js/db/api.js` | Veritabanından motora köprü: `PARAMETRE_TANIM`, `hesapParametre`, `calismaHesapla`, `calismaZamKademe`, `performansCarpani`, `performansModeli` / `calismaPerformansModeli` / `performansModeliYaz`, `ayOf`, `AYLIK_SUREKLI` / `AYLIK_TEK`, `mesaiKisiBasi`, `birlesikHesapla`, `calismaPersonelKopyala`, `ongoruHesapla` |
 | `js/db/schema.js` | Tablolar, varsayılan kanun türleri (`TEMEL_VERI_YAZ`), `PARAMETRE_ANLIK_AL` / `PARAMETRE_DONDUR` / `ONAY_TARIH_DONDUR` |
 | `data/seed.js` | 2026 yasal parametreleri ve hesaplama türleri (`SEED_YUKLE`) |
 
@@ -63,7 +63,11 @@ Genel ilkeler (bütün bölümler için geçerli):
 | g | Aynî yardım işçi SGK tavan karşılaştırmasına ve BES matrahına girmez; BES tavanı sigorta günüyle. | `topEk` (§3.5), `besMatrah`, `besGun` (§3.7) |
 | h | SGK prim matrahı asgari ücret tabanının (asgari / 30 × sigorta günü) altına inmez. | `taban`, `tb` (§3.4) |
 | i | Yakıt yardımının damga vergisi yılın damga oranıyla. | `CR` (§3.5) |
-| — | Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur). | `AV` (§3.3) |
+| — | Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur): saat ücreti = net maaş / 30 / günlük saat; FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri yılın katsayılarıyla çarpılır. | `AV` (§3.3) |
+
+Motorda kalan sabitler: 30 günlük ay, yaka türleri (B / M), 3 sakatlık derecesi (tutarları parametredir), teşvik ve sigorta
+kolu kurallarının formülleri (kanun ve hesaplama türlerinin adı ve oranı parametredir). Oranlar, katsayılar, eşikler ve
+yuvarlama adımları yıl parametresidir (§2.1).
 
 ---
 
@@ -117,8 +121,8 @@ AYLIK_TEK     = ['ayni','prim','yakit','calisilan_gun']
 | `bes` | — | `'EVET'` ya da başka | `bes`, sürekli | Yalnız `=== 'EVET'` BES keser. |
 | `gvTesvik` | — | oran (0–1) | `gv_tesvik`, sürekli | AR-GE gelir vergisi teşvik oranı. `\|\| 0`. |
 | `yol` | `AY` | TL/ay **net** | `yol`, sürekli | |
-| `fm1` | `AT` | saat | `fm1`, sürekli | Hafta içi fazla mesai (×1,5). Mesai öngörüsü açıksa bkz. §1.3. |
-| `fm2` | `AU` | saat | `fm2`, sürekli | Hafta sonu / tatil fazla mesai (×2). |
+| `fm1` | `AT` | saat | `fm1`, sürekli | Hafta içi fazla mesai (× `P.mesaiKat1`, vars. 1,5). Mesai öngörüsü açıksa bkz. §1.3. |
+| `fm2` | `AU` | saat | `fm2`, sürekli | Hafta sonu / tatil fazla mesai (× `P.mesaiKat2`, vars. 2). |
 | `argeGun` | `AP` | gün | `arge_gun`, sürekli | Girilmemişse `null` → §3.2 kuralı. |
 | `ayni` | `AW` | TL **net** | `ayni`, tek | Aynî yardım. |
 | `prim` | `AX` | TL **net** | `prim`, tek | Prim ve diğer ödemeler. |
@@ -182,6 +186,11 @@ hesaplanır: yeni yılın yasal rakamları sonradan girilse de onaylı maliyet d
 | `besOrani` | `bes_orani` | 0,03 | 0,03 | Otomatik katılım BES oranı. |
 | `istisnaKesinti` | `istisna_kesinti` | 0,15 | 0,15 | Asgari ücretin GV matrahı = brüt × (1 − bu oran) (SGK %14 + işsizlik %1). |
 | `argeGun` | — (yıl parametresi değildir) | **0** | — | `hesapParametre` her zaman 0 kurar; çalışma ayarı `arge_gun` ezer (§2.6). |
+| `argeEsik` | `arge_gv_esik` | 0,8 | — (varsayılan) | Kişiye AR-GE günü girilmemişse çalışmanın AR-GE günü yalnız `gvTesvik ≥ argeEsik` olan kişiye uygulanır (§3.2). |
+| `mesaiKat1` | `mesai_fm1_kat` | 1,5 | — (varsayılan) | Hafta içi fazla mesai (FM1) katsayısı (§3.3). |
+| `mesaiKat2` | `mesai_fm2_kat` | 2 | — (varsayılan) | Hafta sonu / tatil mesaisi (FM2) katsayısı (§3.3). |
+| `gunlukSaat` | `mesai_gun_saat` | 7,5 | — (varsayılan) | Saat ücretinde günlük çalışma saati: saat ücreti = net maaş / 30 / `gunlukSaat` (§3.3). |
+| `zamYuvarla` | `zam_yuvarla` | 10 | — (varsayılan) | Zam öngörüsü yuvarlama adımı (TL); çalışma ayarı `zam.yuvarla_ongoru` önceliklidir (§5.1). `parametreHazirla`'dan sonra `P`'ye eklenir. |
 | `turler` | `hesap_turu` (yıl) | — | bkz. §2.3 | |
 | `tesvik.k05510` | `t05510` | 0,02 | 0,02 | 05510 indirimi varsayılan oranı (kanun türünde oran yoksa). |
 | `tesvik.k05746` | `t05746` | 0,09875 | 0,1975 / 2 | 05746 AR-GE SGK teşviki oranı (işveren %19,75 × ½). |
@@ -194,7 +203,16 @@ hesaplanır: yeni yılın yasal rakamları sonradan girilse de onaylı maliyet d
 | `sakatlik` | `sakatlik_derece(yil, derece, tutar)` → `{derece: tutar}` | `{}` | 1: 12.000 · 2: 7.000 · 3: 3.000 | Aylık sakatlık indirimi tutarı. |
 | `dondurulmus` | — | — | | `anlik` verildiyse `true` (yalnız bilgi). |
 
-`parametre` tablosundaki `durum` anahtarı (`RESMI` / `ONGORU`) yalnız bilgidir; motor okumaz.
+`parametre` tablosundaki `durum` anahtarı (`RESMI` / `ONGORU`) yalnız bilgidir; motor okumaz. Aynı tabloda yılın
+performans değerlendirme modeli de durur (`perf.model`, JSON); onu motor değil `api.js:performansModeli` okur (§5.3).
+Ekranın çizdiği genel parametre listesi `api.js:PARAMETRE_TANIM`'dır (anahtar, ad, birim, varsayılan).
+
+Varsayılanlar `hesap.js:ayHesapla`'da da tekrarlanır (alan `P`'de yoksa): `argeEsik`, `mesaiKat1`, `mesaiKat2` için
+`P.x == null ? varsayılan : P.x` (0 geçerli değerdir); `gunlukSaat` için `P.gunlukSaat || 7.5` (0 da 7,5 sayılır).
+Yuvarlama adımında da 0 girilirse 10 kullanılır (`zamHesapla`: `yuvarla.ongoru || 10`).
+
+Bütün yıl parametreleri (`perf.model` dahil) yeni yıla `api.js:yilKopyalaIc` ile kopyalanır (hedefte olan anahtara
+dokunulmaz) ve onaylı çalışmada `calisma_parametre` anlık görüntüsüyle dondurulur.
 
 ### 2.2 Türetilen aylık tablolar — `hesap.js:parametreHazirla(ham)`
 
@@ -255,16 +273,17 @@ return t + (matrah − alt) × son_dilim.oran
 | `14857` | 14857 - ENGELLİ %100 | `14857` | — | Engelli: asgari ücret üzerinden işveren payı |
 | `15510` | 15510 - %5 | `15510` | — | Emekli (SGDP) çalışanda %5 indirim |
 
-Motor **kural koduna** bakar; ad serbesttir, kullanıcı yeni tür tanımlayabilir. `kanunOran` yalnız `kural = '05510'`
-olan türde kullanılır.
+Bu varsayılan türler yalnız `kanun_turu` tablosu boşken yazılır; türler Tanımlar'dan eklenip değiştirilebilir, silinen
+tür kendiliğinden geri gelmez. Motor **kural koduna** bakar; ad ve oran serbesttir, kural kodları (`YOK`, `05510`,
+`05746`, `14857`, `15510`) ve formülleri kodda sabittir. `kanunOran` yalnız `kural = '05510'` olan türde kullanılır.
 
 ### 2.5 Çalışmaya özel ayarlar — `calisma_ayar` (`api.js:calismaHesapla`, `calismaZamKademe`)
 
 | Anahtar | Etki | Yeni yıla taşınır mı (`calismaPersonelKopyala` `YENI_YIL`) |
 |---|---|---|
 | `zam.<M\|B>.alt_esik` / `ust_esik` / `ust_oran` / `alt_oran` | Yılın zam kademesini bu çalışma için ezer (§5.1). | Evet |
-| `zam.yuvarla_ongoru` | Zam öngörüsünün yuvarlama katı (boş = 10). | Evet |
-| `arge_gun` | `P.argeGun` (yoksa 0). Kişiye girilmiş AR-GE günü yoksa ve `gvTesvik ≥ 0,8` ise kullanılır (§3.2). | Hayır (o yılın kararıdır) |
+| `zam.yuvarla_ongoru` | Zam öngörüsünün yuvarlama adımı (TL; boş = yılın `zam_yuvarla` parametresi). | Evet |
+| `arge_gun` | `P.argeGun` (yoksa 0). Kişiye girilmiş AR-GE günü yoksa ve `gvTesvik ≥ P.argeEsik` ise kullanılır (§3.2). | Hayır (o yılın kararıdır) |
 | `tesvik.k05510` / `k05746` / `k14857` / `k15510` | `P.tesvik` oranlarını ezer (ör. imalat işyerinde 05510 %5). | Yalnız `tesvik.k05510` (işyerinin niteliği) |
 | `gun.<M\|B>.<ay>` | O yaka ve ay için varsayılan çalışılan gün (`AQ`). | Hayır |
 | `mesai.ongoru` | `'1'` ise mesai, bölüm × ay öngörü tablosundan gelir (§1.3). | Evet |
@@ -280,6 +299,7 @@ if secenek.dilimler:                                     # GV tarifesini bu hesa
 ayar = calisma_ayar(id)
 if ayar.arge_gun dolu: P.argeGun = Number(ayar.arge_gun)
 P.tesvik = kopya(P.tesvik); her k in [k05510,k05746,k14857,k15510]: ayar['tesvik.'+k] doluysa ez
+Z.yuvarla.ongoru = ayar['zam.yuvarla_ongoru'] dolu ? Number(…) : P.zamYuvarla     # §5.1
 ```
 `calismaParametreAnlik(id)` dondurulmuş kayıt yoksa `null` döner; o zaman yılın güncel tabloları kullanılır.
 
@@ -321,7 +341,8 @@ pasifSifir = !aktif                                          # kural (a)
 
 AM   = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0         # NET MAAŞ
 AF   = g.ozurluIndirimi || 0                                 # özürlü (sakatlık) indirimi, aylık TL
-r.AP = g.argeGun != null ? g.argeGun : ((g.gvTesvik || 0) < 0.8 ? 0 : P.argeGun)   # AR-GE GÜN (ham)
+argeEsik = P.argeEsik ?? 0.8
+r.AP = g.argeGun != null ? g.argeGun : ((g.gvTesvik || 0) < argeEsik ? 0 : P.argeGun)   # AR-GE GÜN (ham)
 AQ   = g.calisilanGun != null ? g.calisilanGun : ((k.yaka == 'B' || k.yaka == 'M') ? 30 : 0)   # ÇALIŞILAN GÜN
 AR   = (AQ == P.gun[m]) ? 30 : AQ                            # SİGORTA GÜN — kural (d)
 AO = pasifSifir ? 0 : (g.yakit || 0)                         # yakıt yardımı (net)
@@ -339,8 +360,9 @@ istMatrahDV = P.istMatrahDV[m] × istOran                     # DİKKAT: istVar'
 ```
 
 **AR-GE günü kuralı.** `AP` önce kişiye girilen `arge_gun`'dan gelir (sürekli alan — Ocak'a yazılan bütün yıla geçer).
-Girilmemişse: `gvTesvik < 0,8` ise 0, değilse `P.argeGun` (çalışma ayarı `arge_gun`; yoksa 0). Yani varsayılan yoktur:
-AR-GE günü ya kişiye ya çalışmaya girilir. Hesapta kullanılan `AP` sigorta günüyle sınırlıdır; dönüş nesnesindeki
+Girilmemişse: `gvTesvik < P.argeEsik` (yıl parametresi `arge_gv_esik`, vars. 0,8) ise 0, değilse `P.argeGun` (çalışma
+ayarı `arge_gun`; yoksa 0). Yani varsayılan yoktur: AR-GE günü ya kişiye ya çalışmaya girilir; çalışmaya girilen gün
+yalnız GV teşvik oranı eşiğe ulaşan kişiye geçer, kişiye girilen gün eşikten bağımsızdır. Hesapta kullanılan `AP` sigorta günüyle sınırlıdır; dönüş nesnesindeki
 `r.AP` ise sınırlanmamış ham değerdir.
 
 **Giriş/çıkış ayı.** Etki **ay düzeyindedir**: giriş ayı ve çıkış ayı `aktif` sayılır ve tam ay (`AQ` varsayılan 30)
@@ -352,13 +374,15 @@ gün oranındadır (`AM/30×UG`), ek ödemeler (yol, prim, aynî, yakıt) ise gi
 
 ```
 AS = hata0(AM/30×UG) + AO                                         # TOPLAM ÜCRET ÖDEMESİ
-AV = hata0(AM/30/7.5×1.5×AT + AM/30/7.5×2×AU)                     # TOPLAM MESAİ (net; saat ücreti = AM/225)
+saat = P.gunlukSaat || 7.5 ;  kat1 = P.mesaiKat1 ?? 1.5 ;  kat2 = P.mesaiKat2 ?? 2
+AV = hata0(AM/30/saat×kat1×AT + AM/30/saat×kat2×AU)               # TOPLAM MESAİ (net)
 AZ = AY + AX + AO                                                 # TOPLAM EK ÖDEME
 BA = AZ + AV + AS                                                 # TOPLAM NET ÖDEME (yalnız gösterim)
 netUcret = hata0(AM/30×UG)
 ```
 `hata0(x)` = `x` sonlu sayı değilse 0 (sıfıra bölme gibi durumlar). Mesai NET maaş (`AM`) üzerinden: saat ücreti
-`AM / 30 / 7,5`, hafta içi ×1,5, hafta sonu/tatil ×2. Gözlem: `AO` hem `AS`'de hem `AZ`'de olduğundan `BA`'da iki kez
+`AM / 30 / gunlukSaat`, hafta içi × `mesaiKat1`, hafta sonu/tatil × `mesaiKat2` (varsayılanlarla `AM / 225`, ×1,5, ×2).
+Mesai, kısmi ayda da tam ay maaşının saat ücretiyle hesaplanır (`AM`, `UG` ile oranlanmaz). Gözlem: `AO` hem `AS`'de hem `AZ`'de olduğundan `BA`'da iki kez
 sayılır; `BA` hiçbir hesaba girmez (§7).
 
 ### 3.4 SGK tabanı ve yardımcı işlevler
@@ -690,10 +714,13 @@ revize TASLAK olduğu için yılın **güncel** parametreleriyle hesaplanır.
 ```
 Z = { yontem:  { kademe: !!c.zam_kademe, performans: !!c.zam_performans },
       kademe:  calismaZamKademe(c, P),            # {M:{altEsik,ustEsik,ustOran,altOran}, B:{…}}
-      yuvarla: { ongoru: calisma_ayar['zam.yuvarla_ongoru'] sayı | null } }
+      yuvarla: { ongoru: calisma_ayar['zam.yuvarla_ongoru'] dolu ? Number(…) : P.zamYuvarla } }
 z = { yaka, eskiYilda: girisAy === 0 || girisAy === null,
       maasEski: kp.maas_eski, duzeltme: kp.duzeltme, carpan: performansCarpani(P, kp) }
 ```
+**Yuvarlama adımının önceliği:** çalışma ayarı `zam.yuvarla_ongoru` > yılın `zam_yuvarla` parametresi (`P.zamYuvarla`,
+`hesapParametre`'de varsayılan 10) > 10 (`zamHesapla`: `yuvarla.ongoru || 10` — boş ya da 0 adım 10 sayılır).
+
 `calismaZamKademe(c, P)`: yılın `P.zamKademe`'si, üzerine çalışma ayarı `zam.<Y>.<anahtar>` (doluysa) yazılır.
 Kademe varsayılanları (`api.js:ZAM_TANIM`; yıl parametresi `zam.<Y>.<anahtar>`, çalışma ayarı ezer). Bunlar yalnız
 başlangıç değeridir; kurum kendi politikasına göre Parametreler'den değiştirir:
@@ -721,7 +748,7 @@ ongoru = mround(oran × eski, Z.yuvarla.ongoru || 10)
 miktar = (duzeltme || 0) + ongoru
 ```
 `mround(x, kat)`: `kat` yoksa 0; aksi `işaret(x) × Math.round(|x|/kat + 1e-12) × kat` — en yakın kata, yarımda sıfırdan
-uzağa. Not: `yuvarla.ongoru || 10` nedeniyle 0 girilen kat da 10 sayılır.
+uzağa. Kat §5.1'deki öncelikle belirlenir; `yuvarla.ongoru || 10` nedeniyle 0 girilen kat da 10 sayılır.
 
 **Zam almama kuralı.** `eskiYilda = (girisAy === 0 || girisAy === null)`: çalışma yılından önce girmiş (ya da giriş
 tarihi boş) kişi zam alır — önceki yıl içinde girmiş olan da alır. Çalışma yılı içinde (1–12) ya da sonra (13) giren
@@ -744,43 +771,107 @@ aksi → 1
 boşaltılır = 1) ve çalışmada `zam_performans = 1` yapar. Değerlendirme girdileri `performans_girdi(calisma_id,
 tc_kimlik_no, alan, deger)` tablosundadır; puan ve çarpan kaydedilmez, her açılışta hesaplanır.
 
-> **Örnek model.** `performans.js`'teki kriterler, ağırlıklar ve ek puan kuralları bir **örnektir**. Her kurum kendi
-> değerlendirme politikasına göre `MODEL` ve `AMIR` tablolarını değiştirmelidir (alan adları değişirse eski girdiler
-> okunmaz). Aşağıdaki hesap düzeni (amir puanı → değerlendirme → bölüm katsayısı → toplam puan → çarpan) modele
-> bağlı değildir; değişen yalnız tablolardır.
+#### 5.3.1 Değerlendirme modeli bir veridir
 
-**Model tabloları** (`PERF.MODEL`, `PERF.AMIR`):
+Amirler, yaka başına kriterler ve ağırlıklar, değerlendirme ağırlığı ve ek puan kuralları kodda değil **yılın
+parametresinde** durur ve ekrandan (Performans Değerlendirme → "Değerlendirme modeli") düzenlenir.
+
+> **Örnek model.** Kayıt yoksa geçerli olan varsayılan model (`PERF.VARSAYILAN()`) bir **örnektir**. Her kurum kendi
+> değerlendirme politikasına göre kriterleri, ağırlıkları ve ek puan kurallarını değiştirmelidir. Aşağıdaki hesap düzeni
+> (amir puanı → değerlendirme → bölüm katsayısı → toplam puan → çarpan) modele bağlı değildir; değişen yalnız modelin
+> içeriğidir.
+
+**Saklama ve geçerli model** (`api.js`):
+
+| İşlev | Davranış |
+|---|---|
+| Saklama | `parametre(yil, 'perf.model', JSON)` — `PERF.hazirla(ham).ham` (denetlenmiş, sayıları ve seçenekleri düzeltilmiş ham biçim). Kayıt yoksa varsayılan model. |
+| `performansModeliHam(yil)` | `{ model: kayıtlı ham ya da PERF.VARSAYILAN(), varsayilan: kayıt yok mu }` (düzenleyici için). |
+| `performansModeli(yil)` | `PERF.hazirla(kayıtlı ham)`; kayıt yoksa, JSON bozuksa ya da model denetimden geçmezse `PERF.hazirla(null)` (varsayılan). |
+| `calismaPerformansModeli(id)` | ONAYLI çalışmada `calisma_parametre` anlık görüntüsündeki `perf.model` (onaydan önce kayıt yoksa varsayılan; yılın sonradan değişen modeli onaylıyı etkilemez); anlık görüntü yoksa ya da çalışma taslak / revize ise yılın modeli. |
+| `performansModeliYaz(yil, ham \| null)` | `parametre.yaz` ister. `null` → kayıt silinir (varsayılana dönülür); aksi `PERF.hazirla(ham)` denetler, hatalıysa kaydetmez (hata metni "Değerlendirme modeli: …"). |
+| `performansGirdiYaz(id, liste)` | Alan adını çalışmanın modeline göre denetler (`model.alanGecerli`); bilinmeyen alan reddedilir. |
+| Yeni yıl | `perf.model` diğer yıl parametreleriyle `yilKopyalaIc` ile kopyalanır. |
+
+Model düzenlenirken bir tanım (kriter, ek puan alanı, amir) kaldırılırsa girilmiş değerler silinmez, yalnız hesaba girmez.
+
+**Ham biçim** (`PERF.VARSAYILAN()` bu biçimdedir):
+```
+{ amirler: [ { alan: 'amir1', ad, agirlik }, … ],                 # 1–5 amir; alan 'amirN'
+  yaka: { M: { ad, sayfa, degAgirlik,
+               kriter: [ { kod, ad, agirlik }, … ],
+               ek:     [ { alan, ad, tur, <türün alanları>, sinir?, not?, kalici? }, … ] },
+          B: { … } } }
+```
+
+**Ek puan kuralı türleri** (`v` = girilen değer; sayısal türlerde `n0(v)` = sayı değilse 0, ondalık virgül kabul edilir):
+
+| `tur` | Türün alanları | Puan |
+|---|---|---|
+| `esik` | `esik`, `puan`, `katsayi` | `v ≥ esik ? puan : v × katsayi` |
+| `kademe` | `kademeler: [[enAz, puan], …]` (artan sıraya dizilir) | değerin ulaştığı en yüksek kademenin puanı (`v ≥ enAz` olan son satır); `v` en alt kademenin altındaysa en alt kademenin puanı |
+| `carpan` | `katsayi`, `enCok` (boş = sınırsız) | `min(v × katsayi, enCok)` |
+| `liste` | `secenek: [[ad, puan], …]`, `bos` (vars. 0) | seçeneğin puanı; listede olmayan ya da boş değer → `bos`. Eşleme `tr-TR` büyük harf ve boşlukları teklenmiş metinle yapılır; seçeneklerin adları da bu biçimde saklanır |
+
+Ek puan alanının isteğe bağlı bilgileri: `sinir: [en az, en çok]` — giriş denetimidir (ekran ve Excel şablonu; kriter
+puanlarına ekran 0–100 uygular); hesapta ve `performansGirdiYaz`'da kullanılmaz.
+`not` — kuralın açıklama metninin (`PERF.aciklama(ek)`) başına eklenir. `kalici: true` — yeni dönemin şablonuna önceki
+dönemden taşınır (ör. kıdem, mezuniyet; değerlendirme bölümü ve amir adları her zaman taşınır).
+
+**Alan adları** (`performans_girdi.alan`; `model.alanlar(yaka)`): `grup` (değerlendirme bölümü), amir alanları
+(`amir1`…, amirin adı), `a<N>.<kriter kodu>` (N. amirin kriter puanı) ve ek puan alanları. Kriter öneki **amirin kendi
+numarasıdır**, listedeki sırası değil: `amir3` → `a3.` (amirler `amir1`, `amir3` ise ikincinin öneki `a3.`'tür).
+
+**Denetim** (`PERF.hazirla(ham)`; `ham` boşsa varsayılan): 1–5 amir, alanı `amir<sayı>` ve tekil, adı dolu, ağırlığı sayı
+ve ≥ 0, en az birinin ağırlığı > 0; her iki yaka tanımlı ve en az bir kriterli; kriter kodu ve ek puan alanı kodu
+`^[a-z][a-z0-9_]{0,29}$`, yaka içinde tekil (ek puan alanı `grup` ya da `amirN` olamaz); adlar dolu; tür geçerli ve türün
+sayıları sayı; `kademe` / `liste` en az bir satırlı; `degAgirlik` sayı. Hata `Error('Değerlendirme modeli: …')`. Kriter
+ağırlıklarının toplamının 100 olması **zorunlu değildir** (ekran yalnız uyarır); toplam 100 değilse amir puanının ölçeği,
+dolayısıyla ek puanların değerlendirmeye göre payı değişir. `PERF.kodUret(ad, varolan)` addan tekil kod üretir
+(Türkçe harfler sadeleştirilir; `grup` ve `amirN` atlanır). `PERF.TURLER` tür adlarının listesidir.
+
+**Derlenmiş model** (`hazirla` dönüşü, `PERF.hesapla`'nın beklediği): `{ ham, amir: [[alan, ad, agirlik, önek]],
+M: { ad, sayfa, degAgirlik, kriter: [[kod, ad, agirlik]], ek: [{ alan, ad, tur, aciklama, puan(v), metin, liste, sinir,
+kalici }] }, B: {…}, alanlar(yaka), alanGecerli(alan), metinAlan(alan), toplamAgirlik(yaka) }`.
+
+**Varsayılan örnek model** (`PERF.VARSAYILAN()`):
 
 | | Mavi yaka (`M`) | Beyaz yaka (`B`) |
 |---|---|---|
-| Kriterler (ağırlık, toplam 100) | iş bilgisi 25 · görevlerini yerine getirme 25 · iş güvenliği ve kurallara uyma 20 · iletişim ve takım çalışması 15 · kendini geliştirme 15 | iş bilgisi 20 · iş kalitesi ve hedeflere ulaşma 20 · planlama ve problem çözme 20 · iletişim ve takım çalışması 15 · kendini geliştirme 10 · yöneticilik özellikleri 15 |
-| Değerlendirme ağırlığı (`degAgirlik`) | 80 | 80 |
-| Ek puanlar | devamlılık, tutanak, kıdem, mezuniyet | kıdem, mezuniyet |
+| Kriterler (kod, ağırlık; toplam 100) | `is_bilgisi` 25 · `gorev` 25 · `kural` (iş güvenliği ve kurallara uyma) 20 · `iletisim` 15 · `gelisim` 15 | `is_bilgisi` 20 · `kalite` 20 · `planlama` 20 · `iletisim` 15 · `gelisim` 10 · `yonetici` 15 |
+| `degAgirlik` | 80 | 80 |
+| Ek puan alanları | `devam`, `tutanak`, `kidem`, `egitim` | `kidem`, `egitim` |
 
-Amirler (`AMIR`): 1. amir 50, 2. amir 30, idari amir 20. Kayıtlı alan adları: `grup` (değerlendirme bölümü),
-`amir1..3` (ad), `a<i>.<kriter>` (i. amirin kriter puanı), ek puan alanları (`devam`, `tutanak`, `kidem`, `egitim`).
+Amirler: `amir1` "1. AMİR" 50 · `amir2` "2. AMİR" 30 · `amir3` "İDARİ AMİR" 20.
 
-Ek puan kuralları (`n0(v)` = sayı değilse 0; ondalık virgül kabul edilir):
+| Ek puan alanı | Yaka | Tür ve tanım | Puan |
+|---|---|---|---|
+| `devam` (devamlılık %) | M | `esik`: eşik 95, puan 5, katsayı 0,05; sınır 0–100 | `v ≥ 95 → 5`; aksi `v × 0,05` |
+| `tutanak` (sayı) | M | `kademe`: [[0, +2], [1, 0], [2, −2]]; sınır 0–99 | 0 → +2 · 1 → 0 · 2 ve üzeri → −2 |
+| `kidem` (yıl; işyerindeki bütün dönemlerin toplamı, elle girilir) | M, B | `carpan`: katsayı 1, en çok 5; sınır 0–99; kalıcı; not var | `min(v, 5)` |
+| `egitim` (mezuniyet) | M, B | `liste`: okur yazar 1 · ilk okul 2 · orta okul 3 · lise 4 · meslek lisesi 4 · ön lisans 5 · lisans 6 · yüksek lisans 7 · doktora 8; `bos` 0; kalıcı | seçeneğin puanı; listede olmayan / boş 0 |
 
-| Alan | Yaka | Puan |
-|---|---|---|
-| `devam` (devamlılık %) | M | `v ≥ 95 → 5`; aksi `v × 5 / 100` |
-| `tutanak` (sayı) | M | `t < 1 → +2`; `t == 1 → 0`; `t ≥ 2 → −2` |
-| `kidem` (yıl, elle girilir — işyerindeki bütün dönemlerin toplamı) | M, B | `min(v, 5)` |
-| `egitim` (mezuniyet) | M, B | okur yazar 1 · ilk okul 2 · orta okul 3 · lise / meslek lisesi 4 · ön lisans 5 · lisans 6 · yüksek lisans 7 · doktora 8 · listede olmayan / boş 0 (metin `tr-TR` büyük harfe çevrilip boşluklar teklenerek eşlenir) |
+#### 5.3.2 Hesap — `PERF.hesapla(kisiler, model)`
 
-`PERF.hesapla(kisiler)` — `kisiler = [{ tc, yaka, g: {alan: değer} }]`; her yaka (`M`; `M` dışındaki her şey `B`) ayrı:
-1. **Amir puanı** (`amirPuani`): `Σ kriter_puanı × kriter_ağırlığı / 100` (yalnız dolu kriterler); hiç dolu yoksa ya da
-   toplam 0 ise `null`.
-2. **Değerlendirme** `deg = Σ amir_puanı_i × w_i / Σ w_i` — yalnız puanı olan amirler (puanı olmayan amirin ağırlığı
-   kalanlara dağılır). Hiç amir puanı yoksa kişi **değerlendirilmemiş** sayılır (sonuçta yer almaz → çarpan 1).
+`kisiler = [{ tc, yaka, g: {alan: değer} }]`; `model` = `PERF.hazirla(…)` sonucu (boşsa `PERF.hazirla(null)`, yani
+varsayılan). Çalışma için doğru model `api.js:calismaPerformansModeli(id)`'dir. Her yaka (`M`; `M` dışındaki her şey
+`B`) ayrı hesaplanır; `t = model[yaka]`:
+1. **Amir puanı** (`amirPuani`): her amir için `Σ g[önek + kriter] × kriter_ağırlığı / 100` (yalnız dolu kriterler);
+   hiç dolu yoksa ya da toplam 0 ise `null`.
+2. **Değerlendirme** `deg = Σ amir_puanı_i × w_i / Σ w_i` — yalnız puanı olan amirler (`w` = modeldeki amir ağırlığı;
+   puanı olmayan amirin ağırlığı kalanlara dağılır). `Σ w_i = 0` ise kişi **değerlendirilmemiş** sayılır (sonuçta yer
+   almaz → çarpan 1).
 3. **Bölüm katsayısı:** `grOrt[grup]` = o bölümdeki `deg` ortalaması (`grup` alanı, kırpılmış);
    `genel` = bölüm ortalamalarının ortalaması (kişilerin değil); `kats = grOrt ? genel / grOrt[grup] : 1`. Bölümler
    arası not cömertliği böylece dengelenir.
-4. **Toplam puan** `puan = kats × deg × degAgirlik / 100 + Σ ek_puan`.
+4. **Toplam puan** `puan = kats × deg × t.degAgirlik / 100 + Σ e.puan(g[e.alan])` (modeldeki bütün ek puan alanları).
 5. **Zam çarpanı** `carpan = ort ? puan / ort : 1`, `ort` = o yakadaki değerlendirilmiş kişilerin `puan` ortalaması.
 
-**Örnek (uydurma, mavi yaka, iki bölüm).** Kriter puanları sırasıyla iş bilgisi / görev / kural / iletişim / gelişim:
+Dönüş: `{ kisi: { tc: { tc, amir, deg, grup, ek, ekToplam, kats, duzDeg, puan, carpan } }, grup: { M: [{ grup, kisi, ort,
+kats }], B: […] }, ort: { M, B }, genel: { M, B } }`.
+
+**Örnek (uydurma, varsayılan model, mavi yaka, iki bölüm).** Kriter puanları sırasıyla iş bilgisi / görev / kural /
+iletişim / gelişim:
 
 | Kişi | Bölüm | Amir puanları | `deg` | Ek: devam + tutanak + kıdem + eğitim | `kats` | `puan` | `carpan` |
 |---|---|---|---|---|---|---|---|
@@ -796,14 +887,15 @@ Ek puan kuralları (`n0(v)` = sayı değilse 0; ondalık virgül kabul edilir):
 
 ```js
 global.window = {}; require(require('path').resolve('program/js/core/performans.js'));
+const PERF = window.PERF, model = PERF.hazirla(null);      // varsayılan model; yıla özel model için PERF.hazirla(ham)
 const a = (i, v) => Object.fromEntries(['is_bilgisi', 'gorev', 'kural', 'iletisim', 'gelisim'].map((k, j) => ['a' + i + '.' + k, v[j]]));
-console.log(window.PERF.hesapla([
+console.log(PERF.hesapla([
   { tc: 'K1', yaka: 'M', g: { grup: 'X', ...a(1, [90, 85, 80, 75, 70]), devam: 98, tutanak: 0, kidem: 6, egitim: 'Lise' } },
   { tc: 'K2', yaka: 'M', g: { grup: 'X', ...a(1, [80, 80, 80, 80, 80]), ...a(2, [70, 70, 70, 70, 70]), devam: 90, tutanak: 1, kidem: 2, egitim: 'İlk okul' } },
   { tc: 'K3', yaka: 'M', g: { grup: 'Y', ...a(1, [70, 70, 70, 70, 70]), devam: 95, tutanak: 2, kidem: 10, egitim: 'Meslek lisesi' } },
   { tc: 'K4', yaka: 'M', g: { grup: 'Y', ...a(1, [60, 60, 60, 60, 60]), devam: 80, tutanak: 0, kidem: 1, egitim: '' } },
   { tc: 'K5', yaka: 'M', g: { grup: 'Y', devam: 99, kidem: 3 } },
-]).kisi);
+], model).kisi);
 ```
 
 ### 5.4 Yeni maaş ve yuvarlama
@@ -815,7 +907,8 @@ oran = eski ? miktar / eski : 0             # gerçekleşen zam oranı (düzeltm
 Dönüş yalnız şu alanlardır: `{ eski, oranOngoru, ongoru, miktar, yeni, oran }` (`oranOngoru` = §5.2'deki `oran`).
 
 - Yeni maaş **tek bir net tutardır**; motor bunu `k.maasYeni` olarak zam ayından itibaren öder (§3.2).
-- **Yalnız öngörü yuvarlanır** (`mround`, kat = `zam.yuvarla_ongoru`, boşsa 10). `duzeltme` yuvarlanmadan eklenir;
+- **Yalnız öngörü yuvarlanır** (`mround`; kat: çalışma ayarı `zam.yuvarla_ongoru`, yoksa yılın `zam_yuvarla`, yoksa 10).
+  `duzeltme` yuvarlanmadan eklenir;
   `maas_eski` yuvarlak değilse yeni maaş da yuvarlak olmaz.
 - `oranOngoru` yuvarlama öncesi orandır (kademe × çarpan); `oran` ise yuvarlanmış öngörü ve düzeltmeyle gerçekleşen
   orandır.
@@ -823,7 +916,8 @@ Dönüş yalnız şu alanlardır: `{ eski, oranOngoru, ongoru, miktar, yeni, ora
 ### 5.5 Zam örnekleri (Node ile `HESAP.zamHesapla` çalıştırılarak)
 
 Varsayılan kademe: alt eşik 50.000, üst eşik 100.000, alt eşiğin altında 0,30, üst eşiğin üstünde 0,25; beyaz yaka,
-yıl başından önce girmiş (`eskiYilda = true`), aksi belirtilmedikçe performans kapalı, düzeltme 0, yuvarlama 10.
+yıl başından önce girmiş (`eskiYilda = true`), aksi belirtilmedikçe performans kapalı, düzeltme 0, yuvarlama 10 (yılın
+`zam_yuvarla` varsayılanı). "Yuvarlama 100" satırı çalışma ayarı `zam.yuvarla_ongoru = 100` durumudur.
 
 | Senaryo | `eski` | `o` | `oranOngoru` | `oran × eski` | `ongoru` | `miktar` | `yeni` | `oran` |
 |---|---|---|---|---|---|---|---|---|
@@ -841,7 +935,8 @@ Ara değer: `o = 0,30 − (75.000 − 50.000)/(100.000 − 50.000) × (0,30 − 
 
 ```js
 global.window = {}; require(require('path').resolve('program/js/core/hesap.js'));
-const Z = { yontem: { kademe: true, performans: false }, yuvarla: { ongoru: null },
+// calismaHesapla'nın kurduğu Z: yuvarla.ongoru = çalışma ayarı 'zam.yuvarla_ongoru' ?? P.zamYuvarla (vars. 10)
+const Z = { yontem: { kademe: true, performans: false }, yuvarla: { ongoru: 10 },
             kademe: { B: { altEsik: 50000, ustEsik: 100000, ustOran: 0.30, altOran: 0.25 } } };
 console.log(window.HESAP.zamHesapla(Z, { yaka: 'B', eskiYilda: true, maasEski: 75000, duzeltme: 0, carpan: 1 }));
 // → { eski: 75000, oranOngoru: 0.275, ongoru: 20630, miktar: 20630, yeni: 95630, oran: 0.27506… }
@@ -855,7 +950,8 @@ console.log(window.HESAP.zamHesapla(Z, { yaka: 'B', eskiYilda: true, maasEski: 7
 
 Parametreler `data/seed.js`'teki 2026 değerleridir ve `api.js:hesapParametre`'nin kurduğu biçimde verilir: dilimler
 190.000 %15 · 400.000 %20 · 1.500.000 %27 · 5.300.000 %35 · ∞ %40; asgari 33.030 (Ocak'tan, tek dönem); tavan çarpanı 9;
-DV 0,00759; BES 0,03; istisna kesintisi 0,15; AR-GE günü 0 (çalışma ayarı yok); hesaplama türleri §2.3; kanun türleri
+DV 0,00759; BES 0,03; istisna kesintisi 0,15; AR-GE günü 0 (çalışma ayarı yok); `PARAMETRE_TANIM` varsayılanları (AR-GE
+eşiği 0,8, mesai katsayıları 1,5 / 2, günlük saat 7,5, zam yuvarlama 10); hesaplama türleri §2.3; kanun türleri
 §2.4; teşvik 0,02 / 0,09875 / 0,1975 / 0,05; sakatlık {1: 12.000, 2: 7.000, 3: 3.000}. Çalışma ayarı yok (varsayılan
 çalışılan gün yok → 30; mesai öngörüsü kapalı). Kişilere zam motorundan çıkmış maaş doğrudan verilir (`maasEski`,
 `maasYeni`, `zamAyi`).
@@ -875,6 +971,7 @@ const P = H.parametreHazirla({
   dilimler: [{ ust: 190000, oran: 0.15 }, { ust: 400000, oran: 0.20 }, { ust: 1500000, oran: 0.27 },
              { ust: 5300000, oran: 0.35 }, { ust: null, oran: 0.40 }],
   tavanCarpan: 9, dv: 0.00759, besOrani: 0.03, istisnaKesinti: 0.15, argeGun: 0,
+  argeEsik: 0.8, mesaiKat1: 1.5, mesaiKat2: 2, gunlukSaat: 7.5,   // PARAMETRE_TANIM varsayılanları
   turler: {
     SSK:    { kol: 'SSK',  sgkIsci: 0.14,  issizlikIsci: 0.01, sgkIsveren: 0.2175, issizlikIsveren: 0.02, gv: true, dv: true, istisna: true },
     EMK:    { kol: 'SGDP', sgkIsci: 0.075, issizlikIsci: 0,    sgkIsveren: 0.2475, issizlikIsveren: 0,    gv: true, dv: true, istisna: true },
@@ -882,6 +979,7 @@ const P = H.parametreHazirla({
   },
   tesvik: { k05510: 0.02, k05746: 0.09875, k14857: 0.1975, k15510: 0.05 },
 });
+P.zamYuvarla = 10;
 P.kanunKural = { YOK: 'YOK', '05510': '05510', '05510-5': '05510', '05746': '05746', '14857': '14857', '15510': '15510' };
 P.kanunOran  = { '05510': 0.02, '05510-5': 0.05 };
 P.sakatlik   = { 1: 12000, 2: 7000, 3: 3000 };
@@ -957,7 +1055,7 @@ Beyaz yaka, SSK, kanun `05510` (`kanunOran 0,02`), bütün yıl aktif (`girisAy 
 | Durum | `aktif = true`, `zamli = true` | |
 | AM | `maasYeni` | 50.000 |
 | AQ, AR, UG | varsayılan 30; `30 ≠ 31` → AR = 30 | 30 ; 30 ; 30 |
-| AP | `argeGun` yok, `gvTesvik 0 < 0,8` → 0 | 0 |
+| AP | `argeGun` yok, `gvTesvik 0 < argeEsik (0,8)` → 0 | 0 |
 | istOran | `min(30,30)/30` | 1 |
 | istGV, istDV | §2.2 | 4.211,325 ; 250,6977 |
 | netUcret | `50.000/30×30` | 50.000 |
@@ -1025,7 +1123,7 @@ kanun `05510-5` (`kanunOran 0,05`).
 | 5 | 4.133,33 | 35.935,88 | 6.147,04 | 6.309,86 | 2.974,38 | 0 | 3.336,06 | 139,18 | 1.351 | 34.782,33 | 9.799,96 | 2.252,87 | 59.815,41 |
 | 12 | 4.133,33 | 39.376,42 | 6.743,79 | 0 | 3.263,12 | 4.030,59 | 5.718,37 | 154,71 | 1.481 | 38.652,33 | 10.740,87 | 2.469,17 | 62.673,29 |
 
-Kontroller: `AV = 30.000/225 × (1,5×10 + 2×8) = 4.133,33`; Ocak `DC = asagiYuvarla(0,03 × (35.721,95 + 2.797,55 + 5.781,61)) = 1.329`;
+Kontroller: `AV = 30.000 / 30 / 7,5 × (1,5×10 + 2×8) = 4.133,33` (varsayılan mesai parametreleri); Ocak `DC = asagiYuvarla(0,03 × (35.721,95 + 2.797,55 + 5.781,61)) = 1.329`;
 Mayıs'ta aynî BES matrahına girmez (`0,03 × (35.935,88 + 2.974,38 + 6.147,04) = 1.351,7 → 1.351`) ve parayla ödenmediği için
 `DD`'den düşülür (`30.000 + 4.133,33 + 2.000 − 1.351 = 34.782,33`); `DG = (BB + CF + BM) × 0,05` (Ocak 2.215,06);
 Aralık yakıtın DV'si `CR = 4.030,59 × 0,00759 = 30,59`, `CQ = 4.000 + 30,59`. Yıl: **680.034,03 TL**.
@@ -1122,10 +1220,10 @@ payı ve teşvik yok → maliyet = brüt. Asgari ücret istisnası uygulanır (`
    matrahının ortalamasıdır; `istGV` AR-GE günü oranıyla (`AP/AR`) ölçeklenmez; DV teşviki `gvTesvik` oranıyla
    çarpılmaz ve matrahına brüt mesai (`BM`) girmez; `istMatrahDV` `istisna = 0` olan türde de düşülür. Kod böyledir;
    mevzuata uygunluğu bu belgede değerlendirilmedi.
-2. **AR-GE günü eşiği.** Kişiye girilmemiş AR-GE günü için çalışmanın `arge_gun` ayarı yalnız `gvTesvik ≥ 0,8` olan
-   kişiye uygulanır (`hesap.js:ayHesapla`). 0,8 kodda sabittir, parametre değildir; `api.js`'teki `AYLIK_SUREKLI`
-   yorumu ("girilmemişse çalışmanın AR-GE günü ayarı kullanılır") bu eşiği anmaz. Kişiye girilen gün eşikten bağımsız
-   geçerlidir.
+2. **AR-GE günü eşiği.** Kişiye girilmemiş AR-GE günü için çalışmanın `arge_gun` ayarı yalnız `gvTesvik ≥ argeEsik`
+   (yıl parametresi `arge_gv_esik`, vars. 0,8) olan kişiye uygulanır (`hesap.js:ayHesapla`). `api.js`'teki
+   `AYLIK_SUREKLI` yorumu ("girilmemişse çalışmanın AR-GE günü ayarı kullanılır") bu eşiği anmaz. Kişiye girilen gün
+   eşikten bağımsız geçerlidir.
 3. **`BA`** (TOPLAM NET ÖDEME) yakıtı (`AO`) iki kez sayar (`AS` ve `AZ` içinde); yalnız gösterimdir, hiçbir hesaba girmez.
 4. **`AQ` kenar durumu.** `AQ`'ya ayın gün sayısından farklı ve 30'dan büyük bir değer girilirse (örn. 30 günlük ayda 31)
    `AR = 31` olur: ücret `31/30` ay, istisna 1 ile sınırlı. Kodda bu durum için koruma yok.
@@ -1140,6 +1238,16 @@ payı ve teşvik yok → maliyet = brüt. Asgari ücret istisnası uygulanır (`
 9. **Yeni yıla taşımada Ocak kaydı.** `calismaPersonelKopyala('YENI_YIL')` sürekli kişi alanlarının Aralık değerini
    `aylik_girdi`'nin 2.–12. aylarından okur; Ocak'a (`ay = 1`) yazılmış bir `aylik_girdi` kaydı (ör. toplu girişle)
    hesapta geçerli olduğu hâlde taşımada dikkate alınmaz, kişi satırındaki değer taşınır.
-10. **Performans çarpanının yuvarlanması.** `performansCarpanUygula` çarpanı yuvarlamadan yazar; örnek veri yüklemesi
-    (`data/seed.js:ORNEK_VERI_YUKLE`) 3 ondalığa yuvarlayarak yazar. Çarpanın 3. ondalıktan sonraki kısmı öngörüyü
-    birkaç TL değiştirir; bu, yuvarlanmış öngörüyü bir kat (ör. 10 TL) kaydırabilir.
+10. **Sıfır girilen parametreler.** `mesai_gun_saat = 0` sessizce 7,5, `zam_yuvarla = 0` (ya da çalışma ayarı
+    `zam.yuvarla_ongoru = 0`) sessizce 10 sayılır (`||`); mesai katsayıları ve AR-GE eşiği için 0 geçerli değerdir
+    (`== null`). Parametre ekranı bu ayrımı göstermez.
+11. **Bozuk değerlendirme modeli.** `performansModeli` / `calismaPerformansModeli`, kayıtlı `perf.model` JSON'u
+    çözülemezse ya da `PERF.hazirla` denetiminden geçmezse hata vermeden varsayılan modele döner. `performansModeliYaz`
+    hatalı modeli kaydetmediği için bu yalnız tabloya dışarıdan yazılmış kayıtta olur; o durumda hesap, kullanıcının
+    düzenlediği modelle değil varsayılanla yapılır.
+12. **Ek puan sınırı yalnız girişte.** `sinir` ekranda ve Excel şablonunda denetlenir; `performansGirdiYaz` ve
+    `PERF.hesapla` denetlemez. API'den ya da dışarıdan yazılmış sınır dışı değer hesaba olduğu gibi girer (ör. `esik`
+    türünde eşiğin altındaki çok büyük eksi değer eksi puan doğurur).
+13. **Kriter ağırlık toplamı.** `PERF.hazirla` toplamı 100 olmayan kriter ağırlıklarını reddetmez (ekran yalnız uyarır).
+    Toplam 100 değilse amir puanı ölçeklenir; bölüm katsayısı etkilenmez ama ek puanların değerlendirmeye göre payı
+    değişir, dolayısıyla çarpanlar da değişir.

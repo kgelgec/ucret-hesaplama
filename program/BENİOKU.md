@@ -39,13 +39,13 @@ düzenleyecekleri gruplar ile yetkileri kişi kişi atanır.
 | Bütçe | Personel ve Zam | Bütçe satırları, zam öngörüsü, yönetim düzeltmesi, kişi kartı |
 | Bütçe | Maliyet Tablosu | Kişi × ay tutarlar; kişiye tıklayınca 12 aylık bordro dökümü |
 | Bütçe | Aylık Girdiler | Aynî yardım, prim, mesai, yakıt, AR-GE günü; yıl içi hesaplama türü / kanun değişikliği |
-| Bütçe | Performans Değerlendirme | Amir değerlendirmeleri, bölüm katsayısı ve zam çarpanı; Excel şablonu |
+| Bütçe | Performans Değerlendirme | Amir değerlendirmeleri, bölüm katsayısı ve zam çarpanı; yıl bazında düzenlenen değerlendirme modeli (amirler, kriterler, ağırlıklar, ek puanlar); Excel şablonu |
 | Bütçe | Mesai Öngörüsü | Bölüm × ay mesai saati ve kişi sayısı; kişi başı mesai |
 | Bütçe | Çalışmalar | Yıl × grup çalışmaları (taslak / onaylı / revize), zam yöntemi |
 | Bütçe | Yönetim Raporu | Yönetime giden Excel ve geri dönen düzeltmelerin içeri alınması |
 | Veri | Dış Liste Aktarımı | ERP / bordro programından güncel maaş ve personel listesinin alınması |
-| Tanımlar | Parametreler | Asgari ücret, GV tarifesi, SGK ve teşvik oranları, zam kademesi, sakatlık indirimi |
-| Tanımlar | Tanımlar | Gruplar, hesaplama türleri (SSK / Emekli / SGK'sız), kanun türleri, bütçe bölümleri |
+| Tanımlar | Parametreler | Asgari ücret, GV tarifesi, SGK ve teşvik oranları, zam kademesi, sakatlık indirimi, mesai katsayıları |
+| Tanımlar | Tanımlar | Gruplar, hesaplama türleri (SSK / Emekli / SGK'sız), kanun türleri, bütçe bölümleri, aktarım başlıkları |
 | Yönetim | Kullanıcılar | Kullanıcılar, grup erişimi ve yetkiler |
 | Yönetim | Sistem | Yedek, veri şifreleme, işlem kaydı, örnek veri, sıfırlama |
 

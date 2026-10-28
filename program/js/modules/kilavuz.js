@@ -123,7 +123,7 @@
       <h4>Hangi alan nasıl çalışır?</h4>
       <table class="genis-tablo kucuk"><thead><tr><th>Girdiğiniz aydan itibaren bütün yıla geçenler</th><th>Yalnız girdiğiniz ayda geçerli olanlar</th></tr></thead>
         <tbody><tr><td>Hesaplama türü, kanun türü, sakatlık, BES, GV teşvik oranı, yol parası,
-          <strong>FM1 / FM2 fazla mesai saatleri</strong> (%50 / %100 zamlı), <strong>AR-GE günü</strong></td>
+          <strong>FM1 / FM2 fazla mesai saatleri</strong> (hafta içi / hafta sonu-tatil; katsayıları Parametreler'de), <strong>AR-GE günü</strong></td>
           <td><strong>Aynî yardım</strong>, <strong>prim ve diğer ödemeler</strong>, <strong>yakıt yardımı</strong>, çalışılan gün</td></tr></tbody></table>
       <ul>
         <li>Ocak'a girdiğiniz mesai saati ya da AR-GE günü bütün yıla geçer; sonraki aylarda soluk rakamla görünür.
@@ -161,7 +161,8 @@
         <li><strong>Onaylı:</strong> yönetimin onayladığı bütçe. Rakamları, parametreleri ve kişilerin giriş-çıkış tarihleri onay anındaki hâliyle dondurulur;
           sonradan parametre ya da kart değişse de onaylı maliyet değişmez.</li>
         <li><strong>Revize aç:</strong> onaylı bir çalışmada değişiklik gerekirse eski çalışma kilitli kalır, yanında "Revize" adlı yeni bir taslak açılır.</li>
-        <li><strong>✎ Ayarlar:</strong> zam yöntemi (maaş kademesi, performans çarpanı), gruba özel zam kademesi, varsayılan çalışılan gün ve 05510 indirim oranı.</li>
+        <li><strong>✎ Çalışma Ayarları:</strong> zam yöntemi (maaş kademesi, performans çarpanı), gruba özel zam kademesi, varsayılan çalışılan gün,
+          05510 indirim oranı ve bu çalışmaya özel <em>zam öngörüsü yuvarlama adımı</em> (boşsa yılın parametresi kullanılır).</li>
       </ul>
       ${dikkat(`Aynı yıl ve grup için iki çalışma açarsanız ekranlar seçili olanı gösterir. "Kişiler görünmüyor" gibi bir durumda
         önce üst çubuktaki çalışma seçicisine bakın; gereksiz çalışmayı Çalışmalar ekranından silin.`)}
@@ -180,9 +181,30 @@
           Değerlendirilmeyen kişinin çarpanı 1'dir.</li>
         <li>Çarpan zam hesabına kendiliğinden geçmez: <em>Çarpanları zam hesabına uygula</em> deyin. Çalışmada performansla zam hesabı
           kapalıysa bu düğme onu da açar.</li>
-        <li>Kriterler ve ağırlıklar kişi penceresinde ve şablonun <em>AÇIKLAMA</em> sayfasında görünür. Programla gelen değerlendirme modeli
-          bir örnektir; kendi politikanıza uyarlamak için program dosyasında (<code>js/core/performans.js</code>) değiştirilir.</li>
+        <li>Kriterler, ağırlıklar ve ek puan kuralları kişi penceresinde ve şablonun <em>AÇIKLAMA</em> sayfasında görünür.</li>
       </ul>
+      <h4>Değerlendirme modeli</h4>
+      <p>Programla gelen model bir örnektir; ekranın üstündeki <strong>Değerlendirme modeli…</strong> düğmesiyle kendi politikanıza göre
+        değiştirilir. Model <strong>yıl bazındadır</strong>: seçili çalışmanın yılının modeli düzenlenir ve o yılın bütün gruplarında kullanılır.
+        Değiştirmek için <em>Parametre ve tanımları değiştirir</em> yetkisi gerekir; yetkisi olmayan modeli yalnız görüntüler.</p>
+      <ul>
+        <li><strong>Amirler:</strong> ad ve ağırlık; en çok 5 amir eklenebilir. Ağırlıklar oran olarak kullanılır (toplamın 100 olması gerekmez);
+          en az bir amirin ağırlığı sıfırdan büyük olmalıdır.</li>
+        <li><strong>Mavi yaka / Beyaz yaka sekmeleri:</strong> yaka adı, Excel sayfa adı, değerlendirme ağırlığı (değerlendirmenin toplam puandaki payı)
+          ve kriterler (ad, ağırlık; ekle, sil, sırala). Kriter ağırlıklarının toplamı 100 değilse uyarı çıkar ama kayda engel değildir.</li>
+        <li><strong>Ek puan alanları:</strong> toplam puana eklenen (eksi de olabilen) alanlar. Kural türleri: <em>Eşik</em> (eşik ve üstü sabit puan,
+          altında değer × katsayı), <em>Kademe</em> (değerin ulaştığı en yüksek kademenin puanı), <em>Çarpan</em> (değer × katsayı, isteğe bağlı üst sınır)
+          ve <em>Liste</em> (seçeneğe göre puan; listede olmayan değerin puanı ayrıca girilir). İsteğe bağlı olarak giriş sınırı (en az / en çok), not
+          ve <em>Önceki dönemden taşınsın</em> işareti (yeni dönemin şablonuna geçen yılın değeri önceden yazılır) verilir. Her alanın altında
+          kuralın açıklaması yazdıkça güncellenir.</li>
+        <li><strong>Kaydet</strong> modeli denetler; hatalı model (ör. bütün amir ağırlıkları 0) kaydedilmez, nedeni pencerede gösterilir.
+          Kaydedince puanlar ve çarpanlar yeni modelle yeniden hesaplanır; gerekirse <em>Çarpanları zam hesabına uygula</em> deyin.
+          <strong>Varsayılan modele dön</strong> yılın özel modelini siler.</li>
+        <li>Kaldırılan amir, kriter ya da ek alana girilmiş değerler silinmez ama artık hesaba ve şablona girmez; aynı kodla yeniden eklenirse geri gelir.
+          Kodlar yeni kriter ve alanlarda adından üretilir, sonradan değişmez.</li>
+      </ul>
+      ${gorsel('14-model', 'Değerlendirme modeli penceresi: amirler, yaka sekmeleri, kriterler ve ek puan alanları')}
+      ${dikkat(`Onaylı çalışma onay anındaki modelle değerlendirilir; modeldeki değişiklik o yılın taslak ve revize çalışmalarına uygulanır.`)}
       <h4>Mesai Öngörüsü</h4>
       <ul>
         <li>Fazla mesaiyi kişi kişi değil bölüm bölüm planlamak içindir: her bölümün ay ay toplam mesai saati (mavi yaka hafta içi ve hafta sonu,
@@ -212,7 +234,8 @@
       <ul>
         <li>Programınızın raporunu Excel (.xlsx) ya da CSV olarak verin ya da tabloyu başlık satırıyla birlikte kopyalayıp yapıştırın.</li>
         <li>Sütunlar sırasına göre değil <strong>başlık adına</strong> göre tanınır (örneğin "T.C. Kimlik No", "Adı Soyadı", "Net Maaş");
-          önizlemede hangi sütunun neye eşlendiği gösterilir.</li>
+          önizlemede hangi sütunun neye eşlendiği gösterilir. Programınızın başlıkları tanınmıyorsa tanınan başlıklar
+          <em>Tanımlar → Aktarım Başlıkları</em>'ndan alan başına eklenir.</li>
         <li>Önce önizleme gösterilir: güncellenecek kişiler, değişmeyenler, çalışmada olmayan yeni kişiler ve dosyada olmayanlar.
           Yeni kişilerden eklenecekleri işaretleyip <em>Aktarımı Uygula</em> deyin. Dosyada boş gelen alana dokunulmaz.</li>
       </ul>
@@ -223,10 +246,14 @@
       <ul>
         <li><strong>Parametreler</strong> (yıl bazında): SGK tavan çarpanı, damga vergisi, BES oranı, teşvik oranları, asgari ücret (iki dönem olabilir),
           gelir vergisi dilimleri, sakatlık indirim tutarları ve zam kademesi (alt eşik / üst eşik / oranlar). ${ac('parametre')}</li>
+        <li><strong>Parametreler → Genel</strong> ayrıca hesabın şu ayarlarını içerir: FM1 (hafta içi) ve FM2 (hafta sonu / tatil) fazla mesai katsayıları
+          (saat ücretinin kaç katı), saat ücretinde günlük çalışma saati, AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı ve
+          zam öngörüsü yuvarlama adımı (bir çalışmaya özel adım Çalışma Ayarları'ndan girilebilir).</li>
         <li><strong>Yeni yıl öngörüsü:</strong> kaynak yıl her zaman seçili yılın bir önceki yılıdır, hedef yıl seçili yıldır. Onaylı çalışması olan yılın
           parametreleri kilitlidir.</li>
-        <li><strong>Tanımlar:</strong> hesaplama türleri (SSK, EMK, SGK'sız), kanun (teşvik) türleri, gruplar (yalnız sistem yöneticisi) ve
-          her grubun bütçe bölümleri. ${ac('tanim')}</li>
+        <li><strong>Tanımlar:</strong> hesaplama türleri (SSK, EMK, SGK'sız), kanun (teşvik) türleri, gruplar (yalnız sistem yöneticisi),
+          her grubun bütçe bölümleri ve <strong>Aktarım Başlıkları</strong>: Dış Liste Aktarımı'nın her alan için tanıdığı sütun başlıkları
+          (virgülle ayrılmış; büyük / küçük harf ve Türkçe karakter farkı gözetilmez). Değiştirilen alan <em>Varsayılan</em> düğmesiyle geri alınır. ${ac('tanim')}</li>
       </ul>` },
 
     { id: 'yonetim', baslik: 'Yönetim için: bütçeyi incelemek ve düzeltmek', kime: 'yonetim', html: `

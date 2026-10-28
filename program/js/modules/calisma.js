@@ -104,6 +104,11 @@
           const vars = API.ZAM_TANIM.find(t => t.anahtar === z[0]).vars;
           return `<td class="num"><input class="hucre-girdi" data-ayar="${an}" data-carp="${z[2]}" value="${goster(a[an], z[2])}"
                    placeholder="${goster(yy(an, vars), z[2])}"></td>`; }).join('')}</tr>`).join('')}</tbody></table>
+      <div class="alan ust-bosluk" style="max-width:420px"><label>Zam öngörüsü yuvarlama adımı (TL)</label>
+        <input class="hucre-girdi" data-ayar="zam.yuvarla_ongoru" data-carp="1" value="${a['zam.yuvarla_ongoru'] == null ? '' : a['zam.yuvarla_ongoru']}"
+               placeholder="${goster(yy('zam_yuvarla', 10), 1)}">
+        <div class="kucuk soluk">Öngörülen zam bu tutarın en yakın katına yuvarlanır (ör. 10, 50, 100). Boş = yılın parametresi
+          (Parametreler → Genel).</div></div>
       <h3 class="ust-bosluk">Varsayılan çalışılan gün</h3>
       <div class="kucuk soluk">Kişiye ayrıca gün girilmemişse bu gün kullanılır (boş = 30). Örn. mavi yaka bazı aylarda eksik gün çalışacaksa (ör. 26) o aylara gün sayısını yazın.</div>
       <div class="tablo-sar ust-bosluk"><table class="genis-tablo" id="ayarGun"><thead><tr><th></th>${U.AYLAR.map(x => `<th class="num">${x.slice(0, 3)}</th>`).join('')}</tr></thead>
@@ -113,7 +118,7 @@
         }).join('')}</tr>`).join('')}</tbody></table></div>
       <div class="alan ust-bosluk" style="max-width:420px"><label>AR-GE çalışılan gün</label>
         <input class="hucre-girdi" data-ayar="arge_gun" data-carp="1" value="${a.arge_gun == null ? '' : a.arge_gun}" placeholder="yok">
-        <div class="kucuk soluk">Varsayılan yoktur (boş = 0). Girilirse GV teşviki %80 ve üzeri olan (AR-GE) kişilerde, kişiye
+        <div class="kucuk soluk">Varsayılan yoktur (boş = 0). Girilirse GV teşviki %${goster(yy('arge_gv_esik', 0.8), 100)} ve üzeri olan (AR-GE) kişilerde (eşik: Parametreler → Genel), kişiye
           Aylık Girdiler'den gün girilmemiş aylarda kullanılır. Kişiye girilen gün her zaman önceliklidir.</div></div>
       <div class="alan ust-bosluk" style="max-width:420px"><label>05510 indirim oranı (%) — 05510 dışı kanunlu kişilerde de uygulanır</label>
         <input class="hucre-girdi" data-ayar="tesvik.k05510" data-carp="100" value="${goster(a['tesvik.k05510'], 100)}"

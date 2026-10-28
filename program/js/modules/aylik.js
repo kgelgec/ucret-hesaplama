@@ -53,7 +53,7 @@
           ? `<input class="hucre-girdi${o[t[0]] !== undefined ? ' degisti' : ''}" data-alan="${t[0]}" data-tc="${U.esc(tc)}"
                     value="${o[t[0]] !== undefined ? B.tlDuz(o[t[0]], Number(o[t[0]]) % 1 ? 2 : 0) : ''}"
                     placeholder="${t[0] === 'calisilan_gun' ? '30' : t[0] === 'arge_gun' ? (s.yil.aylar[ay].AP ? B.tlDuz(s.yil.aylar[ay].AP, s.yil.aylar[ay].AP % 1 ? 1 : 0) : '—') : (t[0] === 'fm1' || t[0] === 'fm2') && g[t[0]] ? B.tlDuz(g[t[0]], g[t[0]] % 1 ? 1 : 0) : ''}"
-                    ${t[0] === 'arge_gun' && o[t[0]] === undefined ? `title="${g.argeGun != null ? 'Önceki aydan devralındı' : s.yil.aylar[ay].AP ? 'Çalışmanın kayıtlı AR-GE günü' : (Number(g.gvTesvik) || 0) >= 0.8 ? 'AR-GE günü girilmedi (varsayılan yok) — Ocak’a girilen gün bütün yıla geçer' : 'AR-GE personeli değil (GV teşviki yok)'}"` : ''}
+                    ${t[0] === 'arge_gun' && o[t[0]] === undefined ? `title="${g.argeGun != null ? 'Önceki aydan devralındı' : s.yil.aylar[ay].AP ? 'Çalışmanın kayıtlı AR-GE günü' : (Number(g.gvTesvik) || 0) >= (h.P.argeEsik == null ? 0.8 : h.P.argeEsik) ? 'AR-GE günü girilmedi (varsayılan yok) — Ocak’a girilen gün bütün yıla geçer' : 'AR-GE personeli değil (GV teşviki yok)'}"` : ''}
                     ${(t[0] === 'fm1' || t[0] === 'fm2') && o[t[0]] === undefined && g[t[0]] ? 'title="Önceki aydan devralındı"' : ''}>`
           : B.tl(o[t[0]])}</td>`).join('')}
         <td class="num">${B.tl(s.yil.aylar[ay].DM)}</td>
