@@ -52,20 +52,27 @@ mavi), 30 günlük ay ve üç sakatlık derecesi (tutarları düzenlenir), yetki
 - **Veri güvenliği.** İsteğe bağlı şifreleme (AES-256-GCM, paroladan PBKDF2 ile anahtar), otomatik ve elle
   yedek, aynı anda birden çok kişi ya da sekme açtığında yazma kilidi.
 
-## Çalıştırma (Windows)
+## Kurulum ve kullanım (Windows)
 
-Gereken: Windows PowerShell 5.1 ya da üstü ve güncel bir tarayıcı.
+Gereken: Windows 10 / 11 (Windows PowerShell zaten yüklüdür) ve güncel bir tarayıcı (Chrome, Edge, Firefox).
+Kurulum programı ya da internet bağlantısı gerekmez.
 
-- **Normal:** `program/BUTCE-BASLAT.bat` dosyasına çift tıklayın. Tarayıcıda `http://localhost:8764/` açılır.
-  Siyah sunucu penceresi açık kaldığı sürece program çalışır. Veri, program klasörünün yanındaki
-  `veri/butce.db` dosyasına yazılır.
-- **Deneme (ayrı veri klasörüyle, gerçek veriye dokunmaz):**
-  `powershell -ExecutionPolicy Bypass -File program/Sunucuyu-Baslat.ps1 -Port 8793 -VeriKok C:\gecici\butce-deneme -Deneme`
+**1. İndirin.** Bu sayfanın üstündeki yeşil **Code** düğmesi → **Download ZIP**.
 
-**İlk açılış:**
+**2. Çıkarın.** ZIP dosyasına sağ tıklayıp **Özellikler**'i açın; altta **"Engellemeyi kaldır"** kutusu varsa
+işaretleyip Tamam deyin (internetten inen dosyalarda Windows'un uyarı çıkarmasını azaltır). Sonra **Tümünü ayıkla**
+ile kalıcı bir yere çıkarın, örneğin `C:\UcretHesaplama`. Masaüstü ya da İndirilenler yerine sabit bir klasör seçin:
+verileriniz bu klasörün içinde tutulur.
 
+**3. Başlatın.** `program` klasöründeki **`BUTCE-BASLAT.bat`** dosyasına çift tıklayın.
+- Windows "Bilgisayarınız korundu" (SmartScreen) uyarısı verirse **Ek bilgi → Yine de çalıştır** deyin.
+- Siyah bir sunucu penceresi açılır ve program tarayıcıda (`http://localhost:8764/`) kendiliğinden açılır.
+- **Siyah pencereyi kapatmayın;** program o açıkken çalışır. İşiniz bitince pencereyi kapatmanız yeterli.
+  Bir dahaki sefere yine `BUTCE-BASLAT.bat` ile açın.
+
+**4. İlk açılış.**
 1. Veri parolası sorulur. Parola belirleyebilir ya da "Şifresiz devam" diyebilirsiniz; şifrelemeyi sonradan
-   Sistem ekranından da kurabilirsiniz.
+   Sistem ekranından da kurabilirsiniz. **Parolayı kaybederseniz veriye kimse ulaşamaz.**
 2. Yönetici hesabı oluşturulur.
 3. Başlangıç seçilir:
    - **Örnek veriyle başla:** uydurma iki grup (Ofis, Üretim), 56 kişi, 2026 onaylı ve 2027 taslak
@@ -73,9 +80,28 @@ Gereken: Windows PowerShell 5.1 ya da üstü ve güncel bir tarayıcı.
    - **Boş başla:** yalnız yasal parametreler ve bir "Genel" grubu. Gruplarınızı **Tanımlar → Gruplar**'dan
      açın; personeli elle girin ya da Dış Liste Aktarımı ile alın.
 
-Örnek veriden gerçek kullanıma geçerken **Sistem → Veritabanını Sıfırla** ile baştan başlayın.
+Örnek veriden gerçek kullanıma geçerken **Sistem → Veritabanını Sıfırla** ile baştan başlayın. Program içinde
+ayrıntılı bir **Kullanım Kılavuzu** vardır (sol alttaki düğme).
 
-Program içinde ayrıntılı bir **Kullanım Kılavuzu** vardır (sol alttaki düğme).
+**Verileriniz nerede?** Çıkardığınız klasörde, `program` klasörünün yanında: `veri\butce.db` (bütün veri),
+`yedek\` (otomatik yedekler) ve `yedek-elle\` (Sistem ekranından aldığınız yedekler). Bu klasörleri düzenli
+olarak başka bir yere de yedekleyin.
+
+### Yeni sürüme geçmek
+
+1. **Sistem → Yedeği indir** ile bir yedek alın, sonra programı kapatın (siyah pencere).
+2. Yeni sürümün ZIP'ini indirip **ayrı bir klasöre** çıkarın.
+3. Eski klasördeki `veri`, `yedek` ve `yedek-elle` klasörlerini yeni klasöre (`program` klasörünün yanına) kopyalayın.
+4. Yeni klasördeki `BUTCE-BASLAT.bat` ile açın; veritabanı gerekiyorsa kendiliğinden güncellenir. Her şey
+   yerindeyse eski klasörü silebilirsiniz.
+
+### Deneme kipi (geliştirenler için)
+
+Ayrı bir veri klasörüyle, gerçek veriye dokunmadan ve tarayıcı açmadan:
+`powershell -ExecutionPolicy Bypass -File program/Sunucuyu-Baslat.ps1 -Port 8793 -VeriKok C:\gecici\butce-deneme -Deneme`
+— ardından tarayıcıda `http://localhost:8793/`.
+
+Program Windows'ta denenmiştir (yerel sunucu bir PowerShell betiğidir).
 
 ## Klasörler
 
