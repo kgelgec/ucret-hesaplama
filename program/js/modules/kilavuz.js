@@ -45,6 +45,19 @@
       </ul>
       ${ipucu(`Örnekle başlayıp gerçek kullanıma geçerken <em>Sistem → Veritabanını Sıfırla</em> ile ilk kurulum ekranına dönebilir
         ya da örnek grupları ve çalışmalarını silebilirsiniz.`)}
+      <h4>Gerçek veriyle başlamadan önce</h4>
+      <ol>
+        <li><strong>Parametreler</strong> ekranında yılın yasal değerlerini (asgari ücret, vergi dilimleri, SGK oranları ve tavanı,
+          teşvik oranları) resmî kaynakla karşılaştırın.</li>
+        <li>Örnek veriyle başladıysanız <em>Sistem → Veritabanını Sıfırla</em> ile baştan başlayın.</li>
+        <li><strong>Şifrelemeyi açın</strong> (Sistem → Veri Şifreleme) ve veri parolasını yazılı saklayın; kaybolursa veri kurtarılamaz.
+          Şifrelemeden önce alınmış yedekler şifresiz kalır; Sistem ekranı sayısını gösterir, silin.</li>
+        <li>Bütçe çalışması açarken <strong>ücret esasını</strong> (net / brüt) doğru seçin; tutar girildikten sonra değişmez
+          (bkz. <em>Ücret esası</em> bölümü).</li>
+        <li><code>veri</code>, <code>yedek</code> ve <code>yedek-elle</code> klasörlerini düzenli olarak başka bir yere de kopyalayın.</li>
+        <li>Excel raporları ve şablonlar kişisel veri taşır: paylaşırken dikkat edin, işi bitenleri silin.</li>
+        <li>Programı başkaları da kullanacaksa her kişiye <strong>Kullanıcılar</strong> ekranından ayrı hesap açın.</li>
+      </ol>
       <h4>Başlangıç gezisi</h4>
       <p>Her kullanıcının ilk girişinde kısa bir <strong>başlangıç gezisi</strong> açılır: yasal parametrelerin kontrolünden gruplara,
         bütçe çalışmasının açılmasından personel listesinin alınmasına ve yedeğe kadar ilk yapılacakları sırayla gösterir; her adımda

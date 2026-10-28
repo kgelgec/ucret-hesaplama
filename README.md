@@ -119,6 +119,34 @@ içinde ayrıntılı bir **Kullanım Kılavuzu** da vardır.
 
 ![Başlangıç gezisi](program/img/kilavuz/15-gezi.png)
 
+## Başlamadan önce
+
+Programı gerçek personel verisiyle kullanmaya başlamadan önce bu listeyi bir kez gözden geçirin:
+
+1. **Yasal parametreleri kontrol edin.** Kurulumla 2026 değerleri gelir. **Parametreler** ekranında asgari ücreti,
+   gelir vergisi dilimlerini, SGK oranlarını ve tavanını, damga vergisini ve teşvik oranlarını resmî kaynakla
+   karşılaştırın. Açıklanmamış bir yıl için **Yeni Yıl Öngörüsü** artış oranıyla tahmin yapar; resmî rakamlar
+   açıklanınca girip "Resmî rakamlar girildi" deyin.
+2. **Örnek veriden çıkın.** Örnek veriyle başladıysanız gerçek kullanıma geçmeden önce **Sistem → Veritabanını
+   Sıfırla** ile baştan başlayın; yoksa uydurma kişiler ve gruplar gerçeklerle karışır.
+3. **Şifrelemeyi açın.** Veri dosyasında maaş ve T.C. Kimlik No vardır; şifresiz dosyayı kopyalayan herkes okuyabilir.
+   Veri parolasını yazılı ve güvenli bir yerde saklayın: **kaybolursa veri kurtarılamaz**, arka kapı yoktur.
+4. **Şifresiz kalmış eski yedekleri silin.** Şifreleme açılmadan önce alınan yedekler şifresiz kalır. Sistem ekranı
+   kaç tane olduğunu gösterir; `yedek` ve `yedek-elle` klasörlerinden silin.
+5. **Ücret esasını baştan seçin.** Her bütçe çalışması açılırken maaşların **net** mi **brüt** mü girileceği seçilir.
+   Tutar girildikten sonra değiştirilemez. Brüt çalışacaksanız:
+   - zam kademesi eşiklerini Bütçe Çalışmaları → ✎ Çalışma Ayarları'ndan brüt tutarla girin;
+   - içe aldığınız listede maaş sütununun başlığında "Brüt" geçsin (örn. "Brüt Maaş").
+6. **Kalıcı bir klasör ve ikinci bir kopya kullanın.** Programı Masaüstü ya da İndirilenler yerine sabit bir klasörde
+   tutun. `veri`, `yedek` ve `yedek-elle` klasörlerini düzenli olarak başka bir diske ya da güvenli bir yere de
+   kopyalayın: otomatik yedekler aynı diskte durur, disk bozulursa onlar da gider.
+7. **Excel dosyaları da kişisel veridir.** Excel raporu ve doldurulmuş şablonlar maaş ve kimlik bilgisi taşır.
+   E-postayla ya da paylaşımlı klasörde dolaşırken KVKK'ya dikkat edin, işi bitenleri silin. T.C. Kimlik No'yu tam
+   yalnız "T.C. Kimlik No'yu tam görür" yetkisi olan kullanıcılar görür; diğerlerinin ekranında ve raporunda maskelidir.
+8. **Herkes kendi hesabıyla girsin.** Programı başkaları da kullanacaksa **Kullanıcılar** ekranından her kişiye ayrı
+   hesap açın ve yalnız gereken grup ve yetkileri verin. Aynı anda yalnız bir kişi kayıt yapabilir. Siyah sunucu
+   penceresi açık kaldıkça program kaydeder.
+
 ## Kurulum ve kullanım (Windows)
 
 Gereken: Windows 10 / 11 (Windows PowerShell zaten yüklüdür) ve güncel bir tarayıcı (Chrome, Edge, Firefox).
