@@ -1,0 +1,154 @@
+/* Maaş Bütçe Sistemi — uygulamaya özgü görünüm */
+.artis{color:var(--danger);}
+.azalis{color:var(--green);}
+.toplam-satir td{font-weight:700; background:var(--accent-soft);}
+.ozet-girdi{width:150px; text-align:right; padding:4px 8px;}
+.ozet-tablo td, .ozet-tablo th{white-space:nowrap;}
+.izgara-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+th.num, td.num{text-align:right;}
+.gosterge{font-size:22px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums;}
+/* Geniş maliyet ve bordro tabloları: ilk sütun sabit */
+.genis-tablo{font-size:12px;}
+.genis-tablo td, .genis-tablo th{white-space:nowrap; padding:5px 8px;}
+.genis-tablo th:first-child, .genis-tablo td:first-child{position:sticky; left:0; background:var(--surface); z-index:1;}
+.hucre-girdi{width:92px; text-align:right; padding:3px 6px; font-size:12px;}
+.hucre-girdi.degisti{background:var(--warn-soft);}
+.devralan{color:var(--ink-fade);}
+.sekme-cubuk{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+.sekme-cubuk .btn-ikincil.etkin{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+/* ---------- Sabit tablo başlıkları ----------
+   Tablo kabı kendi içinde kayar; böylece başlık satırı (thead) ve
+   toplam satırı sayfa aşağı kaydırılsa da görünür kalır. Kap yalnızca
+   ekrandan uzun tablolarda sınırlanır, kısa tablolar etkilenmez. */
+.tablo-sar{max-height:calc(100vh - 150px); overflow:auto;}
+.kip .tablo-sar{max-height:calc(100vh - 260px);}
+.tablo-sar thead th{
+  position:sticky; top:0; z-index:3; background:#e9eff7; color:var(--ink);
+  box-shadow:inset 0 -2px 0 #c9d4e3;
+}
+.genis-tablo thead th:first-child{left:0; z-index:4; background:#e9eff7;}
+.tablo-sar tr.toplam-satir td{position:sticky; bottom:0; z-index:2; background:#dce8f5; box-shadow:inset 0 2px 0 #c9d4e3;}
+.genis-tablo tr.toplam-satir td:first-child{z-index:3;}
+.tablo-sar tbody tr:hover td{background:#f5f8fc;}
+.genis-tablo tbody tr:hover td:first-child{background:#f5f8fc;}
+
+/* ---------- Üst çubuk: yıl + grup ---------- */
+.grup-dugmeler{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+.grup-dugmeler button{border:0; background:var(--surface); padding:6px 14px; font:inherit; font-size:12.5px; cursor:pointer; color:var(--ink-soft);}
+.grup-dugmeler button + button{border-left:1px solid var(--line);}
+.grup-dugmeler button.etkin{background:var(--accent); color:#fff; font-weight:700;}
+.ust-secici{display:flex; align-items:center; gap:10px;}
+.rz-ongoru{background:#fff1d6; color:#8a5a00;}
+/* app.css'teki üst kaydırma çubuğu kuralı başlığı 13px aşağı iter (sayfa
+   kaydırması için); burada tablo kendi kabında kaydığı için başlık tam tepede durur. */
+.tablo-ust-cubuk + .tablo-sar th, .tablo-sar thead th{top:0;}
+
+/* ---------- Grup düğmeleri kesilmesin ----------
+   overflow:hidden esnek kutuda öğenin küçülmesine izin verir; pencere
+   daralınca sağdaki düğmeler (son gruplar, Tümü) kesilip görünmez olur.
+   Bu yüzden düğmeler hiç küçülmez; yer yetmezse üst çubuk alt satıra geçer. */
+.grup-dugmeler{overflow:visible; flex-shrink:0;}
+.grup-dugmeler button{white-space:nowrap;}
+.grup-dugmeler button:first-child{border-radius:7px 0 0 7px;}
+.grup-dugmeler button:last-child{border-radius:0 7px 7px 0;}
+.ust-secici{flex-wrap:wrap; justify-content:flex-end;}
+.ust{flex-wrap:wrap;}
+.ust .sag{flex-wrap:wrap; justify-content:flex-end; min-width:0;}
+
+/* ---------- Personel ve Zam: sütun grupları ----------
+   Sütun grupları (önceki yıl, öngörü, düzeltme, zam, yeni yıl, maliyet)
+   başlık rengiyle, hücreler aynı rengin açık tonuyla ve gruplar arasında
+   kalın çizgiyle birbirinden ayrılır. */
+.personel-tablo thead th.bas-eski{background:#7fae4e; color:#fff;}
+.personel-tablo thead th.bas-ong {background:#8392a8; color:#fff;}
+.personel-tablo thead th.bas-duz {background:#d19a12; color:#fff;}
+.personel-tablo thead th.bas-zam {background:#c0504d; color:#fff;}
+.personel-tablo thead th.bas-yeni{background:#1d8fc4; color:#fff;}
+.personel-tablo thead th.bas-mal {background:#1f4e79; color:#fff;}
+.personel-tablo td.hucre-eski{background:#f0f7e8;}
+.personel-tablo td.hucre-ong {background:#f4f6f9;}
+.personel-tablo td.hucre-duz {background:#fff6da;}
+.personel-tablo td.hucre-zam {background:#fbeceb;}
+.personel-tablo td.hucre-yeni{background:#eaf6fc;}
+.personel-tablo td.hucre-mal {background:#eef2f8;}
+.personel-tablo .grup-sinir{border-left:3px solid #fff; box-shadow:inset 3px 0 0 #9aa8bc;}
+.personel-tablo thead th{white-space:normal; min-width:92px; line-height:1.25; vertical-align:bottom;}
+.personel-tablo thead th:first-child{min-width:190px;}
+.personel-tablo tbody tr:hover td{filter:brightness(0.97);}
+
+/* ---------- Zebra sütunlar ----------
+   Bütün tablolarda çift sütunlar hafif koyulaştırılır; sütunlar birbirinden ayrılır.
+   Renk, hücrenin kendi zemininin ÜSTÜNE gölge katmanı olarak eklenir — Personel ve Zam'daki
+   renk grupları, toplam satırı ve sarı düzeltme hücreleri bozulmaz. */
+table td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.045);}
+table thead th:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.07), inset 0 -2px 0 #c9d4e3;}
+table tr.toplam-satir td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.06), inset 0 2px 0 #c9d4e3;}
+/* Personel ve Zam'da grup sınırı çizgisi zebra katmanıyla birlikte */
+.personel-tablo td.grup-sinir:nth-child(even), .personel-tablo th.grup-sinir:nth-child(even){
+  box-shadow:inset 3px 0 0 #9aa8bc, inset 0 0 0 9999px rgba(31,78,121,0.045);}
+.personel-tablo td.grup-sinir:nth-child(odd), .personel-tablo th.grup-sinir:nth-child(odd){box-shadow:inset 3px 0 0 #9aa8bc;}
+table td + td, table th + th{border-left:1px solid rgba(31,78,121,0.06);}
+
+/* Süzgeç satırı — düğmeler, arama ve seçiciler yan yana (kart başlığı dışında da) */
+.suzgec-satir{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.suzgec-satir > input, .suzgec-satir > select{width:auto; flex:0 0 auto;}
+.suzgec-satir > label.satir{display:inline-flex; gap:6px; align-items:center; margin:0;}
+.suzgec-satir > label.satir input{width:auto;}
+
+/* Yazma kilidi şeridi (görüntüleme kipi; bkz. js/core/kilit.js) */
+.kilit-serit{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin:0 22px 12px; padding:10px 14px; border-radius:10px;
+  background:var(--warn-soft); border:1px solid var(--warn); color:#7a5210; font-size:13px;
+}
+.kilit-serit.gizli{display:none;}
+.kilit-serit .ik{font-size:16px; line-height:1;}
+.kilit-serit .metin{flex:1; min-width:220px;}
+
+/* Maaş Dağılımı */
+.dagilim-cubuk{display:inline-block; width:110px; height:10px; background:#eef1f6; border-radius:5px; overflow:hidden; vertical-align:middle; margin-right:6px;}
+.dagilim-cubuk span{display:block; height:100%; background:var(--accent, #1f4e79); border-radius:5px;}
+tr.dagilim-uc td{background:var(--warn-soft);}
+td.kalin{font-weight:700;}
+
+/* Parametreler: iki sütunlu ızgarada uzun etiketler kırılır, tablo sütununa sığar
+   (nowrap + yapışkan ilk sütunla sol tablo sağdakinin altına girer). */
+.izgara > *{min-width:0;}
+.param-tablo{width:100%;}
+.param-tablo td{white-space:normal;}
+.param-tablo td.num{white-space:nowrap; width:1%;}
+.param-tablo th:first-child, .param-tablo td:first-child{position:static;}
+
+/* Performans: zam hesabına henüz uygulanmamış çarpan */
+.uyari-hucre{background:var(--warn-soft);}
+
+/* Başlıklarda "metni kaydır": uzun sütun başlıkları satır kırar, sütun genişliğini
+   rakamlar belirler; tablolar daralır, yan yana sığar. */
+.genis-tablo thead th, .ozet-tablo thead th{white-space:normal; line-height:1.25; vertical-align:bottom;}
+
+/* Personel ve Zam: 🗑 adın solunda — silme düğmesi satırın başında, kolay erişilir */
+.personel-tablo .ad-sil{margin-right:6px; vertical-align:middle; opacity:.55;}
+.personel-tablo tr:hover .ad-sil{opacity:1;}
+
+/* Kullanım Kılavuzu — solda içindekiler, sağda bölümler */
+.kenar-alt .kilavuz-btn{margin-top:10px; background:rgba(255,255,255,.14); color:#fff; font-weight:600;}
+.kl-duzen{display:grid; grid-template-columns:260px minmax(0,1fr); gap:16px; align-items:start;}
+.kl-icindekiler{position:sticky; top:12px; max-height:calc(100vh - 120px); overflow:auto;}
+.kl-icindekiler input{width:100%;}
+.kl-icindekiler a{display:block; padding:6px 8px; border-radius:6px; color:var(--ink); text-decoration:none; font-size:13px;}
+.kl-icindekiler a:hover{background:var(--line);}
+.kl-bolum{margin-bottom:16px; line-height:1.6;}
+.kl-bolum h4{margin:14px 0 6px; font-size:13.5px;}
+.kl-bolum ul,.kl-bolum ol{padding-left:22px; margin:6px 0;}
+.kl-bolum li{margin:4px 0;}
+.kl-bolum .uyari{margin:10px 0;}
+.kl-bolum table{margin:8px 0;}
+.kl-bolum td{vertical-align:top; white-space:normal;}
+.kl-git{white-space:nowrap; font-size:12px; margin-left:4px;}
+.kl-sss dt{font-weight:600; margin-top:12px;}
+.kl-sss dd{margin:4px 0 0 0; color:var(--ink-soft);}
+@media (max-width:900px){.kl-duzen{grid-template-columns:1fr;} .kl-icindekiler{position:static; max-height:none;}}
+.kl-gorsel{margin:12px 0 16px;}
+.kl-gorsel img{max-width:100%; height:auto; border:1px solid var(--line); border-radius:8px; box-shadow:0 2px 10px rgba(20,35,60,.08); cursor:zoom-in; display:block;}
+.kl-gorsel figcaption{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}

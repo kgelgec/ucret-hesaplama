@@ -1,0 +1,24 @@
+# Programın canlı verisi depoya GİRMEZ (kişisel veri — KVKK).
+# Veri "veri\butce.db" dosyasındadır; yedekler "yedek" ve "yedek-elle" klasörlerindedir.
+veri/
+yedek/
+yedek-elle/
+yedekler/
+**/veri/
+**/yedek/
+**/yedek-elle/
+*.db
+*.db-journal
+kilit.json
+sifreleme-acik
+
+# Tek istisna: örnek (uydurma) veriyle kurulmuş şifresiz deneme veritabanı
+!docs/referans/ornek-veri.db
+
+# Excel dosyaları (maaş listeleri, zam çalışmaları) depoya konmaz
+*.xlsx
+*.xlsm
+*.xls
+~$*
+
+node_modules/
