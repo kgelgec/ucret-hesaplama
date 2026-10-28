@@ -1,8 +1,8 @@
 /* =====================================================================
    SİMGELER — çizgi (SVG) simge seti
    ---------------------------------------------------------------------
-   Çizimler Lucide simge setinden alınmıştır (ISC lisansı; bkz.
-   js/vendor/LISANSLAR.md). Emoji yerine SVG: her sistemde aynı görünür,
+   Çizimler Lucide simge setinden alınmıştır (ISC lisansı; Feather'dan
+   türeyen simgeler MIT; tam metinler js/vendor/LISANSLAR.md). Emoji yerine SVG: her sistemde aynı görünür,
    rengi yazı rengini (currentColor) izler.
 
    IKON.svg(ad)       → simgenin SVG metni

@@ -247,6 +247,13 @@ baştaki sorumluluk notu).
 
 ## Üçüncü taraf bileşenler
 
-`program/js/vendor/` altındaki kütüphaneler kendi lisanslarıyla dağıtılır: [sql.js](https://github.com/sql-js/sql.js)
-(MIT; SQLite kamu malıdır) ve [ExcelJS](https://github.com/exceljs/exceljs) (MIT). Arayüz simgeleri
-[Lucide](https://lucide.dev) setinden alınmıştır (ISC; `program/js/core/ikon.js`). Ayrıntı: `program/js/vendor/LISANSLAR.md`.
+`program/js/vendor/` altındaki kütüphaneler kendi lisanslarıyla dağıtılır:
+
+| Bileşen | Sürüm | Lisans |
+|---|---|---|
+| [sql.js](https://github.com/sql-js/sql.js) (SQLite'ın WebAssembly derlemesi) | 1.10.3 (SQLite 3.45.2) | MIT; SQLite kamu malı |
+| [ExcelJS](https://github.com/exceljs/exceljs) (içindeki JSZip, pako, saxes, Day.js, fast-csv, uuid, buffer, ieee754, safe-buffer ile) | 4.4.0 | MIT; bağımlılıkları MIT, ISC, BSD-3-Clause |
+| [Lucide](https://lucide.dev) simgeleri (`program/js/core/ikon.js`) | — | ISC; Feather'dan türeyenler MIT |
+
+Tam lisans metinleri: [`program/js/vendor/LISANSLAR.md`](program/js/vendor/LISANSLAR.md). Programı ya da bu
+dosyaları yeniden dağıtırken bu dosyayı da birlikte verin.
