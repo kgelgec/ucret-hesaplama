@@ -13,6 +13,15 @@ th.num, td.num{text-align:right;}
 .genis-tablo th:first-child, .genis-tablo td:first-child{position:sticky; left:0; background:var(--surface); z-index:1;}
 .hucre-girdi{width:92px; text-align:right; padding:3px 7px; font-size:12px; min-height:28px; border-radius:6px;}
 .hucre-girdi.degisti{background:var(--warn-soft);}
+/* Tablo hücresindeki bütün kutular aynı boyda: metin, sayı ve seçim kutusu yan yana dursa da satır dengeli kalır */
+:where(table td) :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), select){
+  min-height:28px; padding:3px 7px; font-size:12px; border-radius:6px;}
+/* Personel ve Zam → Kişi Bilgileri: hücreden düzenlenen seçim ve tarih kutuları (sayı kutusuyla aynı boy) */
+.hucre-secim, .hucre-tarih{width:auto; min-height:28px; padding:3px 7px; font-size:12px; border-radius:6px;}
+.hucre-secim{max-width:240px; padding-right:4px;}
+.hucre-tarih{width:132px;}
+/* Tablo hücresi için küçük kutu bir form alanında kullanılırsa diğer alanlarla aynı boyda durur */
+.alan > .hucre-girdi{min-height:36px; padding:8px 11px; font-size:13.5px; width:120px; border-radius:var(--r-sm);}
 .devralan{color:var(--ink-fade);}
 .sekme-cubuk{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
 .sekme-cubuk .btn-ikincil.etkin{background:var(--accent); color:#fff; border-color:var(--accent);}
@@ -96,7 +105,8 @@ table td + td, table th + th{border-left:1px solid rgba(15,23,42,0.045);}
 .suzgec-satir{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
 .suzgec-satir > input, .suzgec-satir > select{width:auto; flex:0 0 auto;}
 .suzgec-satir > label.satir{display:inline-flex; gap:6px; align-items:center; margin:0;}
-.suzgec-satir > label.satir input{width:auto;}
+.suzgec-satir > label.satir{flex-wrap:nowrap;}
+.suzgec-satir > label.satir input, .suzgec-satir > label.satir select{width:auto;}
 
 /* Yazma kilidi şeridi (görüntüleme kipi; bkz. js/core/kilit.js) */
 .kilit-serit{

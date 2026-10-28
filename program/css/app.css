@@ -163,6 +163,9 @@ main{flex:1; min-width:0; display:flex; flex-direction:column;}
 }
 .kart-baslik h2{display:flex; align-items:center; gap:8px;}
 .kart-baslik .sag{margin-left:auto; display:flex; gap:8px; align-items:center;}
+/* Başlık bloğu kalan yeri alır: yanındaki düğme ve süzgeçler sağa yaslanır */
+.kart-baslik > :first-child:not(:last-child){flex:1 1 0; min-width:min(360px, 45%);}
+.kart-baslik > .btn-satir{justify-content:flex-end; flex:0 1 auto;}
 .kart-aciklama{font-size:12.5px; color:var(--ink-soft); margin:-8px 0 14px; line-height:1.55;}
 
 .izgara{display:grid; gap:14px;}
@@ -233,6 +236,8 @@ legend{font-size:12px; font-weight:700; color:var(--ink-soft); padding:0 6px; te
 .btn-tehlike:hover{background:var(--danger-dark); border-color:var(--danger-dark);}
 .btn-kucuk{min-height:30px; padding:4px 11px; font-size:12.5px; border-radius:7px;}
 .btn-satir{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+/* Satır içindeki kutular tam genişlik almaz (alt alta dizilmesinler) */
+.btn-satir > select, .btn-satir > input:not([type=checkbox]):not([type=radio]){width:auto;}
 
 /* ---------- Tablo ---------- */
 .tablo-sar{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--surface);}

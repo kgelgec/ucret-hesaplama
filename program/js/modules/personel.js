@@ -6,6 +6,9 @@
    yeni yıl maaşı ile yıllık maliyet. Maaş ve tutarlar çalışmanın ücret
    esasındadır (net ya da brüt — B.esas); etiketler esası izler.
    Düzeltme hücresine doğrudan yazılır (Enter ya da hücreden çıkış).
+   Kişi Bilgileri sekmesinde temel tanımlar (bütçe bölümü, yaka, tarihler,
+   hesaplama türü, kanun, teşvik, sakatlık, BES, zam ayı, performans) de
+   tablodan değiştirilir; kayıt kişi kartıyla aynı yoldan geçer.
    ===================================================================== */
 (function () {
   'use strict';
@@ -75,6 +78,25 @@
     // Kişi bilgileri
     const turAd = {}; API.hesapTuruListe(c.yil).forEach(t => { turAd[t.kod] = t.ad; });
     const kanunAd = {}; API.kanunListe().forEach(k => { kanunAd[k.kod] = k.ad; });
+    if (yetki.pYaz) {
+      const turler = API.hesapTuruListe(c.yil).map(t => ({ deger: t.kod, etiket: t.ad }));
+      const kanunlar = API.kanunListe().map(x => ({ deger: x.kod, etiket: x.ad }));
+      const perf = (b, alan, ondalik) => ({ b: b, v: s => yetki.zYaz ? hucreSayi(s, alan, s.kp[alan], b, ondalik)
+        : (s.kp[alan] == null ? '' : B.tlDuz(s.kp[alan], ondalik)) });
+      return [
+        { b: 'Yaka', v: s => hucreSec(s, 'yaka', SECENEK.yaka, s.kp.yaka, null, 'Yaka') },
+        { b: 'İşe Giriş', v: s => hucreTarih(s, 'ise_giris', tarihler(s.kp).giris, 'İşe giriş') },
+        { b: 'Çıkış', v: s => hucreTarih(s, 'isten_ayrilis', tarihler(s.kp).cikis, 'Çıkış') + cikisNotu(s.kp) },
+        { b: 'Hesaplama Türü', v: s => hucreSec(s, 'hesap_turu', turler, s.kp.hesap_turu, null, 'Hesaplama türü') },
+        { b: 'Kanun', v: s => hucreSec(s, 'kanun', kanunlar, s.kp.kanun || 'YOK', null, 'Kanun') },
+        { b: 'AR-GE GV Teşvik', v: s => hucreSec(s, 'gv_tesvik', SECENEK.gv, s.kp.gv_tesvik || 0, null, 'AR-GE GV teşvik') },
+        { b: 'Sakatlık', v: s => hucreSec(s, 'sakatlik_derece', SECENEK.sakatlik, s.kp.sakatlik_derece, 'Yok', 'Sakatlık') },
+        { b: 'BES', v: s => hucreSec(s, 'bes', SECENEK.bes, s.kp.bes, '—', 'BES') },
+        { b: 'Zam Ayı', v: s => hucreSec(s, 'zam_ayi', C.aySecenekleri(s.kp.zam_ayi || 1), null, null, 'Zam ayı') },
+        perf('Performans Puanı', 'performans_puani', 1),
+        perf('Performans Çarpanı', 'performans_carpani', 2),
+      ];
+    }
     return [
       { b: 'Yaka', v: s => s.kp.yaka === 'M' ? '<span class="rz rz-mavi">Mavi</span>' : '<span class="rz rz-gri">Beyaz</span>' },
       { b: 'İşe Giriş', v: s => U.tarihGoster(s.kp.ise_giris) },
@@ -91,6 +113,53 @@
   }
 
 
+
+  /* ---------- Kişi Bilgileri: tablodan düzenleme ---------- */
+  const SECENEK = {
+    yaka: [{ deger: 'B', etiket: 'Beyaz' }, { deger: 'M', etiket: 'Mavi' }],
+    gv: [{ deger: 0, etiket: 'Yok' }, { deger: 0.8, etiket: '%80' }, { deger: 0.9, etiket: '%90' }, { deger: 0.95, etiket: '%95' }],
+    sakatlik: [{ deger: 1, etiket: '1. derece' }, { deger: 2, etiket: '2. derece' }, { deger: 3, etiket: '3. derece' }],
+    bes: [{ deger: 'EVET', etiket: 'Katılıyor' }, { deger: 'HAYIR', etiket: 'Katılmıyor' }],
+  };
+  /* Çalışmanın kendi dönem tarihleri varsa (onay_sabit = 2) kartta olduğu gibi onlar düzenlenir */
+  const tarihler = kp => kp.onay_sabit === 2 ? { giris: kp.onay_giris, cikis: kp.onay_cikis } : { giris: kp.ise_giris, cikis: kp.isten_ayrilis };
+  /* Onaydan sonra kartta değişen çıkış (onaylı maliyete girmez) — düzenlenebilir hücrenin yanında da görünür */
+  function cikisNotu(kp) {
+    if (kp.onay_sabit !== 1 || (kp.isten_ayrilis || null) === (kp.onay_cikis || null)) return '';
+    return ' <span class="rz rz-sari" title="Personel kartında onaydan sonra değişti; onaylı maliyete girmez">onayda ' +
+      (kp.onay_cikis ? U.tarihGoster(kp.onay_cikis) : 'çıkış yok') + '</span>';
+  }
+  const hucreOz = (s, alan, baslik) => `data-alan="${alan}" data-tc="${U.esc(s.kp.tc_kimlik_no)}" aria-label="${U.esc(baslik + ' — ' + s.kp.ad_soyad)}"`;
+  const hucreSec = (s, alan, liste, deger, bos, baslik) => `<select class="hucre-secim" ${hucreOz(s, alan, baslik)}>${
+    typeof liste === 'string' ? liste : C.secenekler(liste, deger, bos)}</select>`;
+  const hucreTarih = (s, alan, deger, baslik) => `<input type="date" class="hucre-tarih" ${hucreOz(s, alan, baslik)} value="${U.esc(deger || '')}">`;
+  const hucreSayi = (s, alan, deger, baslik, ondalik) => `<input class="hucre-girdi" ${hucreOz(s, alan, baslik)} value="${deger == null ? '' : B.tlDuz(deger, ondalik)}">`;
+
+  /* Tek alanı kaydeder. Performans alanları zam.yaz ile doğrudan yazılır; diğerleri kişi kartının kaydıyla
+     (calismaPersonelKaydet) — aynı denetimler, dönem tarihi koruması ve işlem kaydı. */
+  function hucreKaydet(c, tc, alan, deger) {
+    if (alan === 'performans_puani' || alan === 'performans_carpani') return API.calismaPersonelAlanYaz(c.id, tc, alan, deger);
+    const k = API.calismaPersonelGetir(c.id, tc);
+    const f = Object.assign({}, k, k.onay_sabit === 2 ? { ise_giris: k.onay_giris, isten_ayrilis: k.onay_cikis } : {});
+    if (alan === 'ise_giris' || alan === 'isten_ayrilis') {
+      const y = deger ? Number(deger.slice(0, 4)) : null;
+      if (y && (y < 1900 || y > 2200)) throw new Error('Tarih geçersiz: ' + deger);
+    }
+    f[alan] = ['gv_tesvik', 'sakatlik_derece', 'zam_ayi'].indexOf(alan) >= 0 ? (deger === '' ? null : Number(deger)) : deger;
+    /* Sakatlık indirimi dereceden, yılın tablosundan gelir (kartta da öyle) */
+    if (alan === 'sakatlik_derece') f.ozurlu_indirimi = f.sakatlik_derece ? API.sakatlikTutari(c.yil, f.sakatlik_derece) : null;
+    API.calismaPersonelKaydet(c.id, f, tc);
+  }
+
+  /* Hücre kaydından sonra ekran yeniden çizilir; kaydırma konumu ve odak korunur (sıradaki hücreye geçilebilsin) */
+  function tazeleKoru(odak) {
+    const y = window.scrollY, sar = document.querySelector('#icerik .tablo-sar'), x = sar ? sar.scrollLeft : 0;
+    APP.tazele();
+    window.scrollTo(0, y);
+    const yeniSar = document.querySelector('#icerik .tablo-sar');
+    if (yeniSar) yeniSar.scrollLeft = x;
+    if (odak) { const e = document.querySelector(odak); if (e) e.focus({ preventScroll: true }); }
+  }
 
   // Renk grubu değişen sütunun soluna kalın ayırıcı çizgi
   function sinir(S, i) { return S[i].g && (i === 0 || S[i - 1].g !== S[i].g) ? ' grup-sinir' : ''; }
@@ -126,7 +195,10 @@
     const aciklama = {
       zam: 'Tutarlar ' + B.esasBuyuk(c) + '. Zam öngörüsü: ' + U.esc(yontem) + ' (Bütçe Çalışmaları ekranından değiştirilir). DÜZELTME yönetimin ' +
            'müdahalesidir; öngörülen zamma eklenir, eksi olabilir.',
-      kisi: 'Hesaplamayı belirleyen bilgiler. Değiştirmek için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler\'den.',
+      kisi: yetki.pYaz
+        ? 'Hesaplamayı belirleyen bilgiler; hücreden doğrudan değiştirilir ve hemen kaydedilir (Ocak\'tan geçerli). Tarih ve sayılar ' +
+          'hücreden çıkınca ya da Enter ile kaydedilir. Diğer bilgiler için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler\'den.'
+        : 'Hesaplamayı belirleyen bilgiler. Ayrıntı için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler\'den.',
     }[sekme];
 
     kap.innerHTML = `
@@ -137,7 +209,7 @@
             <div class="kart-aciklama">${aciklama}</div>
           </div>
           <div class="btn-satir">
-            <input id="ara" placeholder="Ad veya T.C. ile ara (Esc: temizle)" type="search" value="${U.esc(arama)}" style="min-width:200px">
+            <input id="ara" placeholder="Ad veya T.C. ile ara (Esc: temizle)" type="search" value="${U.esc(arama)}" style="min-width:250px">
             <select id="bolumSuz">${C.secenekler(bolumler.map(b => ({ deger: b.ad, etiket: API.bolumEtiket(c.grup_kod, b.ad) })), bolumSuz, 'Tüm bölümler')}</select>
             <select id="yakaSuz">${C.secenekler([{ deger: 'B', etiket: 'Beyaz yaka' }, { deger: 'M', etiket: 'Mavi yaka' }], yakaSuz, 'Tüm yakalar')}</select>
             ${yetki.pYaz ? '<button class="btn" id="yeniBtn">+ Yeni Personel</button>' : ''}
@@ -154,7 +226,9 @@
           <tbody>${satirlar.map(s => `<tr>
             <td>${yetki.pYaz ? `<button class="ikon-btn satir-sil ad-sil" data-sil="${U.esc(s.kp.tc_kimlik_no)}" title="Bütçeden çıkar">🗑</button>` : ''}<a href="#" data-kart="${U.esc(s.kp.tc_kimlik_no)}">${U.esc(s.kp.ad_soyad)}</a>
               ${cikisHtml(s.kp, true)}</td>
-            <td class="kucuk">${U.esc(API.bolumEtiket(c.grup_kod, s.kp.butce_bolumu))}</td>
+            <td class="kucuk">${sekme === 'kisi' && yetki.pYaz
+              ? hucreSec(s, 'butce_bolumu', bolumler.map(b => ({ deger: b.ad, etiket: API.bolumEtiket(c.grup_kod, b.ad) })), s.kp.butce_bolumu, '—', 'Bütçe bölümü')
+              : U.esc(API.bolumEtiket(c.grup_kod, s.kp.butce_bolumu))}</td>
             ${S.map((k, i) => `<td class="${liste}hucre-${k.g || 'yok'}${sinir(S, i)}">${k.v(s)}</td>`).join('')}
           </tr>`).join('')}
           <tr class="toplam-satir"><td>Toplam (${satirlar.length} kişi)</td><td></td>
@@ -174,11 +248,32 @@
         if (inp.value === eski) return;
         try {
           API.calismaPersonelAlanYaz(c.id, inp.getAttribute('data-duz'), 'duzeltme', inp.value.trim());
-          APP.tazele();
+          tazeleKoru(null);
         } catch (e) { U.bildir(e.message, 'hata'); }
       };
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') kaydet(); });
       inp.addEventListener('blur', kaydet);
+    });
+
+    /* Kişi Bilgileri hücreleri: seçim kutusu değişince, tarih ve sayı hücreden çıkınca / Enter'da kaydedilir */
+    kap.querySelectorAll('[data-alan][data-tc]').forEach(el => {
+      const eski = el.value, alan = el.getAttribute('data-alan'), tc = el.getAttribute('data-tc');
+      const secici = x => x && x.getAttribute && x.getAttribute('data-alan') && x.getAttribute('data-tc')
+        ? `#icerik [data-alan="${x.getAttribute('data-alan')}"][data-tc="${x.getAttribute('data-tc')}"]` : null;
+      let bitti = false;
+      /* odak: yeniden çizimden sonra odaklanacak hücre — Enter / seçimde aynı hücre, Tab ile çıkışta gidilen hücre */
+      const kaydet = odak => {
+        if (bitti || el.value === eski) return;
+        bitti = true;
+        try { hucreKaydet(c, tc, alan, el.value.trim()); }
+        catch (e) { U.bildir(e.message, 'hata'); }
+        tazeleKoru(odak);
+      };
+      if (el.tagName === 'SELECT') el.addEventListener('change', () => kaydet(secici(el)));
+      else {
+        el.addEventListener('blur', e => kaydet(secici(e.relatedTarget)));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); kaydet(secici(el)); } });
+      }
     });
 
     kap.addEventListener('click', e => {

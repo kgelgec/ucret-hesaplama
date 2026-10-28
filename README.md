@@ -23,6 +23,8 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
   yıl maaşı ile yeni maaş hep aynı esastadır; işveren maliyeti iki esasta da aynı formülle çıkar.
 - **Zam öngörüsü.** Maaş kademesine göre oran: alt eşiğin altına üst oran, üst eşiğin üstüne alt oran, arada
   doğrusal geçiş. İsteğe bağlı olarak performans çarpanı da uygulanır; yönetim kişi bazında düzeltme girebilir.
+- **Hızlı düzenleme.** Personelin temel tanımları (bütçe bölümü, yaka, giriş-çıkış, hesaplama türü, kanun, teşvik, sakatlık,
+  BES, zam ayı, performans) kişi kartının yanı sıra doğrudan tablodan, kutularla değiştirilir.
 - **Mini bordro.** Kişi × ay maliyet tablosu ve her kişi için 12 aylık bordro dökümü.
 - **Aylık girdiler.** Ayni yardım, prim, mesai, yakıt, çalışılan gün, AR-GE günü; yıl içinde hesaplama türü
   ya da kanun değişikliği.

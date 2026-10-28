@@ -108,11 +108,16 @@
       <ul>
         <li><strong>Zam Çalışması:</strong> zam öngörüsü, <strong>Düzeltme</strong> hücresi ve sonuç. Düzeltme, öngörülen zamma eklenir; eksi olabilir.
           Hücreye yazıp Enter'a basın ya da başka bir hücreye geçin.</li>
-        <li><strong>Kişi Bilgileri:</strong> hesabı belirleyen bilgiler (yaka, hesaplama türü, kanun, giriş-çıkış…).</li>
+        <li><strong>Kişi Bilgileri:</strong> hesabı belirleyen bilgiler: bütçe bölümü, yaka, işe giriş ve çıkış tarihi, hesaplama türü,
+          kanun, AR-GE GV teşviki, sakatlık, BES, zam ayı, performans puanı ve çarpanı. Bunları kişi kartını açmadan, doğrudan
+          <strong>tablodaki kutulardan</strong> değiştirebilirsiniz: seçim kutusunda seçtiğiniz an, tarih ve sayıda Enter'a basınca ya da
+          başka bir kutuya geçince kaydedilir ve maliyet yeniden hesaplanır. Değişiklik Ocak'tan geçerlidir; yıl içinde değişen bilgi
+          için Aylık Girdiler'i kullanın. Onaylı çalışmada kutular çıkmaz.</li>
       </ul>
       <h4>Kişi kartı</h4>
       <p>Kişinin adına tıklayınca kart açılır. Bütçe bölümü, giriş/çıkış tarihi, yaka, hesaplama türü (SSK / EMK / SGK'sız), kanun (teşvik),
-        AR-GE GV teşvik oranı, sakatlık, BES, önceki yıl maaşı, zam ayı, düzeltme ve not buradan değiştirilir.</p>
+        AR-GE GV teşvik oranı, sakatlık, BES, önceki yıl maaşı, zam ayı, düzeltme ve not buradan değiştirilir. Kartla tablodaki kutular aynı
+        kaydı kullanır; hangisinden değiştirirseniz değiştirin aynı denetimlerden geçer.</p>
       <ul>
         <li><strong>+ Yeni Personel:</strong> T.C. yazınca kişi programda daha önce varsa bilgileri kendiliğinden gelir.</li>
         <li><strong>🗑 Bütçeden çıkar:</strong> kişiyi bu çalışmadan çıkarır; personel kaydı ve geçmiş yıllar etkilenmez.

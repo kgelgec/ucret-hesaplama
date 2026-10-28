@@ -43,7 +43,7 @@
           <div class="btn-satir">
             <select id="prmYilSec">${C.secenekler(yillar.length ? yillar : [yil], yil)}</select>
             ${durum.ongoru ? '<span class="rz rz-ongoru">Öngörü</span>' : '<span class="rz rz-yesil">Resmî</span>'}
-            ${yaz && durum.ongoru ? '<button class="btn btn-ikincil btn-kucuk" id="resmiBtn">Resmî rakamlar girildi</button>' : ''}
+            ${yaz && durum.ongoru ? '<button class="btn btn-ikincil" id="resmiBtn">Resmî rakamlar girildi</button>' : ''}
           </div>
         </div>
         ${(() => { const on = API.yilOnayliCalismalar(yil); return on.length ? `<div class="uyari uyari-bilgi"><span class="ik">🔒</span><div>

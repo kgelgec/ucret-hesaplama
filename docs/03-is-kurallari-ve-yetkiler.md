@@ -253,7 +253,8 @@ Kaynak: `js/db/api.js:ayOf`, `calismaHesapla` (`eskiYilda`); `js/core/hesap.js:z
 ### 3.4 Hücreden hızlı giriş (`calismaPersonelAlanYaz`)
 - Yalnız bir alanı yazar; alan `CP_ALANLAR`'da olmalıdır ("Bilinmeyen alan").
 - Yetki: `duzeltme`, `performans_puani`, `performans_carpani` → `zam.yaz`; diğerleri (`maas_eski` dâhil) → `personel.yaz`. Hepsi `calismaYazIste` (grup yazma + taslak) ister.
-- Kullanımlar: Zam sekmesindeki **Düzeltme** hücresi ve Excel Raporu'ndan yönetim düzeltmelerinin geri yüklenmesi (§5.2). Her yazma ayrı bir `GUNCELLE` kaydı üretir.
+- Kullanımlar: Zam sekmesindeki **Düzeltme** hücresi, Kişi Bilgileri sekmesindeki **performans puanı / çarpanı** hücreleri ve Excel Raporu'ndan yönetim düzeltmelerinin geri yüklenmesi (§5.2). Her yazma ayrı bir `GUNCELLE` kaydı üretir.
+- **Kişi Bilgileri hücreleri** (bütçe bölümü, yaka, işe giriş, çıkış, hesaplama türü, kanun, AR-GE GV teşviki, sakatlık, BES, zam ayı) bu yolu **kullanmaz**: hücre değişince güncel satır alınır, yalnız o alan değiştirilir ve kart kaydı (`calismaPersonelKaydet`, §3.3) çağrılır. Böylece yaka denetimi, tarih kuralı (`onay_sabit`, `donemTarihleriniKoru`) ve sakatlık derecesinden özürlü indirimi kartla aynı işler; koşul da aynıdır (`calismaYazilabilir` + `personel.yaz`). Yılı 1900–2200 dışındaki tarih ekranda reddedilir (`personel.js:hucreKaydet`).
 
 ### 3.5 Bütçeden çıkarma (`calismaPersonelSil`)
 - Koşul: `calismaYazIste(id, 'personel.yaz')`. Ekran: satırdaki 🗑 ve kartta "Bütçeden çıkar".

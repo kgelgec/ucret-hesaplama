@@ -601,17 +601,17 @@ En küçük ya da en büyük maaşa eşit bütün satırlar sarı zeminlidir (`t
 
 **Kaynak:** `js/modules/personel.js` (`ciz`, `ozetKutulari`, `sutunlar`, `sinir`, `cikisHtml`, `formAc`, `gecmisHtml`, `sil`); `api.js:calismaHesapla, calismaPersonelListe, calismaPersonelAlanYaz`.
 **Yer:** Bütçe → 👥 Personel ve Zam. Menü rozeti = seçili çalışmadaki kişi sayısı (0 ise ve Tümü'de rozet yok; §1.3). Başlık "Personel ve Zam", alt başlık "Bütçe satırları, zam öngörüsü ve düzeltme".
-**Yetki:** görmek `personel.oku`. "Zam Çalışması" sekmesi ve üst özet kutuları `zam.oku`. Düzeltme hücresi: yazılabilir + `zam.yaz`. **+ Yeni Personel**, 🗑 ve kart kaydı: yazılabilir + `personel.yaz`.
+**Yetki:** görmek `personel.oku`. "Zam Çalışması" sekmesi ve üst özet kutuları `zam.oku`. Düzeltme hücresi ve performans hücreleri: yazılabilir + `zam.yaz`. **+ Yeni Personel**, 🗑, kart kaydı ve Kişi Bilgileri hücreleri: yazılabilir + `personel.yaz`.
 **Tümü:** hayır (§1.6 bilgi kutusu).
 
 **Amaç:** Bütçenin ana ekranı. Her satır bir kişinin bütçe satırıdır: önceki yıl maaşı (çalışmanın esasında), zam öngörüsü (kademe / performans), yönetimin düzeltmesi, yeni yıl maaşı, yıllık maliyet.
 
 **Kart başlığı:** "Personel ve Zam — <yıl> · <grup adı>" + esas rozeti (§2.17); altında sekmeye göre açıklama:
 - zam: "Tutarlar <ES>. Zam öngörüsü: <maaş kademesi | sabit oran>[ × performans çarpanı] (Bütçe Çalışmaları ekranından değiştirilir). DÜZELTME yönetimin müdahalesidir; öngörülen zamma eklenir, eksi olabilir." (yöntem `calisma.zam_kademe` / `zam_performans` bayraklarından).
-- kisi: "Hesaplamayı belirleyen bilgiler. Değiştirmek için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler'den."
+- kisi (düzenlenebilirken): "Hesaplamayı belirleyen bilgiler; hücreden doğrudan değiştirilir ve hemen kaydedilir (Ocak'tan geçerli). Tarih ve sayılar hücreden çıkınca ya da Enter ile kaydedilir. Diğer bilgiler için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler'den."; salt okunurken: "Hesaplamayı belirleyen bilgiler. Ayrıntı için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler'den."
 
 **Süzgeçler** (başlığın sağında, `.btn-satir`):
-- Arama `#ara` (type=search, en az 200 px, yer tutucu "Ad veya T.C. ile ara (Esc: temizle)") — canlı arama (§2.9). Eşleşme: ad `U.normalize` ile içerir **ya da** T.C. ham alt dize (aranan metnin baş/son boşluğu atılır).
+- Arama `#ara` (type=search, en az 250 px, yer tutucu "Ad veya T.C. ile ara (Esc: temizle)") — canlı arama (§2.9). Eşleşme: ad `U.normalize` ile içerir **ya da** T.C. ham alt dize (aranan metnin baş/son boşluğu atılır).
 - Bölüm `#bolumSuz`: "Tüm bölümler" + grubun bütçe bölümleri (etiketli, sıra numarasıyla). Seçili bölüm bu grupta yoksa süzgeç kendiliğinden düşer (liste boş görünmesin diye).
 - Yaka `#yakaSuz`: "Tüm yakalar" / "Beyaz yaka" / "Mavi yaka".
 - **+ Yeni Personel** (yazılabilir + `personel.yaz`) → boş kişi kartı (§3.3.1).
@@ -652,29 +652,42 @@ Başlık ve hücre sınıfları renk grubundan gelir (`bas-<g>`, `hucre-<g>`; §
 | 9 | `<O>` Toplam Maliyet | mal | `kp.maliyet_onceki` (kişi kartından ya da Personel İçe Aktarma'dan, §3.10) | — | Σ |
 | 10 | Fark | mal | maliyet − maliyet_onceki (`B.isaretli`) | — | Σ(8) − Σ(9) |
 
-Tutar hücreleri `B.tl` (kuruşsuz, sıfır soluk "—"). Düzeltme kaydı: **Enter** ya da odak kaybında, değer değiştiyse `API.calismaPersonelAlanYaz(c.id, tc, 'duzeltme', metin)` → ekran tazelenir. Boş = 0 (`CP_SAYISAL`). API `zam.yaz` + yazılabilir çalışma ister; hata bildirimle.
+Tutar hücreleri `B.tl` (kuruşsuz, sıfır soluk "—"). Düzeltme kaydı: **Enter** ya da odak kaybında, değer değiştiyse `API.calismaPersonelAlanYaz(c.id, tc, 'duzeltme', metin)` → ekran tazelenir (kaydırma konumu korunur, `tazeleKoru`). Boş = 0 (`CP_SAYISAL`). API `zam.yaz` + yazılabilir çalışma ister; hata bildirimle.
 
-**Sekme "Kişi Bilgileri"** (`sutunlar(c, 'kisi')`; renk grubu yok, sayı hizası yok, toplam satırında yalnız ilk hücre)
+**Sekme "Kişi Bilgileri"** (`sutunlar(c, 'kisi', yetki)`; renk grubu yok, sayı hizası yok, toplam satırında yalnız ilk hücre)
 
-| Başlık | Kaynak |
-|---|---|
-| Yaka | mavi rozet "Mavi" / gri rozet "Beyaz" |
-| İşe Giriş | `kp.ise_giris` (GG.AA.YYYY) |
-| Çıkış | `cikisHtml(kp, false)` (düz tarih + gerekiyorsa "sonradan" rozeti) |
-| Hesaplama Türü | yılın hesap türü adı (`API.hesapTuruListe(yıl)`), yoksa kod, o da yoksa "—" (küçük) |
-| Kanun | kanun türü adı (`API.kanunListe`); `YOK` ya da boş → "—" (küçük) |
-| AR-GE GV Teşvik | `kp.gv_tesvik` (`B.oran`; 0 ise boş) |
-| Sakatlık | "N. derece" (yoksa boş) |
-| BES | "Katılıyor" (`EVET`) / "Katılmıyor" (`HAYIR`) / boş |
-| Zam Ayı | ay adı (`zam_ayi`; boşsa Ocak) |
-| Performans Puanı | 1 ondalık (boşsa boş) |
-| Performans Çarpanı | 2 ondalık (boşsa boş) |
+Yazılabilir çalışmada ve `personel.yaz` yetkisinde hücreler **düzenlenebilir kutudur** (kişi kartını açmadan değiştirilir);
+değilse düz metin. Bütçe Bölümü sütunu da bu sekmede seçim kutusudur.
+
+| Başlık | Salt okunur | Düzenlenebilir (`data-alan`) |
+|---|---|---|
+| Bütçe Bölümü | bölüm etiketi | seçim: "—" + grubun bölümleri (`butce_bolumu`) |
+| Yaka | mavi rozet "Mavi" / gri rozet "Beyaz" | seçim: Beyaz / Mavi (`yaka`) |
+| İşe Giriş | `kp.ise_giris` (GG.AA.YYYY) | tarih kutusu (`ise_giris`; `onay_sabit = 2` ise çalışmanın kendi `onay_giris`'i) |
+| Çıkış | `cikisHtml(kp, false)` (düz tarih + gerekiyorsa "sonradan" rozeti) | tarih kutusu (`isten_ayrilis`; `onay_sabit = 2` ise `onay_cikis`) + onaydan sonra değiştiyse sarı "onayda <tarih>" rozeti (`cikisNotu`) |
+| Hesaplama Türü | yılın hesap türü adı, yoksa kod, o da yoksa "—" (küçük) | seçim: yılın hesaplama türleri (`hesap_turu`) |
+| Kanun | kanun türü adı; `YOK` ya da boş → "—" (küçük) | seçim: kanun türleri (`kanun`) |
+| AR-GE GV Teşvik | `B.oran` (0 ise boş) | seçim: Yok / %80 / %90 / %95 (`gv_tesvik`) |
+| Sakatlık | "N. derece" (yoksa boş) | seçim: Yok / 1.–3. derece (`sakatlik_derece`); özürlü indirimi yılın tablosundan yeniden yazılır |
+| BES | "Katılıyor" / "Katılmıyor" / boş | seçim: — / Katılıyor / Katılmıyor (`bes`) |
+| Zam Ayı | ay adı (boşsa Ocak) | seçim: aylar (`zam_ayi`) |
+| Performans Puanı | 1 ondalık (boşsa boş) | sayı kutusu (`performans_puani`) — ayrıca `zam.yaz` ister, yoksa düz metin |
+| Performans Çarpanı | 2 ondalık (boşsa boş) | sayı kutusu (`performans_carpani`) — ayrıca `zam.yaz` ister |
+
+**Hücreden kayıt** (`personel.js:hucreKaydet`): seçim kutusu değişince; tarih ve sayı kutusu Enter'da ya da odak
+kaybında (değer değiştiyse). Performans alanları `API.calismaPersonelAlanYaz` ile; diğerleri kişi kartının kaydıyla:
+güncel satır (`API.calismaPersonelGetir`) alınır, yalnız o alan değiştirilir ve `API.calismaPersonelKaydet` çağrılır —
+denetimler, dönem tarihi koruması (`donemTarihleriniKoru`) ve işlem kaydı kartla aynıdır. Yılı 1900–2200 dışındaki tarih
+"Tarih geçersiz: …" bildirimiyle reddedilir; API hatası bildirilir ve hücre eski değerine döner. Kayıttan sonra ekran
+yeniden çizilir; sayfa ve tablonun kaydırma konumu korunur, odak aynı hücreye (Enter / seçim) ya da Tab ile geçilen
+hücreye döner (`tazeleKoru`). Kutular `.hucre-secim`, `.hucre-tarih`, `.hucre-girdi` (28 px, tablo boyu); her birinin
+`aria-label`'ı "<sütun> — <ad soyad>".
 
 **Toplam satırı:** "Toplam (N kişi)" + boş + sütun toplamları (yalnız süzülen satırlar).
 
 **Satır işlemleri:** ada tıklama → kişi kartı (`API.calismaPersonelGetir` ile güncel satır). 🗑 → Bütçeden Çıkar onayı (§3.3.2).
 
-**Klavye/odak:** Düzeltme hücresinde Enter ya da başka yere geçiş kaydeder; kayıttan sonra ekran baştan çizilir ve sayfa en üste döner (bu ekranda kaydırma / odak koruması yalnız arama kutusu içindir, §2.9).
+**Klavye/odak:** Düzeltme ve Kişi Bilgileri hücrelerinde Enter ya da başka yere geçiş kaydeder; kayıttan sonra ekran baştan çizilir, sayfa ve tablonun kaydırma konumu korunur; Kişi Bilgileri'nde odak aynı ya da Tab ile geçilen hücreye döner.
 
 #### 3.3.1 Pencere — Kişi kartı ("Yeni Personel" / kişinin adı)
 
