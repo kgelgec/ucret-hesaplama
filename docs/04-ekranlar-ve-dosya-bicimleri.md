@@ -189,6 +189,7 @@ Menüdeki seçili ekran `etkin` sınıfı ve `aria-current="page"` alır. Tıkla
 - **📖 Kullanım Kılavuzu** → `git('kilavuz')` (§3.15). (📖 düğme içinde olduğu için kitap simgesine çevrilir, §2.15.)
 - **🧭 Başlangıç Gezisi** (`#geziBtn`) → `GEZI.baslat()` (§1.7). (🧭 pusula simgesine çevrilir.)
 - **Çıkış Yap** → kilit bırakılır, `API.cikisYap` (işlem kaydına `CIKIS`), veri hemen kaydedilir, açık pencereler kapanır, giriş perdesi açılır.
+- En altta küçük, soluk "Sürüm X.Y.Z" bağlantısı (`window.PROGRAM_SURUM`, `app.js`): GitHub'daki sürüm sayfasını yeni sekmede açar (internet yoksa açılmaz; program etkilenmez).
 
 ### 1.5 Üst çubuk: yıl · grup · çalışma seçici (`app.js:calismaSeciciCiz`)
 
@@ -1737,6 +1738,7 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 
 | Satır | Değer |
 |---|---|
+| Program sürümü | `window.PROGRAM_SURUM` + "yeni sürümler" bağlantısı (GitHub sürüm sayfası, yeni sekmede) |
 | Veri dosyası | dosya yolu (`code`) |
 | Durum | dosya varsa yeşil "şifreli" / kırmızı "ŞİFRESİZ"; yoksa gri "henüz oluşmadı" |
 | Boyut | "N KB" ya da "—" |

@@ -347,6 +347,9 @@
         <li><strong>Şifreleme:</strong> veri dosyasının şifrelenmesi ve veri parolasının değiştirilmesi.</li>
         <li><strong>Otomatik kapanma:</strong> fare ya da klavye hareketi olmadan ne kadar süre sonra programın kendini kapatacağı.</li>
         <li><strong>Örnek veri:</strong> programı denemek için uydurma iki grubu, personeli ve çalışmaları ekler; var olan kayıtlara dokunmaz.</li>
+        <li><strong>Program sürümü:</strong> sol alttaki "Sürüm" yazısında ve Sistem ekranının Veri Deposu kartında görünür. Yeni sürümler
+          ve değişiklikleri GitHub'daki sürüm sayfasındadır (yazıya tıklayın). Yeni sürüme geçerken önce yedek alın, yeni sürümü ayrı bir
+          klasöre çıkarın ve <code>veri</code>, <code>yedek</code>, <code>yedek-elle</code> klasörlerini yeni klasöre kopyalayın.</li>
       </ul>
       ${dikkat(`<em>Sıfırla…</em> bütün veriyi ve kullanıcı hesaplarını siler; program ilk kurulum ekranıyla açılır. Sıfırlamadan önce mevcut veri
         kendiliğinden yedeklenir, yine de kullanmadan önce yedeğinizi kontrol edin.`)} ${ac('sistem')}` },

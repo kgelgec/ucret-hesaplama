@@ -122,7 +122,9 @@ içinde ayrıntılı bir **Kullanım Kılavuzu** da vardır.
 Gereken: Windows 10 / 11 (Windows PowerShell zaten yüklüdür) ve güncel bir tarayıcı (Chrome, Edge, Firefox).
 Kurulum programı ya da internet bağlantısı gerekmez.
 
-**1. İndirin.** Bu sayfanın üstündeki yeşil **Code** düğmesi → **Download ZIP**.
+**1. İndirin.** [Son sürüm](https://github.com/kgelgec/ucret-hesaplama/releases/latest) sayfasında, **Assets**
+altındaki `ucret-hesaplama-X.Y.Z.zip` dosyasını indirin. (Sayfanın üstündeki yeşil **Code → Download ZIP** o anki
+geliştirme hâlini indirir; kullanım için sürüm paketini tercih edin.)
 
 **2. Çıkarın.** ZIP dosyasına sağ tıklayıp **Özellikler**'i açın; altta **"Engellemeyi kaldır"** kutusu varsa
 işaretleyip Tamam deyin (internetten inen dosyalarda Windows'un uyarı çıkarmasını azaltır). Sonra **Tümünü ayıkla**
@@ -155,7 +157,8 @@ olarak başka bir yere de yedekleyin.
 ### Yeni sürüme geçmek
 
 1. **Sistem → Yedeği indir** ile bir yedek alın, sonra programı kapatın (siyah pencere).
-2. Yeni sürümün ZIP'ini indirip **ayrı bir klasöre** çıkarın.
+2. [Son sürümün](https://github.com/kgelgec/ucret-hesaplama/releases/latest) ZIP'ini indirip **ayrı bir klasöre**
+   çıkarın. Neyin değiştiği [`CHANGELOG.md`](CHANGELOG.md)'dedir; kullandığınız sürüm sol alttaki "Sürüm" yazısında görünür.
 3. Eski klasördeki `veri`, `yedek` ve `yedek-elle` klasörlerini yeni klasöre (`program` klasörünün yanına) kopyalayın.
 4. Yeni klasördeki `BUTCE-BASLAT.bat` ile açın; veritabanı gerekiyorsa kendiliğinden güncellenir. Her şey
    yerindeyse eski klasörü silebilirsiniz.
@@ -183,6 +186,7 @@ Program Windows'ta denenmiştir (yerel sunucu bir PowerShell betiğidir).
 | `tools/ornek-veri-uret.mjs` | Örnek veri üreteci (`node tools/ornek-veri-uret.mjs`) |
 | `docs/` | Teknik belgeler (aşağıda) |
 | `docs/referans/` | Örnek veriyle kurulmuş şifresiz veritabanı ve kişi kişi, ay ay referans sonuçlar |
+| `CHANGELOG.md` | Sürümler ve değişiklikleri (program sürümü: `program/js/app.js` → `PROGRAM_SURUM`) |
 
 ## Belgeler
 

@@ -706,7 +706,7 @@ Bağımsız (FK'siz) tablolar: sistem_bilgi, islem_log, kanun_turu,
 
 ## 4. Şema sürümleri ve veri göçleri
 
-Şu anki sürüm **1**'dir ve hiç göç tanımlı değildir: `SEMA_SURUM = 1`, `EKSIK_SUTUNLAR = []`, `TABLO_GOC = []`, `VERI_GOCLERI = []` (`schema.js`). Mekanizma, programı kendi kurumuna uyarlayan ya da ileride şemayı değiştirecek olanlar için hazır durmaktadır: var olan veri dosyaları elle müdahale gerekmeden yeni şemaya yükseltilir.
+Şema sürümü **program sürümünden ayrıdır** (program sürümü `app.js` → `window.PROGRAM_SURUM`, ör. 1.0.0; değişiklikleri `CHANGELOG.md`): her program sürümü şemayı değiştirmez. Şu anki sürüm **1**'dir ve hiç göç tanımlı değildir: `SEMA_SURUM = 1`, `EKSIK_SUTUNLAR = []`, `TABLO_GOC = []`, `VERI_GOCLERI = []` (`schema.js`). Mekanizma, programı kendi kurumuna uyarlayan ya da ileride şemayı değiştirecek olanlar için hazır durmaktadır: var olan veri dosyaları elle müdahale gerekmeden yeni şemaya yükseltilir.
 
 ### 4.1 Sürüm denetimi nasıl çalışır (`engine.js:surumKontrol`)
 

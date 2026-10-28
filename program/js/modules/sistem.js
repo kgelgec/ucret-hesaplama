@@ -162,6 +162,7 @@
       <p class="kart-aciklama">Veriniz <strong>tarayıcıda değil</strong>, diskteki bir dosyada duruyor. Tarayıcı verisi
         silinse, profil bozulsa ya da başka tarayıcı kullanılsa bile kayıtlarınız yerinde kalır.</p>
       <table class="genis-tablo"><tbody>
+        ${satir('Program sürümü', U.esc(window.PROGRAM_SURUM) + ' · <a href="' + SURUMLER_ADRESI + '" target="_blank" rel="noopener">yeni sürümler</a>')}
         ${satir('Veri dosyası', `<code>${U.esc(b.yol)}</code>`)}
         ${satir('Durum', b.var ? (b.sifreli ? '<span class="rz rz-yesil">şifreli</span>' : '<span class="rz rz-kirmizi">ŞİFRESİZ</span>')
                                : '<span class="rz rz-gri">henüz oluşmadı</span>')}

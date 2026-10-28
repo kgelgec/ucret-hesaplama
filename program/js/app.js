@@ -4,6 +4,11 @@
    Modüller kendilerini APP.modulKaydet ile tanıtır:
      { id, ad, ikon, grup, baslik, altBaslik, yetki, ciz(kap, param) }
    ===================================================================== */
+/* PROGRAM SÜRÜMÜ — tek kaynak. Yayında git etiketi (vX.Y.Z) ve CHANGELOG.md ile aynı olmalı.
+   Veritabanı şema sürümü ayrıdır (schema.js: SEMA_SURUM). */
+window.PROGRAM_SURUM = '1.0.0';
+const SURUMLER_ADRESI = 'https://github.com/kgelgec/ucret-hesaplama/releases';
+
 window.APP = (function () {
   'use strict';
 
@@ -710,7 +715,8 @@ window.APP = (function () {
       <div class="rol">${k.yonetici ? 'Sistem Yöneticisi' : 'Kullanıcı'}</div>
       <button id="kilavuzBtn" class="kilavuz-btn">📖 Kullanım Kılavuzu</button>
       <button id="geziBtn">🧭 Başlangıç Gezisi</button>
-      <button id="cikisBtn">Çıkış Yap</button>`;
+      <button id="cikisBtn">Çıkış Yap</button>
+      <a class="surum" href="${SURUMLER_ADRESI}" target="_blank" rel="noopener" title="Yeni sürümler ve değişiklikler (GitHub)">Sürüm ${U.esc(window.PROGRAM_SURUM)}</a>`;
     U.el('kilavuzBtn').onclick = () => git('kilavuz');
     U.el('geziBtn').onclick = () => GEZI.baslat();
     U.el('cikisBtn').onclick = cikis;

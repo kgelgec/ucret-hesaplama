@@ -137,6 +137,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible{outline:none;}
   transition:background var(--hiz) var(--egri), color var(--hiz) var(--egri);
 }
 .kenar-alt button:hover{background:rgba(148,163,184,.22); color:#fff;}
+.kenar-alt .surum{display:block; margin-top:10px; text-align:center; font-size:11px; color:#94a3b8; text-decoration:none;}
+.kenar-alt .surum:hover, .kenar-alt .surum:focus-visible{color:#e2e8f0; text-decoration:underline;}
 
 main{flex:1; min-width:0; display:flex; flex-direction:column;}
 .ust{
