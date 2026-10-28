@@ -1,5 +1,5 @@
 /* =====================================================================
-   MAAŞ BÜTÇE SİSTEMİ — VERİTABANI ŞEMASI (SQLite)
+   ÜCRET HESAPLAMA — VERİTABANI ŞEMASI (SQLite)
    ---------------------------------------------------------------------
    Bu şema hem tarayıcıda (sql.js) hem sunucuda değiştirilmeden çalışır.
 

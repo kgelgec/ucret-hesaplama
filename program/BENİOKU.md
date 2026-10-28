@@ -1,4 +1,4 @@
-# Maaş Bütçe Sistemi
+# Ücret Hesaplama
 
 Tanımladığınız grupların (ör. Ofis, Üretim) yıllık maaş bütçesini, zam çalışmasını ve
 ay ay işveren maliyetini (mini bordro: brüt, SGK, gelir ve damga vergisi, teşvikler)

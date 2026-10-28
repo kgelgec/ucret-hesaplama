@@ -1,4 +1,4 @@
-# Maaş Bütçe Sistemi
+# Ücret Hesaplama
 
 Kurumların **yıllık maaş bütçesini**, **zam çalışmasını** ve **ay ay işveren maliyetini** hesaplayan,
 tarayıcıda çalışan bir program. Maliyet bir mini bordroyla çıkar: netten brüte, SGK işçi/işveren payları,

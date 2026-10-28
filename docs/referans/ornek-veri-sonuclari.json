@@ -1,5 +1,5 @@
 {
- "aciklama": "Maaş Bütçe Sistemi — ÖRNEK VERİ referans sonuçları (uydurma veri; bkz. tools/ornek-veri-uret.mjs). Tutarlar TL, 2 haneye yuvarlı. aylar[0] = Ocak. Kalem kodları motorun alan kodlarıdır (bkz. docs/02-hesap-motoru.md); DM = aylık toplam işveren maliyeti, DD = net ödeme, CV = brüt toplam.",
+ "aciklama": "Ücret Hesaplama — ÖRNEK VERİ referans sonuçları (uydurma veri; bkz. tools/ornek-veri-uret.mjs). Tutarlar TL, 2 haneye yuvarlı. aylar[0] = Ocak. Kalem kodları motorun alan kodlarıdır (bkz. docs/02-hesap-motoru.md); DM = aylık toplam işveren maliyeti, DD = net ödeme, CV = brüt toplam.",
  "calismalar": [
   {
    "calisma": {

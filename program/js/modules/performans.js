@@ -311,7 +311,7 @@
     const once = API.performansOncekiDonem(c.id);
     const grupAd = String(c.grup_adi || c.grup_kod).toLocaleUpperCase('tr-TR');
     const kitap = new ExcelJS.Workbook();
-    kitap.creator = 'Maaş Bütçe Sistemi'; kitap.created = new Date();
+    kitap.creator = 'Ücret Hesaplama'; kitap.created = new Date();
     let onceden = 0;
     ['M', 'B'].forEach(y => {
       const m = M[y], S = sutunlar(M, y);

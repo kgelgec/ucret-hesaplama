@@ -239,7 +239,7 @@
     if (!window.ExcelJS) throw new Error('Excel kütüphanesi yüklenemedi.');
     API.yetkiIste('excel.aktar');
     const kitap = new ExcelJS.Workbook();
-    kitap.creator = 'Maaş Bütçe Sistemi'; kitap.created = new Date();
+    kitap.creator = 'Ücret Hesaplama'; kitap.created = new Date();
     const ws = kitap.addWorksheet(SAYFA, { views: [{ state: 'frozen', xSplit: 2 }] });
     ws.getColumn(1).width = 11; ws.getColumn(2).width = 40; ws.getColumn(17).width = 40;
     const LAC = 'FF1F3A5F', SARI = 'FFFFF2CC';

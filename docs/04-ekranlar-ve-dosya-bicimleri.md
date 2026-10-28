@@ -1,6 +1,6 @@
 # 04 — Ekranlar ve Dosya Biçimleri
 
-> **Kapsam:** Maaş Bütçe Sistemi'nin bütün ekranları, pencereleri, ortak arayüz davranışları ve bütün Excel çıktı / içe alma biçimleri.
+> **Kapsam:** Ücret Hesaplama'nın bütün ekranları, pencereleri, ortak arayüz davranışları ve bütün Excel çıktı / içe alma biçimleri.
 > **Okur:** programı kullanacak ya da değerlendirecek bordro, İK ve finans uzmanları; programı uyarlayacak ya da ekranlarını başka bir sistemde **aynı alanlar, sütunlar, düğmeler ve davranışla** yeniden kuracak yazılımcılar.
 >
 > **Kaynak:** `program/` klasörünün güncel kodu: `index.html`, `js/app.js`, `js/modules/*.js`, `js/core/*.js` (`bilesen.js`, `bicim.js`, `util.js`, `ikon.js`, `tablooku.js`, `performans.js`, `kilit.js`), API davranışı için `js/db/api.js`, görünüm için `css/app.css` ve `css/butce.css`. Her bilginin yanında kaynağı `dosya.js:işlev` biçiminde verilir. Ekranda görünen metinler tırnak içinde, koddaki gibi yazılmıştır.
@@ -82,8 +82,8 @@ a.atla  : "İçeriğe geç" bağlantısı (#icerik; yalnız klavye odağında g�
 ┌───────────────┬───────────────────────────────────────────────────────────────┐
 │ aside.kenar   │ main                                                           │
 │  .marka       │  .ust:  [h1#sayfaBaslik / #sayfaAltBaslik]  [#donemSecici][#kayitDurum] │
-│   "Maaş Bütçe"│  #kilitSerit (görüntüleme kipi şeridi, çoğunlukla gizli)        │
-│   "Bütçe · Zam · Maliyet"                                                      │
+│   "Ücret Hesaplama"│  #kilitSerit (görüntüleme kipi şeridi, çoğunlukla gizli)        │
+│   "Maaş bütçesi ve maliyet"                                                      │
 │  nav#menu (aria-label="Ana menü") │  #icerik (etkin ekran)                         │
 │  #kenarAlt    │                                                                │
 └───────────────┴───────────────────────────────────────────────────────────────┘
@@ -91,7 +91,7 @@ a.atla  : "İçeriğe geç" bağlantısı (#icerik; yalnız klavye odağında g�
 #kipKap : açılan pencerelerin (kip) kabı
 ```
 
-- Sayfa başlığı (`<title>`): "Maaş Bütçe Sistemi". Dil `tr`.
+- Sayfa başlığı (`<title>`): "Ücret Hesaplama". Dil `tr`.
 - Kütüphaneler yereldir (internet gerekmez): `js/vendor/sql-wasm.js`, `sql-wasm-binary.js`, `exceljs.min.js`. Betik sırası: çekirdek (`schema`, `engine`, `kilit`, `util`, `ikon`, `hesap`, `performans`, `api`, `bilesen`, `bicim`, `tablooku`), başlangıç verisi (`data/ornek-veri.js`, `data/seed.js`), `app.js`, sonra modüller **menüdeki sıralarıyla**: `ozet`, `dagilim`, `calisma`, `personel`, `aylik`, `maliyet`, `performans`, `mesai`, `aktarim`, `excel`, `parametre`, `tanim`, `kullanici`, `sistem`, `kilavuz`.
 - Erişilebilirlik: sayfanın başındaki "İçeriğe geç" bağlantısı (`a.atla`) yalnız klavyeyle odaklanınca görünür ve `#icerik`e atlar; menü `nav aria-label="Ana menü"`, seçili menü düğmesi `aria-current="page"` taşır; klavye odağında görünür odak halkası (`:focus-visible`), düğme ve giriş kutuları en az 36 px, ikon düğmeleri en az 30 px yükseklikte; işletim sisteminde "hareketi azalt" seçiliyse animasyon ve geçişler kapanır (`prefers-reduced-motion`). Simgeler için §2.15.
 - Açılışta `#perde` içinde dönen simge + "Veritabanı hazırlanıyor…", sonra "SQLite motoru yükleniyor…", yeni veritabanına başlangıç verisi yazılırken "Veriler aktarılıyor…" (`app.js:baslat`).
@@ -130,7 +130,7 @@ Hepsi `#perde` içinde "perde-kart" olarak çizilir (simge, büyük başlık, al
 - Başarıda yönetici hesabıyla giriş yapılır, başlangıç verisi yazılır, veri hemen kaydedilir ve uygulama açılır. Başlangıç verisi yazılamazsa uygulama yine açılır, bildirim: "Başlangıç verisi yüklenemedi: …" (hata).
 
 **d) Giriş** — `app.js:girisEkrani`
-- "Maaş Bütçe Sistemi" / "Bütçe · Zam · Maliyet". Alanlar: Kullanıcı Adı, Parola. Düğme **Giriş Yap** ("Kontrol ediliyor…"). Enter gönderir; açılışta Kullanıcı Adı odaklanır.
+- "Ücret Hesaplama" / "Maaş bütçesi ve maliyet". Alanlar: Kullanıcı Adı, Parola. Düğme **Giriş Yap** ("Kontrol ediliyor…"). Enter gönderir; açılışta Kullanıcı Adı odaklanır.
 - Hata metinleri (`api.js:girisYap`): "Kullanıcı adı veya parola hatalı." · "Bu kullanıcı devre dışı bırakılmış." Hatada parola alanı temizlenir ve odaklanır.
 - Alt bölüm **Giriş yapamıyorum** (açılır / kapanır):
   - "Kayıtlı kullanıcı adları aşağıda listelenir. Parola görüntülenemez — saklanmaz, yalnızca doğrulanabilir biçimde tutulur."
@@ -342,7 +342,7 @@ Program emoji yerine SVG çizgi simgeleri kullanır (Lucide simge setinden; ISC 
 - `IKON.svg(ad)` simgenin SVG metnini, `IKON.menu(id)` menü simgesini verir (§1.3).
 - **Dönüştürücü** (`IKON.donustur`, sayfa açılırken `IKON.bagla` ile bağlanır; `MutationObserver` sonradan çizilen ekranları, pencereleri ve metin değişikliklerini de çevirir). Ekran kodu simgeyi karakter olarak yazar, dönüştürücü SVG'ye çevirir:
   - **Her yerde:** 🗑 → `sil`, ✎ → `duzenle`.
-  - **Yalnız düğme, başlık (h1–h4), `.logo`, `summary`, uyarı simgesi (`.ik`) ve Kılavuz'un "Ekranı aç" bağlantısı (`.kl-git`) içinde:** 🔒 `kilit` · 🔓 `kilitAcik` · 🔐 `kalkan` · ℹ `bilgi` · ⚠ `uyari` · ✓ `tamam` · 💡 `ipucu` · 📖 `kitap` · ⏱ `saat` · 🗂 `klasor` · 🔑 `anahtar` · 👁 `goz` · ⇩ ⤓ `indir` · ↻ `yenile` · ↑ `yukari` · ↓ `asagi` · ← `geri` · Σ `toplam` · 🛠 `disli` · 📤 `tablo` · 📋 `liste` · ⚙ `ayar`.
+  - **Yalnız düğme, başlık (h1–h4), `.logo`, `summary`, uyarı simgesi (`.ik`), Kılavuz'un "Ekranı aç" bağlantısı (`.kl-git`) ve rozetler (`.rz`) içinde:** 🔒 `kilit` · 🔓 `kilitAcik` · 🔐 `kalkan` · ℹ `bilgi` · ⚠ `uyari` · ✓ `tamam` · 💡 `ipucu` · 📖 `kitap` · ⏱ `saat` · 🗂 `klasor` · 🔑 `anahtar` · 👁 `goz` · ⇩ ⤓ `indir` · ↻ `yenile` · ↑ `yukari` · ↓ `asagi` · ← `geri` · Σ `toplam` · 🛠 `disli` · 📤 `tablo` · 📋 `liste` · ⚙ `ayar`.
   - Düz metindeki işaretler (ör. "→", metin içindeki "✓") olduğu gibi kalır; giriş kutuları, seçim kutuları, `textarea` ve `[data-ikonsuz]` içindekilere dokunulmaz. Değişiklik ekranın görünümündedir; bu belgede ekran metinleri koddaki karakterlerle yazılmıştır.
   - Yalnız simgeden oluşan düğmeye (ör. 🗑, ✎, ↑ ↓) `title` varsa ekran okuyucu etiketi olarak `aria-label` verilir.
 - Kayıtlardaki `ikon` alanı (emoji) menüde kullanılmaz; bu belgedeki "Yer" satırlarında ekranı tanıtmak için yazılır.
@@ -1678,7 +1678,7 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 - Durum kutusu: yedek alınmışsa "Son yedek: GG.AA.YYYY (N gün önce)" — 7 gün ve daha yeniyse yeşil ✓, eskiyse sarı ⚠; hiç alınmamışsa sarı ⚠ "Henüz yedek alınmamış." (Son yedek zamanı `sistem_bilgi.son_yedek`; elle yedek ve indirme yazar.)
 - **Yedeği "yedek-elle" klasörüne kaydet** → `ADB.yedekSunucuyaKaydet` (`POST /yedek-kaydet`) → "Yedek kaydedildi: <klasör>\<dosya>" (başarı, tazele) ya da "Klasöre kaydedilemedi (<neden>). İndirme ile deneyin." Sunucusuz açılışta neden "Bu özellik sunucu üzerinden çalışırken kullanılabilir (BUTCE-BASLAT.bat)." olur.
 - **Yedeği indir** (ikincil) → `ADB.yedekIndir`; dosya adı `maas-butce-yedek-YYYYAAGG-SSDD.db` (şifreleme açıksa şifreli); 0,5 sn sonra tazele.
-- **Yedekten geri yükle** (ikincil; dosya seçimi `accept=".db"`) → onay "Yedekten Geri Yükle" — "**<dosya adı>** yüklenecek." / detay "Şu anki veritabanının üzerine yazılır. Önce mevcut hâlin yedeğini alın." / **Geri Yükle** (tehlike) → `ADB.yedektenYukle` → sayfa yeniden yüklenir. Motor hataları: "Bu dosya bir SQLite veritabanı değil." · "Dosyada personel tablosu bulunamadı; bu bir Maaş Bütçe yedeği değil." · "Şifreli yedek açılmadı." (parola penceresinden vazgeçilirse) · "Mevcut verinin yedeği alınamadığı için işlem yapılmadı: …". Şifreli yedek bellekteki anahtarla açılamazsa veri parolası perdesi "Şifreli Yedek" başlığıyla açılır (§1.2). Ayrıntı §4.5.
+- **Yedekten geri yükle** (ikincil; dosya seçimi `accept=".db"`) → onay "Yedekten Geri Yükle" — "**<dosya adı>** yüklenecek." / detay "Şu anki veritabanının üzerine yazılır. Önce mevcut hâlin yedeğini alın." / **Geri Yükle** (tehlike) → `ADB.yedektenYukle` → sayfa yeniden yüklenir. Motor hataları: "Bu dosya bir SQLite veritabanı değil." · "Dosyada personel tablosu bulunamadı; bu bir Ücret Hesaplama yedeği değil." · "Şifreli yedek açılmadı." (parola penceresinden vazgeçilirse) · "Mevcut verinin yedeği alınamadığı için işlem yapılmadı: …". Şifreli yedek bellekteki anahtarla açılamazsa veri parolası perdesi "Şifreli Yedek" başlığıyla açılır (§1.2). Ayrıntı §4.5.
 
 **5. "İşlem Kaydı"** — açıklama "Son 300 işlem." Tablo (`API.logListe(300)`, yeniden eskiye):
 
@@ -1752,7 +1752,7 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 
 ## 4. Bütün Excel çıktıları ve içe almalar
 
-**Ortak:** Excel işlemleri tarayıcıda ExcelJS ile yapılır (`js/vendor/exceljs.min.js`); kütüphane yoksa "Excel kütüphanesi yüklenemedi." Her çıktı `API.yetkiIste('excel.aktar')` ister (yazma yetkisi değildir; görüntüleme kipinde ve onaylı çalışmada da alınır) ve işlem kaydına `DISA_AKTAR` yazar — tek istisna, kişi verisi taşımayan Personel İçe Aktarma şablonudur (§4.2.1). Kitap yazarı (`creator`) "Maaş Bütçe Sistemi". İndirme `U.indir` ile (Blob, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). Renk kodları ARGB (`FF` + RGB). İçe almalar her zaman önce **önizleme** gösterir; onaylanmadan hiçbir şey yazılmaz ve onaylanınca tek veritabanı işleminde yazılır.
+**Ortak:** Excel işlemleri tarayıcıda ExcelJS ile yapılır (`js/vendor/exceljs.min.js`); kütüphane yoksa "Excel kütüphanesi yüklenemedi." Her çıktı `API.yetkiIste('excel.aktar')` ister (yazma yetkisi değildir; görüntüleme kipinde ve onaylı çalışmada da alınır) ve işlem kaydına `DISA_AKTAR` yazar — tek istisna, kişi verisi taşımayan Personel İçe Aktarma şablonudur (§4.2.1). Kitap yazarı (`creator`) "Ücret Hesaplama". İndirme `U.indir` ile (Blob, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). Renk kodları ARGB (`FF` + RGB). İçe almalar her zaman önce **önizleme** gösterir; onaylanmadan hiçbir şey yazılmaz ve onaylanınca tek veritabanı işleminde yazılır.
 
 | Ekran | Çıktı dosyası | İçe alma | Bölüm |
 |---|---|---|---|
@@ -1778,7 +1778,7 @@ Diğer içe almalar `TO` kullanmaz, kendi sabit başlıklarıyla okur: Excel Rap
 
 ### 4.1 Excel Raporu — çıktı ve içe alma (`js/modules/excel.js`)
 
-**Dosya adı:** `<Y> <grup adı> Zam Çalışması <YYYY-AA-GG>.xlsx` (tarih `toISOString`, yani UTC günü). Kitap: `creator = 'Maaş Bütçe Sistemi'`, `created = şimdi`, `calcProperties.fullCalcOnLoad = true` (Excel açılışta bütün formülleri yeniden hesaplar), `views = [{ activeTab: 0 }]` (ilk sekme etkin). Sayfa sırası: **ÖZET**, **ZAM ÇALIŞMASI**, **AYLIK MALİYET** (ÖZET önce eklenir, ZAM ÇALIŞMASI kurulduktan sonra doldurulur; ÖZET formülleri ZAM ÇALIŞMASI'na bakar). İşlem kaydı `DISA_AKTAR` (`calisma`, dosya adı). `aktar(c, { sadeceIcerik: true })` dosyayı indirmeden içeriği (ArrayBuffer) döndürür (sınama için).
+**Dosya adı:** `<Y> <grup adı> Zam Çalışması <YYYY-AA-GG>.xlsx` (tarih `toISOString`, yani UTC günü). Kitap: `creator = 'Ücret Hesaplama'`, `created = şimdi`, `calcProperties.fullCalcOnLoad = true` (Excel açılışta bütün formülleri yeniden hesaplar), `views = [{ activeTab: 0 }]` (ilk sekme etkin). Sayfa sırası: **ÖZET**, **ZAM ÇALIŞMASI**, **AYLIK MALİYET** (ÖZET önce eklenir, ZAM ÇALIŞMASI kurulduktan sonra doldurulur; ÖZET formülleri ZAM ÇALIŞMASI'na bakar). İşlem kaydı `DISA_AKTAR` (`calisma`, dosya adı). `aktar(c, { sadeceIcerik: true })` dosyayı indirmeden içeriği (ArrayBuffer) döndürür (sınama için).
 
 Hesap kaynağı: `API.calismaHesapla(c.id)` (kişi sırası: bütçe bölümünün sırası, bölüm içinde işe giriş tarihi, sonra ad — Personel ve Zam ile aynı) ve `API.calismaOzetOku(c.id)`. `O = yıl − 1`, `Y = yıl`.
 
@@ -1958,7 +1958,7 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 
 #### 4.3.1 Şablon (`sablonIndir`)
 
-- Tetik: Performans Değerlendirme → **Excel şablonu indir**. `API.yetkiIste('excel.aktar')`. Dosya adı: `<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRME.xlsx` (grup adı, yoksa grup kodu, büyük harf tr). İşlem kaydı `DISA_AKTAR` / `performans_girdi` "Excel şablonu". Kitap yazarı "Maaş Bütçe Sistemi".
+- Tetik: Performans Değerlendirme → **Excel şablonu indir**. `API.yetkiIste('excel.aktar')`. Dosya adı: `<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRME.xlsx` (grup adı, yoksa grup kodu, büyük harf tr). İşlem kaydı `DISA_AKTAR` / `performans_girdi` "Excel şablonu". Kitap yazarı "Ücret Hesaplama".
 - **Sayfalar:** her yaka için bir sayfa, sırayla mavi (`M`) ve beyaz (`B`), sonda **AÇIKLAMA**. Yaka sayfasının adı (`sayfaAdlari`): modeldeki Excel sayfa adı (boşsa yaka adının büyük harfi); Excel'de geçersiz karakterler (`\ / ? * [ ] :`) boşluğa çevrilir, boşluklar sadeleşir, en çok 28 karakter; sonuç boşsa "MAVİ YAKA" / "BEYAZ YAKA". Mavi sayfanın adı "AÇIKLAMA" ise sonuna " 1", beyaz sayfanınki "AÇIKLAMA" ya da mavininkiyle aynıysa " 2" eklenir (büyük / küçük harf farkı gözetilmez). Örnek modelde **MAVİ YAKA**, **BEYAZ YAKA**.
 - Yaka sayfası: ilk 2 sütun ve ilk 4 satır dondurulmuş.
   - **A1:** "`<Y> <GRUP ADI> PERFORMANS DEĞERLENDİRMESİ — <SAYFA> (dönem <O>)`" (kalın, 13 pt, `FF1F3A5F`).
@@ -2023,7 +2023,7 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 
 #### 4.4.1 Çıktı (`aktar`)
 
-- Tetik: Fazla Mesai Planı → **Excel'e aktar**. `API.yetkiIste('excel.aktar')`. Dosya adı: `<Y> <GRUP ADI> MESAİ ÖNGÖRÜSÜ.xlsx` (grup adı, yoksa kodu, büyük harf tr). İşlem kaydı `DISA_AKTAR` / `mesai_ongoru` "Excel". Kitap yazarı "Maaş Bütçe Sistemi".
+- Tetik: Fazla Mesai Planı → **Excel'e aktar**. `API.yetkiIste('excel.aktar')`. Dosya adı: `<Y> <GRUP ADI> MESAİ ÖNGÖRÜSÜ.xlsx` (grup adı, yoksa kodu, büyük harf tr). İşlem kaydı `DISA_AKTAR` / `mesai_ongoru` "Excel". Kitap yazarı "Ücret Hesaplama".
 - Tek sayfa **"MESAİ ÖNGÖRÜSÜ"**; ilk 2 sütun dondurulmuş (satır dondurma yok). Sütun genişlikleri: A 11, B 40, Q 40 (diğerleri varsayılan). Girdi hücreleri sarı `FFFFF2CC`. Blok başlık satırlarında dolu hücreler kalın beyaz 9 pt, zemin `FF1F3A5F`.
 - **Sütun düzeni:** **A** tür ("HAFTA İÇİ" / "HAFTA SONU") · **B** bölüm adı · **C–N** Ocak–Aralık toplam saat · **O** satır toplamı · **Q** bölüm adı (tekrar) · **R–AC** Ocak–Aralık kişi sayısı · **AD** kişi sayısı toplamı · **AE** kişi başı ortalama. O, AD, AE sütunlarının başlık hücresi yoktur; yalnız **AE7** = "KİŞİ BAŞI ORT." (biçimsiz).
 - **Takvim (satır 1–6):**
@@ -2179,7 +2179,7 @@ Veri bağları (bir ekranın girdisi başka ekranda görünür):
 13. `APP.tazele()` ekranı açılış parametresi olmadan yeniden çizer (`app.js:tazele`).
 14. T.C. araması `alan.tc`'ye bakmaz; Excel Raporu önizlemesinde adı olmayan kişinin T.C.'si ve Personel İçe Aktarma'nın "yeni personelin adı dosyada yok" hatasındaki T.C. tam yazılır (§2.8).
 15. Kişi bütçeden çıkarılınca üst çubuktaki çalışma seçicisinin "N kişi" metni yeniden çizilmez (menü rozeti ve 🗂 bandı güncellenir) (`personel.js:sil`).
-16. Simgelerin SVG'ye çevrilmesi görünüm katmanında, sonradan (`MutationObserver`) yapılır: yalnız düğme, başlık, `.logo`, `summary`, `.ik` ve `.kl-git` içindeki işaretler çevrilir; bildirim kutusundaki (`.toast`) ya da düz metindeki ⚠ ✓ gibi işaretler karakter olarak kalır (`ikon.js:donustur`). Yeniden kurarken simgeyi doğrudan SVG olarak çizmek yeterlidir.
+16. Simgelerin SVG'ye çevrilmesi görünüm katmanında, sonradan (`MutationObserver`) yapılır: yalnız düğme, başlık, `.logo`, `summary`, `.ik`, `.kl-git` ve `.rz` içindeki işaretler çevrilir; bildirim kutusundaki (`.toast`) ya da düz metindeki ⚠ ✓ gibi işaretler karakter olarak kalır (`ikon.js:donustur`). Yeniden kurarken simgeyi doğrudan SVG olarak çizmek yeterlidir.
 
 *Özet ve Maaş Dağılımı*
 17. Özet Kart 1'deki `<O>` toplam maliyeti elle girilen çalışma rakamıdır; Kart 2 ve Kart 4'teki `<O>` maliyeti kişi satırlarındaki `maliyet_onceki` toplamıdır; ikisi farklı çıkabilir (`ozet.js:ciz`).

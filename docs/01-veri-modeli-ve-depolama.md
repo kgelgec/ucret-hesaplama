@@ -1,6 +1,6 @@
 # 01 — Veri Modeli ve Depolama
 
-> Maaş Bütçe Sistemi'nin (bundan sonra "program") bütün verisinin nerede, hangi biçimde ve hangi kurallarla tutulduğunu anlatır. İki tür okur için yazılmıştır: programı kullanacak bordro / İK / finans uzmanları ile programı kuracak, kendi kurumuna uyarlayacak ya da verisini başka bir sisteme aktaracak yazılımcılar. Programı daha önce görmemiş olmak engel değildir.
+> Ücret Hesaplama'nın (bundan sonra "program") bütün verisinin nerede, hangi biçimde ve hangi kurallarla tutulduğunu anlatır. İki tür okur için yazılmıştır: programı kullanacak bordro / İK / finans uzmanları ile programı kuracak, kendi kurumuna uyarlayacak ya da verisini başka bir sisteme aktaracak yazılımcılar. Programı daha önce görmemiş olmak engel değildir.
 >
 > **Kaynak:** Bu depodaki kod. Dosya yolları `program/` klasörüne göredir (`js/db/schema.js` = `program/js/db/schema.js`); `tools/…` ile başlayanlar depo köküne göredir. Her bilginin yanında kaynağı `dosya:işlev` biçiminde yazılıdır. Koddan doğrulanamayan her nokta **"doğrulanamadı"** diye işaretlidir ve [§9](#9-belirsiz-kalan--doğrulanamayan-noktalar)'da toplanmıştır.
 >
@@ -1128,7 +1128,7 @@ Bütün JSON yanıtları `application/json; charset=utf-8` ve `Cache-Control: no
 | Yol | Yöntem | İstek | Yanıt |
 |---|---|---|---|
 | `/veri` | GET | — | Dosya varsa **200**, `application/octet-stream`, gövde = dosya baytları, başlık `X-Veri-Surum: <ticks>`. Yoksa **204**, `X-Veri-Surum: 0` |
-| `/veri` | POST | Gövde: SQLite ya da `BTENC1` paket baytları. Sürüm: başlık `X-Veri-Surum` ya da sorgu `?surum=` | **400** `{"basarili":false,"mesaj":"Gelen veri bir Maas Butce veri dosyasi degil."}` (64 bayttan kısa; ya da `BTENC1` ile başlamıyor ve 512 bayttan kısa ya da `SQLite format 3` değil) · **423** `{"basarili":false,"sifreGerekli":true,"mesaj":…}` (işaret var, veri düz) · **409** `{"basarili":false,"cakisma":true,"surum":"<ticks>"}` · **200** `{"basarili":true,"surum":"<ticks>","boyut":<bayt>}` + `X-Veri-Surum` başlığı. Yazmadan önce otomatik yedek (§6.6) |
+| `/veri` | POST | Gövde: SQLite ya da `BTENC1` paket baytları. Sürüm: başlık `X-Veri-Surum` ya da sorgu `?surum=` | **400** `{"basarili":false,"mesaj":"Gelen veri bir Ucret Hesaplama veri dosyasi degil."}` (64 bayttan kısa; ya da `BTENC1` ile başlamıyor ve 512 bayttan kısa ya da `SQLite format 3` değil) · **423** `{"basarili":false,"sifreGerekli":true,"mesaj":…}` (işaret var, veri düz) · **409** `{"basarili":false,"cakisma":true,"surum":"<ticks>"}` · **200** `{"basarili":true,"surum":"<ticks>","boyut":<bayt>}` + `X-Veri-Surum` başlığı. Yazmadan önce otomatik yedek (§6.6) |
 | `/veri` | DELETE | — | Dosya varsa `yedek\sifirlama-oncesi-*.db`'ye kopyalanır ve silinir. **200** `{"basarili":true}` |
 | `/veri-bilgi` | (her yöntem) | — | **200** `{"basarili":true,"var":bool,"yol":"<veri dosyası>","boyut":bayt,"tarih":"yyyy-MM-ddTHH:mm:ss" (yerel saat),"sifreli":bool,"yedekKlasor":"…","elleYedekKlasor":"…","yedekSayisi":<yedek\ içindeki *.db>,"duzYedek":<iki klasördeki şifresiz *.db>,"sifreIsaret":bool}` |
 | `/yedek-kaydet` | POST | Gövde: yedek baytları | **200** `{"basarili":true,"dosya":"butce-yedek-….db","klasor":"…","boyut":n,"sifreli":bool}` · **500** `{"basarili":false,"mesaj":…}` (biçim tanınmadı ya da işaret varken düz veri) |

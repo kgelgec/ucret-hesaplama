@@ -1,5 +1,5 @@
 ﻿<#
-  MAAŞ BÜTÇE — DENEME SUNUCUSU (port 8794)
+  ÜCRET HESAPLAMA — DENEME SUNUCUSU (port 8794)
   ---------------------------------------------------------------
   Geliştirme sırasında programı denemek içindir. GERÇEK veri klasörüne
   DOKUNMAZ: veri, yedek ve kilit dosyaları geçici klasörde

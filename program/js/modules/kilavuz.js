@@ -25,7 +25,7 @@
   /* kime: 'herkes' | 'yonetim' (işveren / yönetim) | 'yonetici' (sistem yöneticisi) */
   const BOLUMLER = [
     { id: 'baslarken', baslik: 'Başlarken', kime: 'herkes', html: `
-      <p>Maaş Bütçe Sistemi; tanımladığınız grupların (örneğin birim, işyeri ya da şube) yıllık maaş bütçesini, zam çalışmasını ve
+      <p>Ücret Hesaplama; tanımladığınız grupların (örneğin birim, işyeri ya da şube) yıllık maaş bütçesini, zam çalışmasını ve
         ay ay işveren maliyetini (brüt, SGK, gelir ve damga vergisi, teşvikler) hesaplar. Her grubun her yılı ayrı bir bütçe çalışmasıdır.</p>
       <h4>Programı açmak</h4>
       <ol>

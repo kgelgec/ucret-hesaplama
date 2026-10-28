@@ -68,7 +68,7 @@ window.IKON = (function () {
   const KAP = { '🔒': 'kilit', '🔓': 'kilitAcik', '🔐': 'kalkan', 'ℹ': 'bilgi', '⚠': 'uyari', '✓': 'tamam', '💡': 'ipucu',
     '📖': 'kitap', '⏱': 'saat', '🗂': 'klasor', '🔑': 'anahtar', '👁': 'goz', '⇩': 'indir', '⤓': 'indir', '↻': 'yenile',
     '↑': 'yukari', '↓': 'asagi', '←': 'geri', 'Σ': 'toplam', '🛠': 'disli', '📤': 'tablo', '📋': 'liste', '⚙': 'ayar' };
-  const KAP_SECICI = 'button, .ik, h1, h2, h3, h4, .logo, summary, .kl-git';
+  const KAP_SECICI = 'button, .ik, h1, h2, h3, h4, .logo, summary, .kl-git, .rz';
   const tumu = Object.assign({}, KAP, HER_YER);
   const desen = new RegExp('(' + Object.keys(tumu).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\uFE0F?', 'g');
   const desenHerYer = new RegExp('(' + Object.keys(HER_YER).join('|') + ')\\uFE0F?', 'g');

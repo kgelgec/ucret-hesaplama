@@ -633,7 +633,7 @@ window.ADB = (function () {
     if (imza !== 'SQLite format 3') throw new Error('Bu dosya bir SQLite veritabanı değil.');
     const yeni = new SQL.Database(bytes);
     const t = yeni.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='personel'");
-    if (!t.length) { yeni.close(); throw new Error('Dosyada personel tablosu bulunamadı; bu bir Maaş Bütçe yedeği değil.'); }
+    if (!t.length) { yeni.close(); throw new Error('Dosyada personel tablosu bulunamadı; bu bir Ücret Hesaplama yedeği değil.'); }
     try { yikiciIslemOncesi(); await oncesiYedek(); } catch (e) { yeni.close(); throw e; }
     if (db) db.close();
     db = yeni;

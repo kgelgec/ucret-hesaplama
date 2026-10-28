@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
-title Maas Butce Sistemi - Sunucu (kapatmayin)
+title Ucret Hesaplama - Sunucu (kapatmayin)
 cd /d "%~dp0"
 
 echo.
 echo   ============================================
-echo      MAAS BUTCE SISTEMI
+echo      UCRET HESAPLAMA
 echo   ============================================
 echo.
 echo   Sunucu baslatiliyor, tarayici birazdan acilacak...

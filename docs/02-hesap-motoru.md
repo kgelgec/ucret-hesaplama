@@ -1,6 +1,6 @@
 # 02 — HESAP MOTORU
 
-Bu belge Maaş Bütçe Sistemi'nin hesap motorunun başvuru belgesidir: girdi ve parametre sözlüğü, aylık bordronun
+Bu belge Ücret Hesaplama'nın hesap motorunun başvuru belgesidir: girdi ve parametre sözlüğü, aylık bordronun
 (netten brüte) adım adım formülleri, yıllık hesap, zam motoru ve motoru başka bir dilde ya da sistemde yeniden yazanların
 sonucu karşılaştırabileceği rakamlı sınama vektörleri. Bütün formüller kaynaktan (`program/js/`) okunarak yazılmıştır;
 her formülün yanında `dosya.js:işlev` kaynağı verilir. Koddan kesinleştirilemeyen ya da mevzuat açısından ayrıca

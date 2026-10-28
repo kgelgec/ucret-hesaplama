@@ -95,7 +95,7 @@
     const oz = API.calismaOzetOku(c.id);
     const Y = c.yil, O = c.yil - 1;
     const kitap = new ExcelJS.Workbook();
-    kitap.creator = 'Maaş Bütçe Sistemi';
+    kitap.creator = 'Ücret Hesaplama';
     kitap.created = new Date();
     // Formüller açılışta Excel tarafından yeniden hesaplansın
     kitap.calcProperties = { fullCalcOnLoad: true };

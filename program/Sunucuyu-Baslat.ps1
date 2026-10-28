@@ -1,5 +1,5 @@
 ﻿<#
-  MAAŞ BÜTÇE SİSTEMİ — Yerel Web Sunucusu
+  ÜCRET HESAPLAMA — Yerel Web Sunucusu
   ---------------------------------------------------------------
   Uygulamayı http://localhost:8764/ adresinden yayınlar.
   Yönetici yetkisi ve kurulum gerektirmez; sadece Windows PowerShell kullanır.
@@ -118,7 +118,7 @@ try {
 
 if ($zatenCalisiyor) {
   Write-Host ""
-  Write-Host "  Maas Butce Sistemi ZATEN CALISIYOR." -ForegroundColor Green
+  Write-Host "  Ucret Hesaplama ZATEN CALISIYOR." -ForegroundColor Green
   Write-Host "  Adres: $adres" -ForegroundColor Cyan
   Write-Host ""
   if (-not $Deneme) {
@@ -141,7 +141,7 @@ if (-not $dinleyici) {
 }
 
 Write-Host ""
-Write-Host ("  MAAS BUTCE SISTEMI" + $(if ($Deneme) { '  (DENEME)' } else { '' })) -ForegroundColor Cyan
+Write-Host ("  UCRET HESAPLAMA" + $(if ($Deneme) { '  (DENEME)' } else { '' })) -ForegroundColor Cyan
 Write-Host "  ------------------------------------------"
 Write-Host "  Adres  : $adres" -ForegroundColor Green
 Write-Host "  Program: $kok"
@@ -181,7 +181,7 @@ try {
       try {
         $bytes = Govde-Oku $istek
         $tur = Veri-Turu $bytes
-        if (-not $tur) { throw 'Gelen veri bir Maas Butce veri dosyasi degil.' }
+        if (-not $tur) { throw 'Gelen veri bir Ucret Hesaplama veri dosyasi degil.' }
         if (Duz-Reddedilsin-Mi $tur) { throw 'Sifreleme acikken sifresiz yedek yazilmaz.' }
         if (-not (Test-Path -LiteralPath $elleYedekKlasor)) { New-Item -ItemType Directory -Path $elleYedekKlasor -Force | Out-Null }
         $ad = 'butce-yedek-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.db'
@@ -257,7 +257,7 @@ try {
         $bytes = Govde-Oku $istek
         $tur = Veri-Turu $bytes
         if (-not $tur) {
-          Json-Yanit $yanit '{"basarili":false,"mesaj":"Gelen veri bir Maas Butce veri dosyasi degil."}' 400
+          Json-Yanit $yanit '{"basarili":false,"mesaj":"Gelen veri bir Ucret Hesaplama veri dosyasi degil."}' 400
           continue
         }
         if (Duz-Reddedilsin-Mi $tur) {

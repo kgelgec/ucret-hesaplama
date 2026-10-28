@@ -285,8 +285,8 @@ window.APP = (function () {
     perde.innerHTML = `
       <div class="perde-kart">
         <div class="logo">🔒</div>
-        <div class="marka">Maaş Bütçe Sistemi</div>
-        <div class="alt">Bütçe · Zam · Maliyet</div>
+        <div class="marka">Ücret Hesaplama</div>
+        <div class="alt">Maaş bütçesi ve maliyet</div>
         <div class="alan">
           <label>Kullanıcı Adı</label>
           <input id="grKullanici" autocomplete="username">
