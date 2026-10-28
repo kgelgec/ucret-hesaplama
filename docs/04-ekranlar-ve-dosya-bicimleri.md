@@ -1809,9 +1809,9 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 | `baslarken` | Başlarken (başlangıç gezisi ve **🧭 Geziyi başlat** düğmesi dâhil) | herkes | — | `13-kilavuz-dugme`, `15-gezi` |
 | `ekran` | Ekranın düzeni | herkes | — | `01-genel` |
 | `yeniyil` | Yeni yıl bütçesi — adım adım | herkes | `parametre`, `calisma`, `aktarim`, `personel`, `performans`, `aylik`, `mesai`, `excel` | `08-parametre`, `07-yeni-calisma` |
-| `personel` | Personel ve Zam | herkes | `personel` | `02-personel`, `03-kart` |
+| `personel` | Personel ve Zam | herkes | `personel` | `02-personel`, `17-kisi-bilgileri`, `03-kart` |
 | `aylik` | Aylık Girdiler | herkes | `aylik` | `04-aylik` |
-| `ozet` | Özet, Maliyet Tablosu ve Maaş Dağılımı | herkes | `ozet`, `maliyet`, `dagilim` | `09-maliyet`, `10-bordro` |
+| `ozet` | Özet, Maliyet Tablosu ve Maaş Dağılımı | herkes | `ozet`, `maliyet`, `dagilim` | `09-maliyet`, `10-bordro`, `16-dagilim` |
 | `calisma` | Bütçe Çalışmaları: taslak, onay ve revize (ücret esası maddesiyle) | herkes | `calisma` | `06-calisma` |
 | `esas` | Ücret esası: net ya da brüt bütçe (alt bölümler "Nerede seçilir?", "Güvenlik kuralları") | herkes | `calisma` | — |
 | `perfmesai` | Performans Değerlendirme ve Fazla Mesai Planı (alt bölümler: Performans Değerlendirme, Değerlendirme modeli, Fazla Mesai Planı) | herkes | `performans`, `mesai` | `14-model` |

@@ -62,6 +62,61 @@ Kurumdan kuruma değişen her tanım kod değiştirmeden, ekrandan girilir:
 Bilerek kodda kalanlar: teşvik ve sigorta kollarının formülleri (adları ve oranları düzenlenir), yaka türleri (beyaz /
 mavi), 30 günlük ay ve üç sakatlık derecesi (tutarları düzenlenir), yetki anahtarları.
 
+## Kısa tur
+
+Görüntülerdeki gruplar, kişiler ve tutarlar örnek veridir (uydurma).
+
+**1. Özet.** Seçili grubun yıllık maliyeti, önceki yıla göre farkı, zam miktarı ve ay ay işveren maliyeti. Üst
+çubuktan yıl ve grup seçilir; **Tümü** grupları birlikte özetler.
+
+![Özet ekranı](program/img/kilavuz/01-genel.png)
+
+**2. Bütçe çalışması açın.** Her grubun her yılı bir çalışmadır: önceki yılın zamlı maaşlarından, aynı yılın
+kopyasından ya da boş açılır. Ücret esası (net / brüt) burada seçilir. Kesinleşen çalışma onaylanınca kilitlenir.
+
+<table><tr>
+<td width="58%"><img src="program/img/kilavuz/06-calisma.png" alt="Bütçe Çalışmaları listesi"></td>
+<td width="42%"><img src="program/img/kilavuz/07-yeni-calisma.png" alt="Yeni Çalışma penceresi"></td>
+</tr></table>
+
+**3. Personel ve zam.** Her satır bir kişinin bütçesidir: önceki yıl maaşı, kademeye göre öngörülen zam, yönetimin
+sarı **Düzeltme** sütununa yazdığı ek ve sonuçta yeni maaş ile yıllık maliyet. Üstteki kutular her değişiklikte
+hemen güncellenir.
+
+![Personel ve Zam ekranı](program/img/kilavuz/02-personel.png)
+
+**4. Kişi bilgileri.** Yaka, giriş-çıkış tarihi, hesaplama türü, kanun / teşvik, sakatlık, BES ve zam ayı kişi
+kartını açmadan, doğrudan tablodaki kutulardan değiştirilir.
+
+![Kişi Bilgileri sekmesi](program/img/kilavuz/17-kisi-bilgileri.png)
+
+**5. Maliyet ve bordro dökümü.** Kişi × ay maliyet tablosu; kişinin adına tıklayınca ay ay brüt ücret, SGK, gelir
+ve damga vergisi, teşvik ve işveren maliyeti dökümü açılır.
+
+<table><tr>
+<td width="56%"><img src="program/img/kilavuz/09-maliyet.png" alt="Maliyet Tablosu"></td>
+<td width="44%"><img src="program/img/kilavuz/10-bordro.png" alt="Bordro dökümü"></td>
+</tr></table>
+
+**6. Maaş dağılımı.** Maaş aralıklarına göre kişi sayısı, toplam maaş ve maliyet; zam kademesinin eşiklerini
+belirlerken kullanılır.
+
+![Maaş Dağılımı](program/img/kilavuz/16-dagilim.png)
+
+**7. Parametreler ve Excel raporu.** Asgari ücret, vergi dilimleri, SGK ve teşvik oranları yıl bazında ekrandan
+girilir; açıklanmamış yıl için artış oranıyla öngörü yapılır. Bütçe yönetime Excel olarak gider, düzeltmeler aynı
+dosyadan geri alınır.
+
+<table><tr>
+<td width="50%"><img src="program/img/kilavuz/08-parametre.png" alt="Parametreler"></td>
+<td width="50%"><img src="program/img/kilavuz/11-rapor.png" alt="Excel Raporu"></td>
+</tr></table>
+
+**8. Başlangıç gezisi.** İlk girişte ilk yapılacakları ekran ekran gösteren kısa bir rehber açılır; programın
+içinde ayrıntılı bir **Kullanım Kılavuzu** da vardır.
+
+![Başlangıç gezisi](program/img/kilavuz/15-gezi.png)
+
 ## Kurulum ve kullanım (Windows)
 
 Gereken: Windows 10 / 11 (Windows PowerShell zaten yüklüdür) ve güncel bir tarayıcı (Chrome, Edge, Firefox).

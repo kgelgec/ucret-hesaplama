@@ -114,6 +114,7 @@
           başka bir kutuya geçince kaydedilir ve maliyet yeniden hesaplanır. Değişiklik Ocak'tan geçerlidir; yıl içinde değişen bilgi
           için Aylık Girdiler'i kullanın. Onaylı çalışmada kutular çıkmaz.</li>
       </ul>
+      ${gorsel('17-kisi-bilgileri', 'Kişi Bilgileri sekmesi: temel tanımlar tablodaki kutulardan değiştirilir')}
       <h4>Kişi kartı</h4>
       <p>Kişinin adına tıklayınca kart açılır. Bütçe bölümü, giriş/çıkış tarihi, yaka, hesaplama türü (SSK / EMK / SGK'sız), kanun (teşvik),
         AR-GE GV teşvik oranı, sakatlık, BES, önceki yıl maaşı, zam ayı, düzeltme ve not buradan değiştirilir. Kartla tablodaki kutular aynı
@@ -162,7 +163,8 @@
           zam kademesinin alt ve üst eşiklerini belirlerken kullanılır. ${ac('dagilim')}</li>
       </ul>
       ${gorsel('09-maliyet', 'Maliyet Tablosu: kişi × ay; kişinin adına tıklayınca bordro dökümü açılır')}
-      ${gorsel('10-bordro', 'Bordro dökümü: bir kişinin ay ay brüt ücret, SGK, vergi ve teşvik hesabı')}` },
+      ${gorsel('10-bordro', 'Bordro dökümü: bir kişinin ay ay brüt ücret, SGK, vergi ve teşvik hesabı')}
+      ${gorsel('16-dagilim', 'Maaş Dağılımı: maaş aralıklarına göre kişi sayısı, toplam maaş ve maliyet')}` },
 
     { id: 'calisma', baslik: 'Bütçe Çalışmaları: taslak, onay ve revize', kime: 'herkes', html: `
       <p>Her grubun her yılı ayrı bir bütçe çalışmasıdır (örneğin "2027 · Ofis · 2027 Bütçe"). ${ac('calisma')}</p>
