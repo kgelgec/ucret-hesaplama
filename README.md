@@ -1,5 +1,7 @@
 # Ücret Hesaplama
 
+[![Testler](https://github.com/kgelgec/ucret-hesaplama/actions/workflows/test.yml/badge.svg)](https://github.com/kgelgec/ucret-hesaplama/actions/workflows/test.yml)
+
 Kurumların **yıllık maaş bütçesini**, **zam çalışmasını** ve **ay ay işveren maliyetini** hesaplayan,
 tarayıcıda çalışan bir program. Maliyet bir mini bordroyla çıkar: netten brüte (ya da brütten nete), SGK işçi/işveren payları,
 kümülatif gelir vergisi, damga vergisi, asgari ücret istisnası, BES ve teşvikler (05510, 05746 AR-GE, 14857
@@ -184,6 +186,7 @@ Program Windows'ta denenmiştir (yerel sunucu bir PowerShell betiğidir).
 | `program/data/seed.js` | Yasal parametreler ve örnek veri yükleyicisi |
 | `program/data/ornek-veri.js` | Örnek veri (üretilmiş dosya; elle düzenlemeyin) |
 | `tools/ornek-veri-uret.mjs` | Örnek veri üreteci (`node tools/ornek-veri-uret.mjs`) |
+| `tools/test/` | Otomatik testler ve bakım araçları (aşağıda "Otomatik testler") |
 | `docs/` | Teknik belgeler (aşağıda) |
 | `docs/referans/` | Örnek veriyle kurulmuş şifresiz veritabanı ve kişi kişi, ay ay referans sonuçlar |
 | `CHANGELOG.md` | Sürümler ve değişiklikleri (program sürümü: `program/js/app.js` → `PROGRAM_SURUM`) |
@@ -226,6 +229,36 @@ karşılaştırın:
    açılmıştır.
 3. Tek kişilik elle sınama için `docs/02-hesap-motoru.md` içindeki rakamlı örnekler ve sınama vektörleri
    kullanılabilir.
+
+### Otomatik testler
+
+`tools/test` altındaki testler her push'ta ve değişiklik isteğinde (pull request) GitHub Actions'ta Windows'ta
+çalışır (yukarıdaki "Testler" rozeti). Her test geçici bir veri klasörüyle deneme sunucusunu açar; gerçek veriye
+dokunmaz. Yerelde çalıştırmak için Node.js 20+ ve Chrome ya da Edge gerekir:
+
+```powershell
+cd tools\test
+npm ci
+npm test
+```
+
+| Test | Ne denetler |
+|---|---|
+| `referans` | Örnek verinin kişi kişi, ay ay sonuçları `docs/referans/ornek-veri-sonuclari.json` ile aynı (hesap motoru) |
+| `net-brut` | Net esasta bulunan brütler brüt esasa verilince net ödeme, kesintiler ve maliyet aynı çıkıyor; brüt mesai formülü |
+| `duman` | Örnek veriyle ve boş kurulumda bütün yıl × grup × ekran hatasız açılıyor |
+| `ucret-esasi` | Net / brüt esas kuralları (değiştirilemezlik, devralma, içe aktarma) ve brüt çalışmanın ekranları, şablonu, Excel raporu |
+| `guvenlik` | Başka bir sitenin sayfası veri dosyasına yazamıyor; yabancı Host reddediliyor |
+| `gezi` | Başlangıç gezisi: ilk girişte açılma, adımlar, klavye, yeniden başlatma |
+| `kisi-bilgileri` | Kişi Bilgileri sekmesinde hücreden düzenleme, kişi kartıyla tutarlılık |
+
+Bakım araçları (aynı klasörde):
+
+- `npm run hiza`: bütün ekran ve pencerelerde kutu hizası denetimi (aynı satırda farklı boyda kutu, alta düşen
+  etiket, sağa yaslanmayan başlık düğmesi). `node hiza.mjs 1024` ile dar ekranda.
+- `npm run gorsel`: kılavuz ve README görsellerini (`program/img/kilavuz/`) örnek veriyle yeniden çeker.
+- `npm run referans`: `docs/referans/` dosyalarını yeniden üretir. Yalnız hesap **bilinçli olarak** değiştiyse
+  çalıştırın; farkı `CHANGELOG.md`'ye ve yukarıdaki toplam tablosuna yazın.
 
 ## Örnek veri hakkında
 

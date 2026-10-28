@@ -1,0 +1,29 @@
+name: Testler
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Windows'ta testler
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tools/test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/test/package-lock.json
+      - run: npm ci
+      - name: Testler (referans, net-brüt, ekranlar, ücret esası, güvenlik, gezi, kişi bilgileri)
+        run: npm test
