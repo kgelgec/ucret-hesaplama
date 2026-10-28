@@ -34,6 +34,8 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
 - **Personel listesini içe alma.** Elinizdeki Excel / CSV listesi ya da ERP / bordro programı çıktısı başlık adlarıyla
   tanınır; hazır listesi olmayan için ekrandan **örnek Excel şablonu** indirilir (Personel İçe Aktarma).
 - **Excel.** Bütçenin Excel raporu ve yönetimin düzeltmelerinin geri yüklenmesi; performans ve mesai şablonları.
+- **Başlangıç gezisi.** İlk girişte, parametrelerin kontrolünden yedeğe kadar ilk yapılacakları ekran ekran gösteren
+  kısa bir rehber açılır; sol alttaki **Başlangıç Gezisi** düğmesiyle yeniden başlatılır.
 - **Kullanıcılar.** Rol yerine kişi bazında yetki ve grup erişimi; işlem kaydı; hareketsizlikte otomatik çıkış.
 - **Veri güvenliği.** İsteğe bağlı şifreleme (AES-256-GCM, paroladan PBKDF2 ile anahtar), otomatik ve elle
   yedek, aynı anda birden çok kişi ya da sekme açtığında yazma kilidi.

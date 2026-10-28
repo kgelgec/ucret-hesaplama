@@ -107,7 +107,7 @@ Genel amaçlı `api.js:ayarOku/ayarYaz` işlevleri de bu tabloyu kullanır; kod 
 | `son_giris` | TEXT | NULL | Son başarılı giriş (ISO) |
 | `olusturma` | TEXT | NOT NULL | Oluşturma zamanı (ISO) |
 
-- **Yazan:** İlk kurulum (`app.js:ilkKurulumEkrani` → `API.kullaniciEkle(…, yonetici=true)`; hiç kullanıcı yokken yetki aranmaz), `api.js:kullaniciEkle`, `kullaniciGuncelle`, `kullaniciSil` (üçü de `sistem.yonet`), `parolaDegistir` (kişi kendi parolasını yetkisiz değiştirir; başkasınınki `sistem.yonet` ister), `girisYap` (`son_giris`).
+- **Yazan:** İlk kurulum (`app.js:ilkKurulumEkrani` → `API.kullaniciEkle(…, yonetici=true)`; hiç kullanıcı yokken yetki aranmaz), `api.js:kullaniciEkle`, `kullaniciGuncelle`, `kullaniciSil` (üçü de `sistem.yonet`), `parolaDegistir` (kişi kendi parolasını yetkisiz değiştirir; başkasınınki `sistem.yonet` ister), `girisYap` (`son_giris`; yazmadan önce boşsa dönüşte `ilkGiris: true` — başlangıç gezisi kendiliğinden açılır).
 - **Kurallar:** Parola en az 6 karakter. Sistemde en az bir **etkin yönetici** kalmalı (`api.js:digerYoneticiYok`). Rol kavramı yoktur; her yetki kullanıcıya ayrı ayrı verilir.
 
 ### 2.3 `kullanici_yetki` — kullanıcıya atanan yetkiler

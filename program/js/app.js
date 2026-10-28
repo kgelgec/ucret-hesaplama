@@ -263,6 +263,7 @@ window.APP = (function () {
             try { if (ornek) API.ornekVeriYukle(); else API.varsayilanGrupAc(); }
             catch (e) { console.error(e); setTimeout(() => U.bildir('Başlangıç verisi yüklenemedi: ' + e.message, 'hata'), 800); }
             ADB.kaydetHemen(); uygulamayiAc();
+            if (g.ilkGiris) GEZI.baslat({ baslangic: ornek ? 'ornek' : 'bos' });
           }
           else hata.textContent = g.mesaj;
         } catch (e) {
@@ -375,7 +376,7 @@ window.APP = (function () {
       // Parola doğrulaması yoğun işlem içerir; arayüzün donmaması için ertelenir
       setTimeout(() => {
         const g = API.girisYap(U.el('grKullanici').value, U.el('grParola').value);
-        if (g.basarili) { KILIT.dene(); uygulamayiAc(); }
+        if (g.basarili) { KILIT.dene(); uygulamayiAc(); if (g.ilkGiris) GEZI.baslat(); }
         else {
           hata.textContent = g.mesaj;
           btn.disabled = false; btn.textContent = 'Giriş Yap';
@@ -564,6 +565,7 @@ window.APP = (function () {
   }
 
   function cikis() {
+    GEZI.kapat(true);
     KILIT.birak();
     API.cikisYap();
     ADB.kaydetHemen();
@@ -707,8 +709,10 @@ window.APP = (function () {
       <div class="kisi">${U.esc(k.ad_soyad)}</div>
       <div class="rol">${k.yonetici ? 'Sistem Yöneticisi' : 'Kullanıcı'}</div>
       <button id="kilavuzBtn" class="kilavuz-btn">📖 Kullanım Kılavuzu</button>
+      <button id="geziBtn">🧭 Başlangıç Gezisi</button>
       <button id="cikisBtn">Çıkış Yap</button>`;
     U.el('kilavuzBtn').onclick = () => git('kilavuz');
+    U.el('geziBtn').onclick = () => GEZI.baslat();
     U.el('cikisBtn').onclick = cikis;
   }
 

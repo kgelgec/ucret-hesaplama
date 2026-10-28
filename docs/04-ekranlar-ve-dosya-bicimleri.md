@@ -187,6 +187,7 @@ Menüdeki seçili ekran `etkin` sınıfı ve `aria-current="page"` alır. Tıkla
 
 - Kullanıcının ad soyadı; rol ("Sistem Yöneticisi" / "Kullanıcı").
 - **📖 Kullanım Kılavuzu** → `git('kilavuz')` (§3.15). (📖 düğme içinde olduğu için kitap simgesine çevrilir, §2.15.)
+- **🧭 Başlangıç Gezisi** (`#geziBtn`) → `GEZI.baslat()` (§1.7). (🧭 pusula simgesine çevrilir.)
 - **Çıkış Yap** → kilit bırakılır, `API.cikisYap` (işlem kaydına `CIKIS`), veri hemen kaydedilir, açık pencereler kapanır, giriş perdesi açılır.
 
 ### 1.5 Üst çubuk: yıl · grup · çalışma seçici (`app.js:calismaSeciciCiz`)
@@ -211,6 +212,43 @@ Menüdeki seçili ekran `etkin` sınıfı ve `aria-current="page"` alır. Tıkla
    - Aksi hâlde `m.ciz(kap, parametre)`; ardından tek grup seçiliyse bantlar eklenir (§2.4, §2.5).
    - Çizimde hata olursa kırmızı kutu: "**Bu bölüm görüntülenemedi.**" + hata metni.
 5. Sayfa en üste kayar.
+
+### 1.7 Başlangıç gezisi (`js/core/gezi.js`)
+
+İlk yapılacakları sırasıyla gösteren adım adım rehber. Her adım ilgili ekranı açar (`APP.git`) ve menüdeki düğmesini
+(ya da belirtilen öğeyi) vurgular; açıklama kartı vurgunun yanında durur.
+
+- **Ne zaman açılır:** hesabın **ilk girişinde** kendiliğinden — `API.girisYap` dönüşündeki `ilkGiris` (girişten önce
+  `kullanici.son_giris` boşsa `true`). İlk kurulumda yönetici hesabı da ilk kez giriş yaptığı için gezi açılır ve karşılama
+  metni başlangıç seçimine göre değişir (`{ baslangic: 'ornek' | 'bos' }`). Sonra yalnız elle: sol alttaki **🧭 Başlangıç
+  Gezisi** düğmesi ya da Kılavuz → Başlarken'deki **🧭 Geziyi başlat** düğmesi. Tarayıcı deposu kullanılmaz.
+- **Adımlar** (`ADIMLAR`; kullanıcının göremediği ekranların adımı atlanır — `APP.gorunurModuller`):
+
+| # | Vurgu | Açılan ekran | Başlık |
+|---|---|---|---|
+| 0 | — (kart ortada) | — | Ücret Hesaplama'ya hoş geldiniz |
+| 1 | menü | Parametreler | Yasal parametreleri kontrol edin |
+| 2 | menü | Tanımlar | Gruplarınızı ve bütçe bölümlerinizi tanımlayın |
+| 3 | `#donemSecici` | — | Yıl ve grup seçimi |
+| 4 | menü | Bütçe Çalışmaları | Bütçe çalışmasını açın (sarı kutuda ücret esası uyarısı) |
+| 5 | menü | Personel İçe Aktarma | Personel listenizi alın |
+| 6 | menü | Personel ve Zam | Maaşları ve zam öngörüsünü gözden geçirin |
+| 7 | menü | Aylık Girdiler | Aylık girdileri ekleyin |
+| 8 | menü | Maliyet Tablosu | Sonucu inceleyin |
+| 9 | menü | Excel Raporu | Raporu alın ve onaylayın |
+| 10 | menü | Sistem | Verinizi koruyun |
+| 11 | `#kilavuzBtn` | — | Hazırsınız |
+
+- **Kart:** üstte "Başlangıç gezisi" (0. adım) ya da "Adım N / M", × (Geziyi kapat), ilerleme çubuğu, başlık, metin.
+  Düğmeler: 0. adımda **Şimdi değil** · **Geziye başla**; sonra **Geri** · **İleri**; son adımda **Bitir**.
+- **Klavye:** → ve Enter ileri, ← geri, Esc kapatır; Tab kartın düğmeleri arasında döner (odak kartın dışına çıkmaz).
+  Kart `role="dialog"`, `aria-modal`; açılışta odak birincil düğmededir.
+- **Yerleşim:** kart vurgunun sağına, sığmazsa altına ya da üstüne, o da olmazsa ortaya oturur; ekran kenarından 16 px
+  içeride kalır. Vurgulanan öğe görünmüyorsa (dar ekran, gizli öğe) kart ortada durur ve perde bütün ekranı karartır.
+  Pencere boyutu değişince ya da kaydırılınca yeniden yerleşir. Hareketi azaltma tercihinde geçişler kapanır.
+- **Kapanış:** gezi başladığı ekrana döner, odak **Başlangıç Gezisi** düğmesine gelir. Açılışta açık pencereler kapatılır;
+  oturum kapanırken (çıkış, zaman aşımı) gezi ekran değiştirmeden kapanır. Perde tıklamaları yutar: gezi açıkken
+  arkadaki ekran kullanılamaz.
 
 ---
 
@@ -344,7 +382,7 @@ Program emoji yerine SVG çizgi simgeleri kullanır (Lucide simge setinden; ISC 
 - `IKON.svg(ad)` simgenin SVG metnini, `IKON.menu(id)` menü simgesini verir (§1.3).
 - **Dönüştürücü** (`IKON.donustur`, sayfa açılırken `IKON.bagla` ile bağlanır; `MutationObserver` sonradan çizilen ekranları, pencereleri ve metin değişikliklerini de çevirir). Ekran kodu simgeyi karakter olarak yazar, dönüştürücü SVG'ye çevirir:
   - **Her yerde:** 🗑 → `sil`, ✎ → `duzenle`.
-  - **Yalnız düğme, başlık (h1–h4), `.logo`, `summary`, uyarı simgesi (`.ik`), Kılavuz'un "Ekranı aç" bağlantısı (`.kl-git`) ve rozetler (`.rz`) içinde:** 🔒 `kilit` · 🔓 `kilitAcik` · 🔐 `kalkan` · ℹ `bilgi` · ⚠ `uyari` · ✓ `tamam` · 💡 `ipucu` · 📖 `kitap` · ⏱ `saat` · 🗂 `klasor` · 🔑 `anahtar` · 👁 `goz` · ⇩ ⤓ `indir` · ↻ `yenile` · ↑ `yukari` · ↓ `asagi` · ← `geri` · Σ `toplam` · 🛠 `disli` · 📤 `tablo` · 📋 `liste` · ⚙ `ayar`.
+  - **Yalnız düğme, başlık (h1–h4), `.logo`, `summary`, uyarı simgesi (`.ik`), Kılavuz'un "Ekranı aç" bağlantısı (`.kl-git`) ve rozetler (`.rz`) içinde:** 🔒 `kilit` · 🔓 `kilitAcik` · 🔐 `kalkan` · ℹ `bilgi` · ⚠ `uyari` · ✓ `tamam` · 💡 `ipucu` · 📖 `kitap` · ⏱ `saat` · 🗂 `klasor` · 🔑 `anahtar` · 👁 `goz` · ⇩ ⤓ `indir` · ↻ `yenile` · ↑ `yukari` · ↓ `asagi` · ← `geri` · Σ `toplam` · 🛠 `disli` · 📤 `tablo` · 📋 `liste` · ⚙ `ayar` · 🧭 `pusula`.
   - Düz metindeki işaretler (ör. "→", metin içindeki "✓") olduğu gibi kalır; giriş kutuları, seçim kutuları, `textarea` ve `[data-ikonsuz]` içindekilere dokunulmaz. Değişiklik ekranın görünümündedir; bu belgede ekran metinleri koddaki karakterlerle yazılmıştır.
   - Yalnız simgeden oluşan düğmeye (ör. 🗑, ✎, ↑ ↓) `title` varsa ekran okuyucu etiketi olarak `aria-label` verilir.
 - Kayıtlardaki `ikon` alanı (emoji) menüde kullanılmaz; bu belgedeki "Yer" satırlarında ekranı tanıtmak için yazılır.
@@ -1755,7 +1793,7 @@ Yetki ve grup değişikliği açık oturumlara da yansır: her ekran geçişinde
 
 | `id` | Başlık | Kime | "Ekranı aç →" hedefleri (`APP.git`) | Görseller (`img/kilavuz/<ad>.png`) |
 |---|---|---|---|---|
-| `baslarken` | Başlarken | herkes | — | `13-kilavuz-dugme` |
+| `baslarken` | Başlarken (başlangıç gezisi ve **🧭 Geziyi başlat** düğmesi dâhil) | herkes | — | `13-kilavuz-dugme`, `15-gezi` |
 | `ekran` | Ekranın düzeni | herkes | — | `01-genel` |
 | `yeniyil` | Yeni yıl bütçesi — adım adım | herkes | `parametre`, `calisma`, `aktarim`, `personel`, `performans`, `aylik`, `mesai`, `excel` | `08-parametre`, `07-yeni-calisma` |
 | `personel` | Personel ve Zam | herkes | `personel` | `02-personel`, `03-kart` |
@@ -2116,6 +2154,7 @@ Okuma `TO` ile yapılır (§4.0): `.xlsx` için ilk sayfa, `.csv` / `.txt` ve ya
 ```
 Açılış ──► (şifreliyse) Veri parolası ──► Giriş ──► Özet (varsayılan açılış; app.js:uygulamayiAc)
            (kullanıcı yoksa) Veri parolası belirleme ──► İlk kurulum (Örnek veriyle / Boş başla) ──► Özet
+           Hesabın ilk girişinde (ilk kurulum dâhil) Özet'in üstünde başlangıç gezisi açılır (§1.7)
 
 Üst çubuk: Yıl / Grup / Çalışma seçimi ──► etkin ekran yeniden çizilir (her ekranda)
            Grup yokken: "Tanımlar → Gruplar" yönlendirme metni (yöneticiye; bağlantı değil)

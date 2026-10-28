@@ -47,6 +47,7 @@ window.IKON = (function () {
     yukari: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
     asagi: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
     geri: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    pusula: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>',
     nokta: '<circle cx="12" cy="12" r="2"/>',
   };
 
@@ -67,7 +68,7 @@ window.IKON = (function () {
   const HER_YER = { '🗑': 'sil', '✎': 'duzenle' };
   const KAP = { '🔒': 'kilit', '🔓': 'kilitAcik', '🔐': 'kalkan', 'ℹ': 'bilgi', '⚠': 'uyari', '✓': 'tamam', '💡': 'ipucu',
     '📖': 'kitap', '⏱': 'saat', '🗂': 'klasor', '🔑': 'anahtar', '👁': 'goz', '⇩': 'indir', '⤓': 'indir', '↻': 'yenile',
-    '↑': 'yukari', '↓': 'asagi', '←': 'geri', 'Σ': 'toplam', '🛠': 'disli', '📤': 'tablo', '📋': 'liste', '⚙': 'ayar' };
+    '↑': 'yukari', '↓': 'asagi', '←': 'geri', 'Σ': 'toplam', '🛠': 'disli', '📤': 'tablo', '📋': 'liste', '⚙': 'ayar', '🧭': 'pusula' };
   const KAP_SECICI = 'button, .ik, h1, h2, h3, h4, .logo, summary, .kl-git, .rz';
   const tumu = Object.assign({}, KAP, HER_YER);
   const desen = new RegExp('(' + Object.keys(tumu).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\uFE0F?', 'g');

@@ -45,6 +45,13 @@
       </ul>
       ${ipucu(`Örnekle başlayıp gerçek kullanıma geçerken <em>Sistem → Veritabanını Sıfırla</em> ile ilk kurulum ekranına dönebilir
         ya da örnek grupları ve çalışmalarını silebilirsiniz.`)}
+      <h4>Başlangıç gezisi</h4>
+      <p>Her kullanıcının ilk girişinde kısa bir <strong>başlangıç gezisi</strong> açılır: yasal parametrelerin kontrolünden gruplara,
+        bütçe çalışmasının açılmasından personel listesinin alınmasına ve yedeğe kadar ilk yapılacakları sırayla gösterir; her adımda
+        ilgili ekran açılır. <kbd>Esc</kbd> ile istediğiniz an çıkabilirsiniz. Geziyi sol alttaki <strong>🧭 Başlangıç Gezisi</strong>
+        düğmesiyle ya da buradan yeniden başlatırsınız.</p>
+      <p><button class="btn btn-ikincil btn-kucuk" data-gezi-baslat>🧭 Geziyi başlat</button></p>
+      ${gorsel('15-gezi', 'Başlangıç gezisi: her adım ilgili ekranı açar ve menüdeki yerini gösterir')}
       <h4>Kayıt</h4>
       <p>Kaydet düğmesi aramanıza gerek yok: yaptığınız her değişiklik hemen kaydedilir. Ekranın üstündeki gösterge
         <em>Kaydediliyor…</em> iken bekleyin, <em>Kayıtlı</em> olunca işlem tamamdır.</p>
@@ -397,6 +404,7 @@
     kap.querySelectorAll('[data-buyut]').forEach(im => im.onclick = () => C.kipAc({ baslik: im.alt, genislik: 'genis',
       govde: `<img src="${im.getAttribute('src')}" alt="" style="width:100%; height:auto; display:block">` }));
     kap.querySelectorAll('[data-git]').forEach(a => a.onclick = e => { e.preventDefault(); APP.git(a.getAttribute('data-git')); });
+    kap.querySelectorAll('[data-gezi-baslat]').forEach(b => b.onclick = () => GEZI.baslat());
   }
 
   APP.modulKaydet({

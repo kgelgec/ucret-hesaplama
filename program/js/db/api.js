@@ -163,7 +163,8 @@ window.API = (function () {
     };
     db.calistir(`UPDATE kullanici SET son_giris = ? WHERE kullanici_adi = ?`, [U.simdi(), ka]);
     log('GIRIS', 'kullanici', ka);
-    return { basarili: true, kullanici: aktifKullanici };
+    /* ilkGiris: hesabın ilk girişi (başlangıç gezisi kendiliğinden açılır) */
+    return { basarili: true, kullanici: aktifKullanici, ilkGiris: !k.son_giris };
   }
 
   function cikisYap() {

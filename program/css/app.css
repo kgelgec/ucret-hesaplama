@@ -446,6 +446,47 @@ table.yapiskan-ilk tbody tr:hover td:first-child{background:var(--surface-2);}
   .icerik{padding:16px;}
   .ust{padding:12px 16px;}
 }
+/* ---------- Başlangıç gezisi (js/core/gezi.js) ----------
+   Perde tıklamaları yutar; ışık hedefin çevresini açık bırakıp gerisini karartır (kutu gölgesi).
+   Hedef yoksa (.ortada) perde kendisi karartır, kart ortada durur. */
+.gezi-perde{position:fixed; inset:0; z-index:250;}
+.gezi-perde.ortada{background:rgba(15,23,42,.55);}
+.gezi-perde.ortada .gezi-isik{display:none;}
+.gezi-isik{
+  position:fixed; border-radius:12px; pointer-events:none;
+  box-shadow:0 0 0 3px rgba(147,197,253,.9), 0 0 0 9999px rgba(15,23,42,.55);
+  transition:left 220ms var(--egri), top 220ms var(--egri), width 220ms var(--egri), height 220ms var(--egri);
+}
+.gezi-kart{
+  position:fixed; width:380px; max-width:calc(100vw - 32px); max-height:calc(100vh - 32px); overflow-y:auto;
+  background:var(--surface); color:var(--ink); border-radius:14px; border:1px solid var(--line);
+  box-shadow:var(--golge-yuksek); padding:16px 20px 18px; animation:kip-gir 200ms var(--egri);
+}
+.gezi-ust{display:flex; align-items:center; gap:8px;}
+.gezi-sayac{font-size:12px; font-weight:600; color:var(--ink-fade); letter-spacing:.02em;}
+.gezi-kapat{
+  margin-left:auto; background:none; border:0; font-size:22px; line-height:1; color:var(--ink-fade);
+  width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  transition:background var(--hiz) var(--egri), color var(--hiz) var(--egri);
+}
+.gezi-kapat:hover{color:var(--ink); background:var(--line-soft);}
+.gezi-ilerleme{height:4px; background:var(--line-soft); border-radius:4px; margin:6px 0 14px; overflow:hidden;}
+.gezi-ilerleme span{display:block; height:100%; background:var(--accent-2); border-radius:4px; transition:width 220ms var(--egri);}
+.gezi-kart h2{font-size:17px; margin:0 0 8px; letter-spacing:-.01em;}
+.gezi-metin{font-size:13.5px; line-height:1.6; color:var(--ink-soft);}
+.gezi-metin p{margin:0 0 9px;}
+.gezi-metin strong{color:var(--ink);}
+.gezi-not{font-size:12.5px; color:var(--ink-fade);}
+.gezi-dikkat{
+  margin:4px 0 9px; padding:9px 12px; border-radius:var(--r-sm); background:var(--warn-soft);
+  border:1px solid #fde68a; color:var(--ink); font-size:13px;
+}
+kbd{
+  font:12px var(--yazi-mono); padding:1px 6px; border-radius:5px; border:1px solid var(--line-input);
+  background:var(--surface-2); color:var(--ink);
+}
+.gezi-alt{display:flex; justify-content:flex-end; gap:9px; margin-top:14px;}
+
 /* Hareketi azaltma tercihi: animasyon ve geçişler kapanır */
 @media (prefers-reduced-motion:reduce){
   *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}
