@@ -26,6 +26,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $kok  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $adres = "http://localhost:$Port/"
+# Yazma isteklerinin kabul edildigi kokenler: yalniz programin kendi sayfasi (asagida KOKEN DENETIMI)
+$izinliKokenler = @("http://localhost:$Port", "http://127.0.0.1:$Port")
 
 # VERI KLASORU — program klasorunun BIR USTUNDE durur. Boylece program
 # dosyalari guncellenirken (klasor degistirilirken) veri etkilenmez.
@@ -156,6 +158,21 @@ try {
     $baglam = $dinleyici.GetContext()
     $istek  = $baglam.Request
     $yanit  = $baglam.Response
+
+    # KOKEN DENETIMI: GET / HEAD disindaki istekler (veri yazma, silme, kilit, yedek, sifreleme isareti)
+    # yalniz programin kendi sayfasindan kabul edilir. Tarayici, baska bir sitenin sayfasindan gelen
+    # istege o sitenin adresini Origin basligina koyar; boyle istek reddedilir. Yoksa kullanici baska
+    # bir sitedeyken o site arka planda veri dosyasinin uzerine yazdirabilirdi. Tarayicilar GET / HEAD
+    # disindaki her istekte Origin gonderir; Origin'siz istek tarayici disi bir aractan gelir, kabul edilir.
+    # Okuma istekleri (GET) baska siteden yapilsa da yaniti okunamaz (CORS izni verilmez).
+    if ($istek.HttpMethod -ne 'GET' -and $istek.HttpMethod -ne 'HEAD') {
+      $koken = $istek.Headers['Origin']
+      if ($koken -and ($izinliKokenler -notcontains $koken.TrimEnd('/'))) {
+        Json-Yanit $yanit '{"basarili":false,"mesaj":"Bu istek programin kendi sayfasindan gelmedi; reddedildi."}' 403
+        Write-Host ("  403  " + $istek.HttpMethod + " " + $istek.Url.AbsolutePath + " REDDEDILDI - yabanci koken: " + $koken) -ForegroundColor Red
+        continue
+      }
+    }
 
     $yol = [Uri]::UnescapeDataString($istek.Url.AbsolutePath)
     if ($yol -eq '/' -or $yol -eq '') { $yol = '/index.html' }
