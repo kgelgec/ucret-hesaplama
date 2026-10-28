@@ -661,7 +661,7 @@ window.APP = (function () {
         ${gruplar.length > 1 ? `<button data-grup="TUMU" class="${tumuMu() ? 'etkin' : ''}">Tümü</button>` : ''}
       </div>
       ${ayni.length > 1 ? `<select id="calismaSec">${ayni.map(c =>
-        `<option value="${c.id}" ${secili && c.id === secili.id ? 'selected' : ''}>${U.esc(c.ad)} · ${c.kisi} kişi${c.durum === 'ONAYLI' ? ' · onaylı' : ''}</option>`).join('')}</select>` : ''}
+        `<option value="${c.id}" ${secili && c.id === secili.id ? 'selected' : ''}>${U.esc(c.ad)} · ${c.kisi} kişi${c.durum === 'ONAYLI' ? ' · onaylı' : ''}${API.ucretEsasi(c.id) === 'BRUT' ? ' · brüt esas' : ''}</option>`).join('')}</select>` : ''}
     </div>`;
     U.el('yilSec').onchange = e => secimYap(e.target.value, null);
     kap.querySelectorAll('[data-grup]').forEach(b => b.onclick = () => secimYap(null, b.getAttribute('data-grup')));

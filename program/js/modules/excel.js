@@ -7,6 +7,8 @@
                      müdahale alanıdır. Zam miktarı / yeni maaş / oran
                      formüldür, Excel'de anında güncellenir.
      AYLIK MALİYET   kişi × ay toplam maliyet
+   Maaş tutarları çalışmanın ücret esasındadır (net / brüt); açıklama satırı
+   ve maaş sütun başlıkları esası yazar (net esasta başlıklar eskisi gibi).
    İçeri alma: ZAM ÇALIŞMASI sayfası başlık adlarıyla okunur, kişiler
    T.C. ile eşleştirilir. Öncelik: elle yazılmış ZAM ORANI → elle yazılmış
    ZAM MİKTARI → DÜZELTME. Önizleme gösterilmeden hiçbir şey yazılmaz.
@@ -30,7 +32,7 @@
     kap.innerHTML = `
       <div class="kart">
         <div class="kart-baslik"><div><h2>Excel Raporu</h2>
-          <div class="kart-aciklama">${c.yil} · ${U.esc(c.grup_adi)} · ${U.esc(c.ad)}. Tutarlar net maaştır.</div></div>
+          <div class="kart-aciklama">${c.yil} · ${U.esc(c.grup_adi)} · ${U.esc(c.ad)}. Tutarlar ${B.esas(c)} maaştır.</div></div>
           <button class="btn" id="aktarBtn">Excel'e Aktar</button></div>
         <ul class="kucuk">
           <li><strong>ZAM ÇALIŞMASI</strong> sayfasında sarı <strong>DÜZELTME</strong> sütunu yönetimin yazacağı yerdir;
@@ -94,6 +96,7 @@
     const h = API.calismaHesapla(c.id);
     const oz = API.calismaOzetOku(c.id);
     const Y = c.yil, O = c.yil - 1;
+    const ES = B.esasBuyuk(c), brut = ES === 'BRÜT';
     const kitap = new ExcelJS.Workbook();
     kitap.creator = 'Ücret Hesaplama';
     kitap.created = new Date();
@@ -108,12 +111,12 @@
       { b: 'SIRA', g: 6 }, { b: 'BÜTÇE BÖLÜMÜ', g: 30 }, { b: 'ADI SOYADI', g: 28 }, { b: 'M / B', g: 6 },
       { b: 'İŞE GİRİŞ', g: 11 }, { b: 'HESAPLAMA', g: 10 },
     ];
-    K.push({ b: O + ' MAAŞ', g: 13, s: SAYI, a: 'eski' });
+    K.push({ b: O + ' MAAŞ' + (brut ? ' (BRÜT)' : ''), g: 13, s: SAYI, a: 'eski' });
     K.push({ b: 'ÖNGÖRÜ ORANI', g: 10, s: ORAN, a: 'ongOran' });
     K.push({ b: B_ONG, g: 12, s: SAYI, a: 'ong' });
     K.push({ b: B_DUZ, g: 12, s: SAYI, a: 'duz', sari: 1 });
     K.push({ b: Y + ' ' + B_MIK, g: 13, s: SAYI, a: 'mik' });
-    K.push({ b: Y + ' MAAŞ', g: 13, s: SAYI, a: 'yeni' });
+    K.push({ b: Y + ' MAAŞ' + (brut ? ' (BRÜT)' : ''), g: 13, s: SAYI, a: 'yeni' });
     K.push({ b: B_ORAN, g: 10, s: ORAN, a: 'oran' });
     K.push({ b: Y + ' TOPLAM MALİYET', g: 15, s: SAYI, a: 'mal' });
     K.push({ b: O + ' TOPLAM MALİYET', g: 15, s: SAYI, a: 'malO' });
@@ -124,7 +127,7 @@
 
     z.getCell('A1').value = `${Y} ${c.grup_adi.toLocaleUpperCase('tr-TR')} ZAM ÇALIŞMASI`;
     z.getCell('A1').font = { bold: true, size: 14, color: { argb: LACIVERT } };
-    z.getCell('A2').value = `${c.ad} · Tutarlar NET · Oluşturma: ${new Date().toLocaleString('tr-TR')}`;
+    z.getCell('A2').value = `${c.ad} · Tutarlar ${ES} · Oluşturma: ${new Date().toLocaleString('tr-TR')}`;
     z.getCell('A2').font = { italic: true, size: 9, color: { argb: 'FF666666' } };
     z.getCell('A3').value = 'Sarı DÜZELTME sütununa müdahalenizi yazın (öngörülen zamma eklenir, eksi olabilir). ' +
                             'Maliyet sütunları, dosya programa geri yüklendiğinde yeniden hesaplanır.';
@@ -177,7 +180,7 @@
     o.getColumn(1).width = 34; for (let i = 2; i <= 9; i++) o.getColumn(i).width = 17;
     o.getCell('A1').value = `${Y} ${c.grup_adi.toLocaleUpperCase('tr-TR')} — MALİYET ÖZETİ`;
     o.getCell('A1').font = { bold: true, size: 14, color: { argb: LACIVERT } };
-    o.getCell('A2').value = c.ad + ' · ' + h.kisiler.length + ' kişi';
+    o.getCell('A2').value = c.ad + ' · ' + h.kisiler.length + ' kişi' + (brut ? ' · Maaşlar BRÜT' : '');
     o.getCell('A2').font = { italic: true, size: 9, color: { argb: 'FF666666' } };
     o.getRow(4).values = ['', 'KİŞİ', O + ' TOPLAM MALİYET', Y + ' BÜTÇELENEN MALİYET', Y + ' TOPLAM MALİYET',
                           'BÜTÇE FARKI', 'ZAM MİKTARI', 'ZAM ORANI', 'ORTALAMA ZAM'];
@@ -211,7 +214,7 @@
 
     // Bütçe bölümleri
     // A bölüm · B kişi · C önceki maaş · D zam · E oran · F yeni maaş · G önceki maliyet · H maliyet · I fark
-    o.getRow(10).values = ['BÜTÇE BÖLÜMÜ', 'KİŞİ', O + ' MAAŞ (NET)', 'ZAM MİKTARI', 'ZAM ORANI', Y + ' MAAŞ (NET)',
+    o.getRow(10).values = ['BÜTÇE BÖLÜMÜ', 'KİŞİ', O + ' MAAŞ (' + ES + ')', 'ZAM MİKTARI', 'ZAM ORANI', Y + ' MAAŞ (' + ES + ')',
                            O + ' MALİYET', Y + ' MALİYET', 'FARK'];
     baslikBicim(o.getRow(10));
     const bolumler = [...new Set(h.kisiler.map(s => s.kp.butce_bolumu || ''))]

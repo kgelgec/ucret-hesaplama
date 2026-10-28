@@ -1,9 +1,10 @@
 /* =====================================================================
    PERSONEL VE ZAM — kişi bazında bütçe satırları
 
-   Her satır bir kişinin bütçe satırıdır: önceki yıl net maaşı, zam
+   Her satır bir kişinin bütçe satırıdır: önceki yıl maaşı, zam
    öngörüsü (kademe / performans), yönetimin düzeltmesi ve sonuçta
-   yeni yıl maaşı ile yıllık maliyet.
+   yeni yıl maaşı ile yıllık maliyet. Maaş ve tutarlar çalışmanın ücret
+   esasındadır (net ya da brüt — B.esas); etiketler esası izler.
    Düzeltme hücresine doğrudan yazılır (Enter ya da hücreden çıkış).
    ===================================================================== */
 (function () {
@@ -14,9 +15,9 @@
   /* Onaylı çalışma onay anındaki çıkış tarihiyle hesaplanır; kartta sonradan
      değişen tarih ayrıca gösterilir (onaylı maliyete girmez). */
   /* Üst özet kutuları — zam çalışmasının toplu görünümü. Süzgeçten bağımsız: çalışmanın tamamını gösterir;
-     düzeltme girildikçe anında değişir. Tutarlar net maaş ve yıllık maliyettir. */
+     düzeltme girildikçe anında değişir. Tutarlar maaş (çalışmanın esasında) ve yıllık maliyettir. */
   function ozetKutulari(c, kisiler) {
-    const O = c.yil - 1, Y = c.yil;
+    const O = c.yil - 1, Y = c.yil, es = B.esas(c);
     const top = f => kisiler.reduce((a, s) => a + (Number(f(s)) || 0), 0);
     const eski = top(s => s.zam.eski), yeni = top(s => s.zam.yeni), mal = top(s => s.yil.maliyet);
     const onceki = top(s => s.kp.maliyet_onceki), duzKisi = kisiler.filter(s => Number(s.kp.duzeltme)).length;
@@ -27,10 +28,10 @@
           <div class="ek">${kisiler.length} kişi · zam oranı ${oran(yeni - eski, eski)}</div></div>
         <div class="stat altin"><div class="deger">${onceki ? B.isaretli(mal - onceki) : '—'}</div><div class="etiket">Maliyet farkı (${Y} − ${O})</div>
           <div class="ek">${onceki ? O + ' maliyeti ' + B.tlDuz(onceki) + ' · ' + oran(mal - onceki, onceki) : O + ' maliyeti girilmemiş'}</div></div>
-        <div class="stat yesil"><div class="deger">${B.isaretli(yeni - eski)}</div><div class="etiket">Aylık net maaş artışı</div>
+        <div class="stat yesil"><div class="deger">${B.isaretli(yeni - eski)}</div><div class="etiket">Aylık ${es} maaş artışı</div>
           <div class="ek">${O}: ${B.tlDuz(eski)} → ${Y}: ${B.tlDuz(yeni)}</div></div>
         <div class="stat mor"><div class="deger">${duzKisi} / ${kisiler.length}</div><div class="etiket">Düzeltme yapılan kişi</div>
-          <div class="ek">${duzKisi ? 'Toplam düzeltme ' + B.isaretli(duzTop) + ' (aylık net)' : 'Düzeltme girilmedi'}</div></div>
+          <div class="ek">${duzKisi ? 'Toplam düzeltme ' + B.isaretli(duzTop) + ' (aylık ' + es + ')' : 'Düzeltme girilmedi'}</div></div>
       </div>`;
   }
 
@@ -123,7 +124,7 @@
     const yontem = [c.zam_kademe ? 'maaş kademesi' : 'sabit oran', c.zam_performans ? 'performans çarpanı' : null]
       .filter(Boolean).join(' × ');
     const aciklama = {
-      zam: 'Tutarlar NET. Zam öngörüsü: ' + U.esc(yontem) + ' (Bütçe Çalışmaları ekranından değiştirilir). DÜZELTME yönetimin ' +
+      zam: 'Tutarlar ' + B.esasBuyuk(c) + '. Zam öngörüsü: ' + U.esc(yontem) + ' (Bütçe Çalışmaları ekranından değiştirilir). DÜZELTME yönetimin ' +
            'müdahalesidir; öngörülen zamma eklenir, eksi olabilir.',
       kisi: 'Hesaplamayı belirleyen bilgiler. Değiştirmek için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler\'den.',
     }[sekme];
@@ -132,7 +133,7 @@
       <div class="kart">
         <div class="kart-baslik">
           <div>
-            <h2>Personel ve Zam — ${c.yil} · ${U.esc(c.grup_adi)}</h2>
+            <h2>Personel ve Zam — ${c.yil} · ${U.esc(c.grup_adi)} ${B.esasRozet(c)}</h2>
             <div class="kart-aciklama">${aciklama}</div>
           </div>
           <div class="btn-satir">
@@ -206,6 +207,7 @@
     const bolumler = API.butceBolumuListe(c.grup_kod).map(b => ({ deger: b.ad, etiket: API.bolumEtiket(c.grup_kod, b.ad) }));
     const v = x => U.esc(x == null ? '' : x);
     const sayi = x => x == null || x === '' ? '' : B.tlDuz(x, Math.round(x) === x ? 0 : 2);
+    const es = B.esas(c), Es = B.esasBas(c);
 
     const kip = C.kipAc({
       baslik: yeni ? 'Yeni Personel' : k.ad_soyad,
@@ -223,8 +225,8 @@
               <option value="">${U.esc(grupEtiket(c))}</option>
               ${hedefler.map(h => `<option value="${h.id}">${U.esc(grupEtiket(h))}</option>`).join('')}</select>
             <div class="alan-not" id="grupNot">${yeni ? 'Kişi bu çalışmaya eklenir.' : hedefler.length
-              ? 'Başka gruba atanırsa kişi bütün bilgileriyle (maaş, zam, aylık girdiler, değerlendirme) o gruba taşınır.'
-              : (c.durum === 'ONAYLI' ? 'Onaylı çalışmada grup değiştirilemez.' : c.yil + ' yılında taşınabilecek başka grup çalışması (taslak) yok.')}</div></div>
+              ? 'Başka gruba atanırsa kişi bütün bilgileriyle (maaş, zam, aylık girdiler, değerlendirme) o gruba taşınır. Yalnız aynı ücret esasındaki (' + es + ') çalışmalar listelenir.'
+              : (c.durum === 'ONAYLI' ? 'Onaylı çalışmada grup değiştirilemez.' : c.yil + ' yılında taşınabilecek başka grup çalışması (taslak, aynı ücret esasında) yok.')}</div></div>
           <div class="alan"><label>Bütçe Bölümü</label>
             <select name="butce_bolumu">${C.secenekler(bolumler, k.butce_bolumu, '—')}</select></div>
           <div class="alan"><label>İşe Giriş</label><input name="ise_giris" type="date" value="${v(k.ise_giris)}">
@@ -259,11 +261,12 @@
             <select name="bes">${C.secenekler([{ deger: 'EVET', etiket: 'Katılıyor' }, { deger: 'HAYIR', etiket: 'Katılmıyor' }], k.bes, '—')}</select></div>
         </div>
 
-        <h3>Maaş ve Zam <span class="kucuk soluk">— net tutarlar</span></h3>
+        <h3>Maaş ve Zam <span class="kucuk soluk">— ${es} tutarlar</span></h3>
         <div class="uyari uyari-bilgi kucuk" id="maasNot"><span class="ik">ℹ</span><div></div></div>
         <div class="izgara izgara-3 ust-bosluk">
-          <div class="alan"><label>${c.yil - 1} Net Maaş</label>
-            <input name="maas_eski" class="num" value="${sayi(k.maas_eski)}"></div>
+          <div class="alan"><label>${c.yil - 1} ${Es} Maaş</label>
+            <input name="maas_eski" class="num" value="${sayi(k.maas_eski)}">
+            <div class="alan-not" id="maasEsasNot"></div></div>
           <div class="alan"><label>Zam Ayı</label>
             <select name="zam_ayi">${C.aySecenekleri(k.zam_ayi || 1)}</select></div>
           <div class="alan"><label>Zam Düzeltmesi</label>
@@ -274,7 +277,7 @@
           <div class="alan"><label>Performans Çarpanı</label>
             <input name="performans_carpani" class="num" value="${sayi(k.performans_carpani)}">
             <div class="alan-not">Boşsa puandan (Parametreler → Performans) bulunur; o da yoksa 1.</div></div>
-          <div class="alan"><label>Yol Parası (aylık net)</label>
+          <div class="alan"><label>Yol Parası (aylık ${es})</label>
             <input name="yol" class="num" value="${sayi(k.yol)}"></div>
           <div class="alan"><label>${c.yil - 1} Toplam Maliyet</label>
             <input name="maliyet_onceki" class="num" value="${sayi(k.maliyet_onceki)}"></div>
@@ -332,7 +335,8 @@
     if (yeni && tcIn) tcIn.addEventListener('change', () => {
       const tc = U.tcTemizle(tcIn.value);
       if (tc.length !== 11) return;
-      const o = API.personelOnDoldur(tc, c.yil);
+      const o = API.personelOnDoldur(tc, c.yil, c.id);
+      U.el('maasEsasNot').innerHTML = '';
       if (!o) { U.el('tcBilgi').innerHTML = ''; return; }
       const ata = (ad, val) => { const e = kip.querySelector('[name=' + ad + ']'); if (e && val != null && val !== '') e.value = e.tagName === 'SELECT' ? val : (typeof val === 'number' ? sayi(val) : val); };
       ['ad_soyad', 'bolum', 'ekip', 'gorev', 'ise_giris', 'isten_ayrilis'].forEach(a => ata(a, o.personel[a]));
@@ -342,7 +346,13 @@
         if (o.son && o.son.grup_kod === c.grup_kod) ata('butce_bolumu', o.satir.butce_bolumu);
         der.onchange && der.onchange();
       }
-      U.el('tcBilgi').innerHTML = gecmisHtml(o.gecmis, c, true);
+      /* Önceki çalışması öbür esastaysa maaş taşınmaz (API boş bırakır): net tutar brüt diye okunmasın */
+      if (o.esasFarkli) {
+        kip.querySelector('[name=maas_eski]').value = '';
+        U.el('maasEsasNot').innerHTML = `<span class="rz rz-sari">Önceki çalışması farklı ücret esasında; maaşı girin</span>
+          <br>Bu çalışma ${es} esaslı; ${es} maaşı yazın.`;
+      }
+      U.el('tcBilgi').innerHTML = gecmisHtml(o.gecmis, c, true, o.esasFarkli);
       maasNotu();
     });
 
@@ -368,14 +378,15 @@
   }
 
   /* Kişinin grup / çalışma geçmişi; yeni personelde yeniden giriş ve aynı yılda başka grup uyarısı */
-  function gecmisHtml(g, c, yeni) {
+  function gecmisHtml(g, c, yeni, esasFarkli) {
     if (!g || !g.length) return '';
     const ayniYilBaska = g.filter(x => x.yil === c.yil && x.id !== c.id);
     const satir = x => `<tr><td>${x.yil}</td><td>${U.esc(x.grup_adi)}</td><td>${U.esc(x.ad)}${x.durum === 'ONAYLI' ? ' <span class="rz rz-yesil">onaylı</span>' : ''}${x.id === c.id ? ' <span class="rz rz-mavi">bu çalışma</span>' : ''}</td>
       <td>${x.giris ? U.tarihGoster(x.giris) : '—'}</td><td>${x.cikis ? U.tarihGoster(x.cikis) : '—'}</td></tr>`;
     return `<h3>Grup geçmişi</h3>
       ${yeni ? `<div class="uyari uyari-bilgi kucuk"><span class="ik">ℹ</span><div>Bu T.C. kayıtlı: bilgileri son çalışmasından dolduruldu
-        ${g.find(x => x.yil < c.yil) ? '(maaş, ' + (c.yil - 1) + ' yılının zamlı maaşı)' : ''}. <strong>Yeniden girişse İşe Giriş tarihini yeni tarih yapın ve İşten Çıkış'ı boşaltın</strong>;
+        ${esasFarkli ? '(maaş hariç: önceki çalışması farklı ücret esasında)'
+          : g.find(x => x.yil < c.yil) ? '(maaş, ' + (c.yil - 1) + ' yılının zamlı maaşı)' : ''}. <strong>Yeniden girişse İşe Giriş tarihini yeni tarih yapın ve İşten Çıkış'ı boşaltın</strong>;
         eski çalışmalar eski tarihlerini korur.</div></div>` : ''}
       ${ayniYilBaska.length ? `<div class="uyari uyari-dikkat kucuk"><span class="ik">⚠</span><div>Bu kişi ${c.yil} yılında
         <strong>${ayniYilBaska.map(x => U.esc(x.grup_adi + ' · ' + x.ad)).join(', ')}</strong> çalışmasında da var; iki grupta birden maliyeti sayılır.

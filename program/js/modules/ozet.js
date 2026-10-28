@@ -4,6 +4,10 @@
 
    Önceki yıl maliyeti ve bütçelenen maliyet bütçe bölümünden gelir,
    elle girilir. Toplam maliyet ve zam rakamları hesaptan gelir.
+
+   Maaş ve zam tutarları çalışmanın ücret esasındadır (net / brüt). "Tümü"de
+   gruplar farklı esastaysa (birlesikHesapla → karisikEsas) maaş ve zam
+   TOPLAMLARI gösterilmez ("—"); maliyetler esastan bağımsızdır, gösterilir.
    ===================================================================== */
 (function () {
   'use strict';
@@ -19,6 +23,12 @@
     };
     const h = API.birlesikHesapla(liste);
     const oz = h.ozet;
+    /* Karışık esasta maaş / zam toplamı ve ondan türeyen oran yazılmaz */
+    const kar = h.karisikEsas, es = kar ? null : (h.esaslar[0] || 'NET');
+    const yok = '<span class="cok-soluk" title="' + B.KARISIK_ESAS + '">—</span>';
+    const mt = v => kar ? yok : B.tl(v);                       // maaş / zam toplamı
+    const mo = (a, b) => kar ? yok : B.oran(b ? a / b : 0);     // toplamlardan oran
+    const esEk = es ? ' (' + B.esas(es) + ')' : '';
     const yazabilir = tek && API.calismaYazilabilir(c) && API.yetkiVar('personel.yaz');
 
     // Yaka bazında toplamlar
@@ -39,7 +49,8 @@
         sira: [s.calisma.grup_kod, API.bolumSira(s.calisma.grup_kod, s.kp.butce_bolumu)] };
       b.kisi++; b.maliyet += s.yil.maliyet; b.zam += s.zam.miktar; b.eski += s.zam.eski;
       b.ocak += s.yil.aylar[1].DM; b.onceki += s.kp.maliyet_onceki || 0;
-      const g = grp[s.calisma.grup_adi] = grp[s.calisma.grup_adi] || { kisi: 0, maliyet: 0, zam: 0, eski: 0, onceki: 0 };
+      const g = grp[s.calisma.grup_adi] = grp[s.calisma.grup_adi] || { kisi: 0, maliyet: 0, zam: 0, eski: 0, onceki: 0,
+        esas: kar ? B.esasKod(s.calisma) : es };
       g.kisi++; g.maliyet += s.yil.maliyet; g.zam += s.zam.miktar; g.eski += s.zam.eski; g.onceki += s.kp.maliyet_onceki || 0;
       for (let m = 1; m <= 12; m++) ayToplam[m] += s.yil.aylar[m].DM;
     });
@@ -57,8 +68,9 @@
       <div class="kart">
         <div class="kart-baslik"><div>
           <h2>${c.yil} · ${U.esc(c.grup_adi)} — Toplam Maliyetler</h2>
-          <div class="kart-aciklama">${U.esc(c.ad)} · ${h.kisiler.length} kişi</div>
+          <div class="kart-aciklama">${U.esc(c.ad)} · ${h.kisiler.length} kişi${es ? ' · ' + B.esasRozet(es) : ''}</div>
         </div></div>
+        ${kar ? B.karisikEsasUyari() : ''}
 
         <div class="izgara izgara-4">
           <div class="stat"><div class="kucuk soluk">${c.yil} toplam maliyet</div>
@@ -66,9 +78,9 @@
           <div class="stat"><div class="kucuk soluk">Bütçelenen</div>
             <div class="gosterge">${t.T.butce ? B.tlDuz(t.T.butce) : '—'}</div>
             ${t.T.butce ? `<div class="kucuk">Fark: ${B.isaretli(t.T.maliyet - t.T.butce)}</div>` : ''}</div>
-          <div class="stat"><div class="kucuk soluk">Toplam zam miktarı (net)</div>
-            <div class="gosterge">${B.tlDuz(t.T.zam)}</div>
-            <div class="kucuk soluk">Oran ${B.oran(t.T.eski ? t.T.zam / t.T.eski : 0)}</div></div>
+          <div class="stat"><div class="kucuk soluk">Toplam zam miktarı${esEk}</div>
+            <div class="gosterge">${kar ? yok : B.tlDuz(t.T.zam)}</div>
+            <div class="kucuk soluk">${kar ? 'Gruplar farklı ücret esasında' : 'Oran ' + B.oran(t.T.eski ? t.T.zam / t.T.eski : 0)}</div></div>
           <div class="stat"><div class="kucuk soluk">Ocak aylık maliyet</div>
             <div class="gosterge">${B.tlDuz(ayToplam[1])}</div></div>
         </div>
@@ -85,16 +97,16 @@
               <td class="num">${girdi('butce_' + y[0], a.butce)}</td>
               <td class="num kalin">${B.tl(a.maliyet)}</td>
               <td class="num">${a.butce ? B.isaretli(a.maliyet - a.butce) : ''}</td>
-              <td class="num">${B.tl(a.zam)}</td>
-              <td class="num">${B.oran(a.eski ? a.zam / a.eski : 0)}</td>
-              <td class="num">${a.kisi ? B.tl(a.zam / a.kisi) : ''}</td></tr>`; }).join('')}
+              <td class="num">${mt(a.zam)}</td>
+              <td class="num">${mo(a.zam, a.eski)}</td>
+              <td class="num">${kar ? yok : a.kisi ? B.tl(a.zam / a.kisi) : ''}</td></tr>`; }).join('')}
             <tr class="toplam-satir"><td>Toplam</td><td class="num">${t.T.kisi}</td>
               <td class="num">${B.tl(t.T.onceki)}</td><td class="num">${B.tl(t.T.butce)}</td>
               <td class="num">${B.tl(t.T.maliyet)}</td>
               <td class="num">${t.T.butce ? B.isaretli(t.T.maliyet - t.T.butce) : ''}</td>
-              <td class="num">${B.tl(t.T.zam)}</td>
-              <td class="num">${B.oran(t.T.eski ? t.T.zam / t.T.eski : 0)}</td>
-              <td class="num">${t.T.kisi ? B.tl(t.T.zam / t.T.kisi) : ''}</td></tr>
+              <td class="num">${mt(t.T.zam)}</td>
+              <td class="num">${mo(t.T.zam, t.T.eski)}</td>
+              <td class="num">${kar ? yok : t.T.kisi ? B.tl(t.T.zam / t.T.kisi) : ''}</td></tr>
           </tbody></table></div>
         <div class="kucuk soluk ust-bosluk">Ortalama zam oranı (kişi ortalaması):
           ${B.oran(t.T.kisi ? t.T.oranTop / t.T.kisi : 0)}.
@@ -104,12 +116,12 @@
       ${tek ? '' : `<div class="kart">
         <div class="kart-baslik"><div><h2>Gruplara Göre</h2></div></div>
         <div class="tablo-sar"><table>
-          <thead><tr><th>Grup</th><th class="num">Kişi</th><th class="num">${c.yil - 1} Maaş (net)</th><th class="num">Zam Miktarı</th>
-            <th class="num">Zam Oranı</th><th class="num">${c.yil} Maaş (net)</th><th class="num">${c.yil - 1} Maliyet</th><th class="num">${c.yil} Maliyet</th><th class="num">Fark</th></tr></thead>
-          <tbody>${Object.keys(grp).map(k => { const g = grp[k]; return `<tr><td class="kalin">${U.esc(k)}</td><td class="num">${g.kisi}</td>
+          <thead><tr><th>Grup</th><th class="num">Kişi</th><th class="num">${c.yil - 1} Maaş${esEk}</th><th class="num">Zam Miktarı</th>
+            <th class="num">Zam Oranı</th><th class="num">${c.yil} Maaş${esEk}</th><th class="num">${c.yil - 1} Maliyet</th><th class="num">${c.yil} Maliyet</th><th class="num">Fark</th></tr></thead>
+          <tbody>${Object.keys(grp).map(k => { const g = grp[k]; return `<tr><td class="kalin">${U.esc(k)}${kar ? ' ' + B.esasRozet(g.esas) : ''}</td><td class="num">${g.kisi}</td>
             <td class="num">${B.tl(g.eski)}</td><td class="num">${B.tl(g.zam)}</td><td class="num">${B.oran(g.eski ? g.zam / g.eski : 0)}</td><td class="num">${B.tl(g.eski + g.zam)}</td>
             <td class="num">${B.tl(g.onceki)}</td><td class="num kalin">${B.tl(g.maliyet)}</td><td class="num">${B.isaretli(g.maliyet - g.onceki)}</td></tr>`; }).join('')}
-          ${toplamSatiri(Object.values(grp), false)}</tbody></table></div>
+          ${toplamSatiri(Object.values(grp), false, kar)}</tbody></table></div>
       </div>`}
 
       <div class="kart">
@@ -124,8 +136,8 @@
       <div class="kart">
         <div class="kart-baslik"><div><h2>Bütçe Bölümlerine Göre</h2></div></div>
         <div class="tablo-sar"><table>
-          <thead><tr><th>Bütçe Bölümü</th><th class="num">Kişi</th><th class="num">${c.yil - 1} Maaş (net)</th>
-            <th class="num">Zam Miktarı</th><th class="num">Zam Oranı</th><th class="num">${c.yil} Maaş (net)</th><th class="num">Ocak Maliyeti</th>
+          <thead><tr><th>Bütçe Bölümü</th><th class="num">Kişi</th><th class="num">${c.yil - 1} Maaş${esEk}</th>
+            <th class="num">Zam Miktarı</th><th class="num">Zam Oranı</th><th class="num">${c.yil} Maaş${esEk}</th><th class="num">Ocak Maliyeti</th>
             <th class="num">${c.yil - 1} Maliyet</th><th class="num">${c.yil} Maliyet</th><th class="num">Fark</th></tr></thead>
           <tbody>${Object.keys(bolum).sort((x, y) => {
               const a = bolum[x].sira, b = bolum[y].sira;
@@ -135,7 +147,7 @@
             <td class="num">${B.tl(b.zam)}</td><td class="num">${B.oran(b.eski ? b.zam / b.eski : 0)}</td><td class="num">${B.tl(b.eski + b.zam)}</td>
             <td class="num">${B.tl(b.ocak)}</td><td class="num">${B.tl(b.onceki)}</td>
             <td class="num kalin">${B.tl(b.maliyet)}</td><td class="num">${B.isaretli(b.maliyet - b.onceki)}</td></tr>`; }).join('')}
-          ${toplamSatiri(Object.values(bolum), true)}
+          ${toplamSatiri(Object.values(bolum), true, kar)}
           </tbody></table></div>
       </div>`;
 
@@ -153,12 +165,15 @@
   }
 
   /* Bölüm / grup tablolarının toplam satırı. Oran = toplam zam / toplam maaş
-     (kişi ortalaması değil — yaka tablosundaki "Zam Oranı" ile aynı tanım). */
-  function toplamSatiri(liste, ocakVar) {
+     (kişi ortalaması değil — yaka tablosundaki "Zam Oranı" ile aynı tanım).
+     karisik: gruplar farklı ücret esasında → maaş / zam toplamları "—" (maliyet toplamı kalır). */
+  function toplamSatiri(liste, ocakVar, karisik) {
     const t = { kisi: 0, eski: 0, zam: 0, ocak: 0, onceki: 0, maliyet: 0 };
     liste.forEach(x => Object.keys(t).forEach(k => { t[k] += x[k] || 0; }));
-    return `<tr class="toplam-satir"><td>Toplam</td><td class="num">${t.kisi}</td><td class="num">${B.tl(t.eski)}</td>
-      <td class="num">${B.tl(t.zam)}</td><td class="num">${B.oran(t.eski ? t.zam / t.eski : 0)}</td><td class="num">${B.tl(t.eski + t.zam)}</td>
+    const yok = '<span class="cok-soluk" title="' + B.KARISIK_ESAS + '">—</span>';
+    const mt = v => karisik ? yok : B.tl(v);
+    return `<tr class="toplam-satir"><td>Toplam</td><td class="num">${t.kisi}</td><td class="num">${mt(t.eski)}</td>
+      <td class="num">${mt(t.zam)}</td><td class="num">${karisik ? yok : B.oran(t.eski ? t.zam / t.eski : 0)}</td><td class="num">${mt(t.eski + t.zam)}</td>
       ${ocakVar ? `<td class="num">${B.tl(t.ocak)}</td>` : ''}<td class="num">${B.tl(t.onceki)}</td>
       <td class="num">${B.tl(t.maliyet)}</td><td class="num">${B.isaretli(t.maliyet - t.onceki)}</td></tr>`;
   }

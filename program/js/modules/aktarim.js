@@ -3,9 +3,15 @@
    personel bilgisini çalışmaya alır
 
    Yeni yıl çalışmasına başlanırken ERP ya da bordro programındaki güncel
-   (gerçekleşen) net maaşlar bu çalışmanın "önceki yıl maaşı" olur; zam
+   (gerçekleşen) maaşlar bu çalışmanın "önceki yıl maaşı" olur; zam
    öngörüsü bunların üzerine uygulanır. Önceki yılın gerçekleşen maliyeti
    de karşılaştırma için buradan gelebilir.
+
+   ÜCRET ESASI: maaş sütunu çalışmanın esasında olmalı. Brüt esaslı bütçede
+   maaş sütunu yalnız başlığında "Brüt" geçiyorsa alınır; net esaslı bütçede
+   başlığında "Brüt" geçen sütun alınmaz (net tutar brüt diye, brüt tutar net
+   diye sessizce okunmasın). API'deki başlık sözlüğüne dokunulmaz; brüt
+   adaylar burada, sözlüğün kopyasına eklenir.
 
    Liste, programdan alınan rapor dosyası (.xlsx / .csv) ya da kopyala-
    yapıştır ile verilir. Doğrudan veritabanı bağlantısı kurulursa yalnız
@@ -17,6 +23,38 @@
   /* Sütun başlığı sözlüğü (alan → olası başlıklar) ve alan adları API'den gelir; kullanıcı
      Tanımlar → İçe Aktarma Başlıkları'ndan değiştirebilir. */
   const sozluk = () => API.aktarimSozluk();
+  const BRUT_ADAY = ['brut maas', 'brüt maaş', 'brut ucret', 'brüt ücret'];
+  const brutMu = c => B.esasKod(c) === 'BRUT';
+  /* Çalışmanın esasına göre sözlük (kopya): brüt esasta maaş adaylarının başına brüt adlar eklenir */
+  function sozlukEsasli(c) {
+    const S = sozluk();
+    const s = Object.assign({}, S.sozluk);
+    if (brutMu(c)) s.maas = BRUT_ADAY.concat((s.maas || []).filter(a => BRUT_ADAY.indexOf(a) < 0));
+    return s;
+  }
+  function etiketEsasli(c) {
+    const e = Object.assign({}, sozluk().etiket);
+    if (brutMu(c)) e.maas = 'Brüt Maaş';
+    return e;
+  }
+  const brutBaslik = h => TO.norm(h).includes('brut');
+  /* Eşleşen maaş sütununu esasa göre denetler (e.sutun yerinde düzeltilir). Kurala uyan başka bir maaş sütunu
+     varsa o alınır (ör. hem "Net Maaş" hem "Brüt Maaş" olan listede brüt bütçe brüt sütunu alır). Dönüş: uyarı ya da null. */
+  function maasEsasDenetle(c, e, S) {
+    const s = e.sutun, b = e.basliklar.map(TO.norm), brut = brutMu(c);
+    const uygun = i => brut ? brutBaslik(b[i]) : !brutBaslik(b[i]);
+    if (s.maas == null || uygun(s.maas)) return null;
+    const ad = S.maas.map(TO.norm);
+    const kullanilan = Object.keys(s).filter(a => a !== 'maas').map(a => s[a]);
+    const aday = b.map((x, i) => i).filter(i => b[i] && kullanilan.indexOf(i) < 0 && uygun(i) &&
+      (ad.indexOf(b[i]) >= 0 || ad.some(a => a.length > 2 && b[i].includes(a))));
+    const red = e.basliklar[s.maas];
+    if (aday.length) { s.maas = aday[0]; return null; }
+    delete s.maas;
+    return brut
+      ? `Bu bütçe brüt esaslı; maaş sütununun başlığında 'Brüt' geçmeli — örn. 'Brüt Maaş'. "${red}" sütunu alınmadı, maaşlar güncellenmeyecek.`
+      : `Brüt maaş sütunu net esaslı bütçeye alınmaz. "${red}" sütunu alınmadı, maaşlar güncellenmeyecek.`;
+  }
 
   let durum = null;   // { calismaId, kaynak, sutun, satirlar, onizleme }
 
@@ -28,11 +66,13 @@
     }
     if (durum && durum.calismaId !== c.id) durum = null;
 
+    const es = B.esas(c), Es = B.esasBas(c);
     kap.innerHTML = `
       <div class="kart">
-        <div class="kart-baslik"><div><h2>Personel İçe Aktarma — ${c.yil} · ${U.esc(c.grup_adi)}</h2>
+        <div class="kart-baslik"><div><h2>Personel İçe Aktarma — ${c.yil} · ${U.esc(c.grup_adi)} ${B.esasRozet(c)}</h2>
           <div class="kart-aciklama">Elinizdeki personel listesini (Excel, CSV ya da ERP / bordro programı çıktısı) bu bütçeye alın.
-            Listedeki net maaşlar bu çalışmanın <strong>${c.yil - 1} maaşı</strong> olur; zam öngörüsü bunun üzerine uygulanır.
+            Listedeki ${es} maaşlar bu çalışmanın <strong>${c.yil - 1} maaşı</strong> olur; zam öngörüsü bunun üzerine uygulanır.
+            ${brutMu(c) ? 'Bu bütçe <strong>brüt esaslı</strong>: maaş sütununun başlığında "Brüt" geçmeli (örn. "Brüt Maaş").' : ''}
             Sütunlar başlık adından tanınır, sıra önemli değildir.</div></div></div>
         <ol class="adimlar">
           <li><strong>Listenizi hazırlayın.</strong> Kendi dosyanızı kullanabilir ya da örnek şablonu indirip doldurabilirsiniz.
@@ -43,12 +83,12 @@
         <div class="izgara izgara-2">
           <div>
             <div class="alan"><label for="dosya">Personel listesi (.xlsx / .csv)</label><input type="file" id="dosya" accept=".xlsx,.csv,.txt"></div>
-            <div class="kucuk soluk">Tanınan başlıklar: ${(E => Object.keys(E).map(k => E[k]).join(', '))(sozluk().etiket)}
+            <div class="kucuk soluk">Tanınan başlıklar: ${(E => Object.keys(E).map(k => E[k]).join(', '))(etiketEsasli(c))}
               (sütun adları Tanımlar → İçe Aktarma Başlıkları'ndan değiştirilebilir).
               Yalnızca T.C. zorunludur; boş sütunlar mevcut bilgiye dokunmaz.</div>
           </div>
           <div class="alan"><label>…ya da Excel'den kopyalayıp yapıştırın (başlık satırıyla birlikte)</label>
-            <textarea id="yapistir" rows="4" placeholder="TC&#9;Ad Soyad&#9;Net Maaş…"></textarea>
+            <textarea id="yapistir" rows="4" placeholder="TC&#9;Ad Soyad&#9;${Es} Maaş…"></textarea>
             <button class="btn btn-ikincil btn-kucuk ust-bosluk" id="yapistirBtn">Yapıştırılanı oku</button></div>
         </div>
         <div id="sonuc">${durum ? onizlemeHtml(c) : ''}</div>
@@ -67,7 +107,8 @@
 
   /* ÖRNEK ŞABLON — ilk sayfa (PERSONEL) yalnız başlıklardır: okuyucu ilk sayfayı alır, şablon olduğu gibi
      yüklenirse kimse eklenmez. Başlıklar programın tanıdığı adlardır (İçe Aktarma Başlıkları değiştirildiyse
-     geçerli sözlükten seçilir). İkinci sayfada sütun açıklamaları ve uydurma örnek satırlar durur. */
+     geçerli sözlükten seçilir). İkinci sayfada sütun açıklamaları ve uydurma örnek satırlar durur.
+     Maaş sütunu çalışmanın esasındadır (brüt esasta "Brüt Maaş"; bkz. sablonSatirlari). */
   const SABLON = [
     ['tc', 'T.C. Kimlik No', 16, 'Zorunlu. 11 hane.', '12345678901'],
     ['ad', 'Ad Soyad', 26, 'Yeni eklenecek kişide zorunlu.', 'ÖRNEK KİŞİ'],
@@ -81,8 +122,12 @@
     ['maas', 'Net Maaş', 14, 'Önceki yılın aylık NET maaşı (TL).', '50000'],
     ['maliyet', 'Gerçekleşen Maliyet', 18, 'Önceki yılın yıllık işveren maliyeti (TL); isteğe bağlı, karşılaştırma için.', ''],
   ];
+  const sablonSatirlari = c => brutMu(c)
+    ? SABLON.map(x => x[0] === 'maas' ? ['maas', 'Brüt Maaş', 14, 'Önceki yılın aylık BRÜT maaşı (TL). Bu bütçe brüt esaslı; başlıkta "Brüt" kalmalı.', '80000'] : x)
+    : SABLON;
   async function sablonIndir(c) {
-    const S = sozluk();
+    const S = { sozluk: sozlukEsasli(c) };
+    const SABLON = sablonSatirlari(c);
     /* Her başlık geçerli sözlükle tanınmalı; tanınmazsa sözlüğün ilk adayı kullanılır */
     const baslik = SABLON.map(x => {
       const e = TO.eslestir([[x[1]]], { [x[0]]: S.sozluk[x[0]] }, []);
@@ -107,6 +152,7 @@
     ac.addRow(['Personel içe aktarma şablonu']).font = { bold: true, size: 13 };
     ac.addRow(['Doldurulacak sayfa: PERSONEL (ilk sayfa). Bu sayfa okunmaz; yalnız açıklama ve örnektir.']);
     ac.addRow(['Yalnız T.C. zorunludur; boş bırakılan sütun programdaki mevcut bilgiye dokunmaz. Sütun sırası önemli değildir.']);
+    ac.addRow([`Ücret esası: ${B.esasBuyuk(c)} — maaş sütununa ${B.esasBuyuk(c)} tutar yazın.`]);
     ac.addRow([]);
     const h = ac.addRow(['Sütun', 'Açıklama', 'Örnek']);
     h.font = { bold: true }; h.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
@@ -120,8 +166,10 @@
   }
 
   function oku(c, ham, kaynak) {
-    const e = TO.eslestir(ham, sozluk().sozluk, ['tc']);
+    const S = sozlukEsasli(c);
+    const e = TO.eslestir(ham, S, ['tc']);
     if (!e) throw new Error('Başlık satırında T.C. sütunu bulunamadı.');
+    const maasUyari = maasEsasDenetle(c, e, S);
     const s = e.sutun, al = (row, a) => s[a] == null ? null : row[s[a]];
     const satirlar = e.veri.map(row => ({
       tc: TO.tc(al(row, 'tc')), ad: al(row, 'ad') ? String(al(row, 'ad')).trim() : null,
@@ -135,7 +183,10 @@
       maliyet: TO.sayi(al(row, 'maliyet')),
     })).filter(r => r.tc.length === 11);
     if (!satirlar.length) throw new Error('Geçerli T.C. içeren satır bulunamadı.');
-    durum = { calismaId: c.id, kaynak: kaynak, sutun: s, basliklar: e.basliklar, satirlar: satirlar, yeni: {} };
+    /* Maaş sütunu alınmadıysa tutarlar API'ye gitmez; alındıysa okunduğu esas beyan edilir */
+    if (s.maas == null) satirlar.forEach(r => { r.maas = null; });
+    durum = { calismaId: c.id, kaynak: kaynak, sutun: s, basliklar: e.basliklar, satirlar: satirlar, yeni: {}, maasUyari: maasUyari,
+              maasEsasi: brutMu(c) ? 'BRUT' : 'NET' };
     APP.tazele();
   }
 
@@ -145,13 +196,13 @@
     const baska = API.tcBaskaGrupta(c.yil, c.grup_kod, durum.satirlar.map(r => r.tc));
     const degisen = [], yeni = [], ayni = [];
     const dosyada = {};
-    const ETIKET = sozluk().etiket;
+    const ETIKET = etiketEsasli(c), Es = B.esasBas(c);
     durum.satirlar.forEach(r => {
       dosyada[r.tc] = 1;
       const k = mevcut[r.tc];
       if (!k) { yeni.push(r); return; }
       const f = [];
-      if (r.maas != null && Math.abs(r.maas - (k.maas_eski || 0)) > 0.004) f.push(['Net maaş', B.tlDuz(k.maas_eski, 2), B.tlDuz(r.maas, 2)]);
+      if (r.maas != null && Math.abs(r.maas - (k.maas_eski || 0)) > 0.004) f.push([Es + ' maaş', B.tlDuz(k.maas_eski, 2), B.tlDuz(r.maas, 2)]);
       if (r.maliyet != null && Math.abs(r.maliyet - (k.maliyet_onceki || 0)) > 0.004) f.push(['Maliyet', B.tlDuz(k.maliyet_onceki || 0), B.tlDuz(r.maliyet)]);
       if (r.ad && U.bicimAd(r.ad) !== k.ad_soyad) f.push(['Ad', k.ad_soyad, r.ad]);
       if (r.ise_giris && r.ise_giris !== k.ise_giris) f.push(['İşe giriş', U.tarihGoster(k.ise_giris), U.tarihGoster(r.ise_giris)]);
@@ -166,8 +217,9 @@
     return `
       <div class="ayrac"></div>
       <div class="uyari uyari-bilgi"><span class="ik">ℹ</span><div><strong>${U.esc(durum.kaynak)}</strong>: ${durum.satirlar.length} satır okundu.
-        Tanınan sütunlar: ${Object.keys(durum.sutun).map(a => `<span class="rz rz-mavi">${sozluk().etiket[a]} ← ${U.esc(durum.basliklar[durum.sutun[a]])}</span>`).join(' ')}
-        ${durum.sutun.maas == null ? '<br><strong>Net maaş sütunu tanınmadı</strong> — maaşlar güncellenmeyecek.' : ''}</div></div>
+        Tanınan sütunlar: ${Object.keys(durum.sutun).map(a => `<span class="rz rz-mavi">${ETIKET[a]} ← ${U.esc(durum.basliklar[durum.sutun[a]])}</span>`).join(' ')}
+        ${durum.sutun.maas == null && !durum.maasUyari ? `<br><strong>${Es} maaş sütunu tanınmadı</strong> — maaşlar güncellenmeyecek.` : ''}</div></div>
+      ${durum.maasUyari ? `<div class="uyari uyari-dikkat" id="maasEsasUyari"><span class="ik">⚠</span><div><strong>${U.esc(durum.maasUyari)}</strong></div></div>` : ''}
       <div class="izgara izgara-4 ust-bosluk">
         <div class="stat"><div class="kucuk soluk">Güncellenecek</div><div class="gosterge">${degisen.length}</div></div>
         <div class="stat"><div class="kucuk soluk">Değişiklik yok</div><div class="gosterge">${ayni.length}</div></div>
@@ -186,7 +238,7 @@
         ${C.tablo([
           { baslik: '', deger: x => `<input type="checkbox" data-yeni="${x.tc}" ${durum.yeni[x.tc] ? 'checked' : ''}>` },
           { baslik: 'T.C.', sinif: 'mono', deger: x => B.tc(x.tc) }, { baslik: 'Ad Soyad', deger: x => U.esc(x.ad || '') },
-          { baslik: 'Bölüm', deger: x => U.esc(x.bolum || '') }, { baslik: 'Net Maaş', sinif: 'num', deger: x => B.tl(x.maas) },
+          { baslik: 'Bölüm', deger: x => U.esc(x.bolum || '') }, { baslik: Es + ' Maaş', sinif: 'num', deger: x => B.tl(x.maas) },
           { baslik: '', deger: x => baska[x.tc] ? '<span class="rz rz-sari">bu yıl başka bir grupta kayıtlı</span>' : '' },
         ], yeni)}` : ''}
       ${eksik.length ? `<h3 class="ust-bosluk">Çalışmada olup dosyada olmayanlar</h3>
@@ -213,11 +265,12 @@
       const yeniSay = Object.keys(durum.yeni).filter(k => durum.yeni[k]).length;
       const ok = await C.onay({ baslik: 'Personel İçe Aktarma',
         mesaj: `${durum.onizleme.degisen.length} kişi güncellenecek${yeniSay ? `, ${yeniSay} kişi eklenecek` : ''}.`,
-        detay: 'Net maaşlar bu çalışmanın önceki yıl maaşı olur; zam ve maliyet yeniden hesaplanır. Önce yedek almanız önerilir.',
+        detay: (durum.sutun.maas == null ? 'Maaşlar güncellenmez (maaş sütunu alınmadı). '
+                : B.esasBas(c) + ' maaşlar bu çalışmanın önceki yıl maaşı olur; ') + 'zam ve maliyet yeniden hesaplanır. Önce yedek almanız önerilir.',
         evetYazi: 'Uygula' });
       if (!ok) return;
       try {
-        const r = API.erpAktar(c.id, durum.satirlar, durum.yeni);
+        const r = API.erpAktar(c.id, durum.satirlar, durum.yeni, durum.maasEsasi);
         U.bildir(`${r.guncel} kişi güncellendi, ${r.eklenen} kişi eklendi.`, 'basari');
         durum = null; APP.git('personel');
       } catch (e) { U.bildir(e.message, 'hata'); }

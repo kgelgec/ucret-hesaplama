@@ -12,7 +12,9 @@
       büyük / ortanca. Zam kademesi ÖNCEKİ YIL maaşına uygulandığı için
       varsayılan esas önceki yıl maaşıdır; mevcut kademe eşikleri yanında
       gösterilir.
-   Tutarlar NET maaştır.
+   Tutarlar çalışmanın ücret esasındaki maaştır (net ya da brüt; kart başlığında
+   yazar). Her grup kendi kartında, kendi esasıyla gösterilir — gruplar arası
+   maaş toplamı yapılmaz; "Tümü"de esaslar farklıysa üstte uyarı çıkar.
    ===================================================================== */
 (function () {
   'use strict';
@@ -122,7 +124,7 @@
       <div class="kart">
         <div class="kart-baslik"><div>
           <h2>${c.yil} · ${U.esc(c.grup_adi)} — Maaş Dağılımı</h2>
-          <div class="kart-aciklama">${kisiler.length} kişi · esas: <strong>${esasAd}</strong> (net) ·
+          <div class="kart-aciklama">${kisiler.length} kişi · esas: <strong>${esasAd}</strong> (${B.esas(c)}) · ${B.esasRozet(c)} ·
             aralıklar <strong>${sabit ? 'sabit' : 'otomatik'}</strong>${sabit ? '' : ' (bu grubun maaşlarına göre)'}
             ${disarida.length ? ` · listeye alınmayan <strong>${disarida.length}</strong> kişi (aşağıda)` : ''}</div></div>
           ${API.yetkiVar('parametre.yaz') ? `<button class="btn btn-ikincil btn-kucuk" data-aralik="${U.esc(c.grup_kod)}" data-cal="${c.id}">Aralıkları Düzenle</button>` : ''}
@@ -190,7 +192,10 @@
 
   function ciz(kap) {
     const liste = APP.calismalar();
+    /* "Tümü"de gruplar farklı ücret esasındaysa kartlar yan yana karşılaştırılamaz (net ve brüt maaş) */
+    const karisik = new Set(liste.map(c => B.esasKod(c))).size > 1;
     kap.innerHTML = `
+      ${karisik ? B.karisikEsasUyari() : ''}
       <div class="kart">
         <div class="suzgec-satir">
           <label class="satir">Esas maaş

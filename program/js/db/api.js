@@ -493,13 +493,13 @@ window.API = (function () {
     { anahtar: 'arge_gv_esik',   ad: 'AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı', birim: 'oran', vars: 0.8 },
     { anahtar: 'mesai_fm1_kat',  ad: 'Hafta içi fazla mesai katsayısı', birim: '× saat ücreti', vars: 1.5 },
     { anahtar: 'mesai_fm2_kat',  ad: 'Hafta sonu / tatil mesaisi katsayısı', birim: '× saat ücreti', vars: 2 },
-    { anahtar: 'mesai_gun_saat', ad: 'Saat ücretinde günlük çalışma saati (net maaş / 30 / saat)', birim: 'saat', vars: 7.5 },
+    { anahtar: 'mesai_gun_saat', ad: 'Saat ücretinde günlük çalışma saati (maaş / 30 / saat)', birim: 'saat', vars: 7.5 },
     { anahtar: 'zam_yuvarla',    ad: 'Zam öngörüsü yuvarlama adımı (çalışmaya özel de girilebilir)', birim: 'TL', vars: 10 },
   ];
   /* Zam öngörüsü kademesi — varsayılanlar yalnızca başlangıç değeridir; Parametreler'den değiştirilir */
   const ZAM_TANIM = [
-    { anahtar: 'alt_esik', ad: 'Alt eşik (net)',   vars: 50000 },
-    { anahtar: 'ust_esik', ad: 'Üst eşik (net)',   vars: 100000 },
+    { anahtar: 'alt_esik', ad: 'Alt eşik',   vars: 50000 },
+    { anahtar: 'ust_esik', ad: 'Üst eşik',   vars: 100000 },
     { anahtar: 'ust_oran', ad: 'Alt eşiğin altındaki oran', vars: 0.30 },
     { anahtar: 'alt_oran', ad: 'Üst eşiğin üstündeki oran', vars: 0.25 },
   ];
@@ -767,9 +767,11 @@ window.API = (function () {
       onbellekTemizle();
       return k.id;
     }
+    if (k.ucret_esas != null && k.ucret_esas !== 'NET' && k.ucret_esas !== 'BRUT') throw new Error('Ücret esası NET ya da BRUT olmalı.');
     const r = db.calistir(`INSERT INTO calisma (yil, grup_kod, ad, durum, zam_kademe, zam_performans,
                              aciklama, olusturma) VALUES (?,?,?,?,?,?,?,?)`,
                           [k.yil, k.grup_kod, ad, 'TASLAK', 1, 0, k.aciklama || null, U.simdi()]);
+    ucretEsasiYazIc(r.sonId, k.ucret_esas);
     log('EKLE', 'calisma', r.sonId, k.yil + ' ' + k.grup_kod);
     return r.sonId;
   }
@@ -815,9 +817,36 @@ window.API = (function () {
     db.tumu(`SELECT anahtar, deger FROM calisma_ayar WHERE calisma_id = ?`, [id]).forEach(r => { o[r.anahtar] = r.deger; });
     return o;
   }
+  /* ÜCRET ESASI — çalışma ayarı 'ucret.esas': 'BRUT' ya da yok (= NET). Güvenlik kuralları:
+     · personeli olan çalışmanın esası değişmez (net ↔ brüt dönüşümü aydan aya değiştiği için kesin
+       karşılığı yoktur; tutarların sessizce yanlış anlamda okunmasındansa değişiklik engellenir),
+     · yeni yıl / kopya / revize kaynağın esasını devralır (önceki yıl maaşı ile yeni maaş hep aynı esasta),
+     · esası farklı çalışmalar arasında kişi taşınmaz, önceki yıl maaşı ön doldurulmaz. */
+  function ucretEsasi(id) {
+    return db.deger(`SELECT deger FROM calisma_ayar WHERE calisma_id = ? AND anahtar = 'ucret.esas'`, [id]) === 'BRUT' ? 'BRUT' : 'NET';
+  }
+  /* Esası bağlayan tutar var mı: bütçe satırı ya da (satırı silinmiş kişiden kalmış olabilecek) aylık girdi */
+  function esasBagli(id) {
+    return !!(db.deger(`SELECT COUNT(*) FROM calisma_personel WHERE calisma_id = ?`, [id]) ||
+              db.deger(`SELECT COUNT(*) FROM aylik_girdi WHERE calisma_id = ?`, [id]));
+  }
+  function ucretEsasiBagli(id) { calismaOkuIste(id); return esasBagli(id); }
+  function ucretEsasiYazIc(id, esas) {
+    if (esas === 'BRUT') db.calistir(`INSERT OR REPLACE INTO calisma_ayar (calisma_id, anahtar, deger) VALUES (?, 'ucret.esas', 'BRUT')`, [id]);
+    else db.calistir(`DELETE FROM calisma_ayar WHERE calisma_id = ? AND anahtar = 'ucret.esas'`, [id]);
+  }
   /* degerler = { anahtar: deger | null }; null ya da '' = kaldır (yılın değerine dön) */
   function calismaAyarYaz(id, degerler) {
     calismaYazIste(id, 'personel.yaz');
+    if ('ucret.esas' in degerler) {
+      const v = degerler['ucret.esas'];
+      if (v != null && v !== '' && v !== 'NET' && v !== 'BRUT') throw new Error('Ücret esası NET ya da BRUT olmalı.');
+      const yeni = v === 'BRUT' ? 'BRUT' : 'NET';
+      if (yeni !== ucretEsasi(id) && esasBagli(id))
+        throw new Error('Tutar girilmiş (personeli ya da aylık girdisi olan) bütçe çalışmasının ücret esası değiştirilemez: ' +
+                        'girilmiş tutarlar öbür esasta yanlış okunur. Esası değiştirmek için boş bir çalışma açın.');
+      degerler = Object.assign({}, degerler, { 'ucret.esas': yeni === 'BRUT' ? 'BRUT' : null });
+    }
     db.islem(() => Object.keys(degerler).forEach(k => {
       const v = degerler[k];
       if (v == null || v === '') db.calistir(`DELETE FROM calisma_ayar WHERE calisma_id = ? AND anahtar = ?`, [id, k]);
@@ -904,7 +933,7 @@ window.API = (function () {
   }
   /* Yeni personel formu için: kayıtlı kişinin son bilgileri. Son çalışma önceki yıldansa, o yılın
      ZAMLI maaşı bu yılın "önceki yıl maaşı" olur (yeni yıl aktarımındaki gibi). */
-  function personelOnDoldur(tc, yil) {
+  function personelOnDoldur(tc, yil, hedefId) {
     const p = personelGetir(tc);
     if (!p) return null;
     const g = personelGecmis(tc);
@@ -918,23 +947,29 @@ window.API = (function () {
           const h = calismaHesapla(son.id).kisiler.find(x => x.kp.tc_kimlik_no === tc);
           if (h) { satir.maas_eski = h.zam.yeni; satir.maliyet_onceki = h.yil.maliyet; }
         } catch (e) { }
+        /* Önceki çalışma başka ücret esasındaysa maaş taşınmaz (net tutar brüt diye okunmasın) */
+        if (hedefId && ucretEsasi(son.id) !== ucretEsasi(hedefId)) { satir.maas_eski = null; satir.esasFarkli = true; }
         satir.duzeltme = 0; satir.performans_puani = null; satir.performans_carpani = null;
       }
     }
-    return { personel: p, gecmis: g, son: son, satir: satir };
+    return { personel: p, gecmis: g, son: son, satir: satir, esasFarkli: !!(satir && satir.esasFarkli) };
   }
   /* GRUP DEĞİŞTİRME: kişi, aynı yılın başka bir grubunun çalışmasına BÜTÜN bilgileriyle taşınır
      (bütçe satırı, aylık girdiler, performans değerlendirmesi) ve bu çalışmadan çıkar.
      İki çalışma da taslak olmalı — onaylı çalışma kilitlidir, etkilenmez. */
   function tasimaHedefleri(id) {
     const c = calismaGetir(id);
-    return calismaListe().filter(x => x.yil === c.yil && x.grup_kod !== c.grup_kod && x.durum !== 'ONAYLI' && grupYazabilir(x.grup_kod));
+    const esas = ucretEsasi(id);
+    return calismaListe().filter(x => x.yil === c.yil && x.grup_kod !== c.grup_kod && x.durum !== 'ONAYLI' && grupYazabilir(x.grup_kod)
+                                      && ucretEsasi(x.id) === esas);
   }
   function calismaPersonelTasi(kaynakId, tc, hedefId, butceBolumu) {
     const k = calismaYazIste(kaynakId, 'personel.yaz');
     const h = calismaYazIste(hedefId, 'personel.yaz');
     if (k.yil !== h.yil) throw new Error('Taşıma aynı yılın çalışmaları arasında yapılır.');
     if (kaynakId === hedefId) return;
+    if (ucretEsasi(kaynakId) !== ucretEsasi(hedefId))
+      throw new Error('Ücret esasları farklı (net / brüt) çalışmalar arasında kişi taşınamaz.');
     const row = db.tek(`SELECT * FROM calisma_personel WHERE calisma_id = ? AND tc_kimlik_no = ?`, [kaynakId, tc]);
     if (!row) throw new Error('Kişi bu çalışmada yok.');
     if (db.deger(`SELECT COUNT(*) FROM calisma_personel WHERE calisma_id = ? AND tc_kimlik_no = ?`, [hedefId, tc]))
@@ -1064,10 +1099,17 @@ window.API = (function () {
     const hedef = calismaYazIste(hedefId, 'personel.yaz');
     const kaynak = calismaGetir(kaynakId);
     if (kaynak.grup_kod !== hedef.grup_kod) throw new Error('Kaynak ve hedef aynı grupta olmalı.');
+    /* Ücret esası kaynaktan gelir; hedefte tutar varken esas farklıysa aktarılmaz. Esas, satırlarla aynı
+       işlemde yazılır: kopya yarıda kalırsa hedef eski esasında kalır. */
+    const esasDegisir = ucretEsasi(kaynakId) !== ucretEsasi(hedefId);
+    if (esasDegisir && esasBagli(hedefId))
+      throw new Error('Kaynak ve hedef çalışmanın ücret esası farklı (net / brüt); aktarılamaz.');
+    const esasYaz = () => { if (esasDegisir) ucretEsasiYazIc(hedefId, ucretEsasi(kaynakId)); };
     let n = 0;
     if (tur === 'KOPYA') {
       const sut = CP_ALANLAR.join(',');
       db.islem(() => {
+        esasYaz();
         n = db.calistir(`INSERT OR IGNORE INTO calisma_personel (calisma_id, tc_kimlik_no, ${sut})
                          SELECT ?, tc_kimlik_no, ${sut} FROM calisma_personel WHERE calisma_id = ?`, [hedefId, kaynakId]).degisen;
         db.calistir(`INSERT OR IGNORE INTO aylik_girdi (calisma_id, tc_kimlik_no, ay, alan, deger)
@@ -1087,7 +1129,7 @@ window.API = (function () {
         for (let m = 2; m <= 12; m++) if (o[m] && o[m][alan] !== undefined) v = o[m][alan];
         return v;
       };
-      db.islem(() => h.kisiler.forEach(s => {
+      db.islem(() => { esasYaz(); h.kisiler.forEach(s => {
         const k = s.kp;
         /* Çıkış tarihi personel kartından GÜNCEL okunur (hesap önbelleğinden ya da onaylı
            çalışmanın dondurulmuş tarihinden değil): onaydan sonra ayrılan da aktarılmaz. */
@@ -1107,7 +1149,7 @@ window.API = (function () {
            Number(son(k.tc_kimlik_no, 'ozurlu_indirimi', k.ozurlu_indirimi)) || 0, son(k.tc_kimlik_no, 'bes', k.bes),
            son(k.tc_kimlik_no, 'kanun', k.kanun), Number(son(k.tc_kimlik_no, 'gv_tesvik', k.gv_tesvik)) || 0,
            Number(son(k.tc_kimlik_no, 'yol', k.yol)) || 0, k.not_metni]).degisen;
-      }));
+      }); });
     }
     /* Grubun ayarları (zam kademesi) yeni çalışmaya da geçer. AR-GE günü yeni yıla taşınmaz: o yılın kararıdır,
        kişiye Aylık Girdiler'den girilir. Eksik gün öngörüsü ('gun.*') ve teşvik oranları (05510 hariç: işyerinin
@@ -1127,10 +1169,12 @@ window.API = (function () {
      ERP'den ya da bordro programından alınan Excel / yapıştırılmış liste ile;
      doğrudan veritabanı bağlantısı kurulursa yalnızca bu işlevin kaynağı değişir.
      satir = { tc, ad, ise_giris, isten_ayrilis, bolum, ekip, gorev,
-               maas (önceki yıl net maaş), yaka, butce_bolumu,
+               maas (önceki yıl maaşı, çalışmanın ücret esasında), yaka, butce_bolumu,
                maliyet (önceki yıl gerçekleşen maliyet) }
      Boş gelen alana dokunulmaz.
      yeniEklensin: { tc: true } — çalışmada olmayıp eklenecekler
+     maasEsasi: 'NET' | 'BRUT' — dosyadaki maaş tutarlarının esası. Satırlarda maaş varsa zorunludur ve
+                çalışmanın ücret esasıyla aynı olmalıdır (net tutar brüt bütçeye ya da tersi yazılmasın).
      --------------------------------------------------------------- */
   /* Başlık sözlüğü: alan → dosyadaki olası sütun başlıkları. Varsayılanlar aşağıda; kullanıcı
      Tanımlar → İçe Aktarma Başlıkları'ndan alan başına listeyi değiştirebilir (sistem_bilgi 'aktarim.sozluk', JSON). */
@@ -1142,7 +1186,7 @@ window.API = (function () {
     ['bolum', 'Bölüm', ['bolum', 'bölüm', 'departman', 'birim']],
     ['ekip', 'Ekip', ['ekip']],
     ['gorev', 'Görev', ['gorev', 'görev', 'pozisyon', 'unvan', 'meslek']],
-    ['maas', 'Net Maaş', ['net maas', 'net maaş', 'net ucret', 'net ücret', 'maas', 'maaş', 'ucret', 'ücret']],
+    ['maas', 'Maaş', ['net maas', 'net maaş', 'net ucret', 'net ücret', 'maas', 'maaş', 'ucret', 'ücret']],
     ['yaka', 'Yaka', ['yaka', 'm b', 'm / b', 'm/b']],
     ['butce_bolumu', 'Bütçe Bölümü', ['butce bolumu', 'bütçe bölümü', 'masraf merkezi']],
     ['maliyet', 'Gerçekleşen Maliyet', ['gerceklesen maliyet', 'gerçekleşen maliyet', 'toplam maliyet', 'yillik maliyet', 'yıllık maliyet', 'maliyet']],
@@ -1174,8 +1218,12 @@ window.API = (function () {
     log('KAYDET', 'sistem_bilgi', 'aktarim.sozluk', Object.keys(kayit).length + ' alan değiştirilmiş');
   }
 
-  function erpAktar(id, satirlar, yeniEklensin) {
+  function erpAktar(id, satirlar, yeniEklensin, maasEsasi) {
     const c = calismaYazIste(id, 'personel.yaz');
+    if (satirlar.some(r => r.maas != null && r.maas !== '') && maasEsasi !== ucretEsasi(id))
+      throw new Error(maasEsasi === 'NET' || maasEsasi === 'BRUT'
+        ? `Maaşlar ${maasEsasi === 'BRUT' ? 'brüt' : 'net'}, çalışma ${ucretEsasi(id) === 'BRUT' ? 'brüt' : 'net'} esaslı; aktarılamaz.`
+        : 'Maaş tutarlarının esası (net / brüt) belirtilmeli.');
     let guncel = 0, eklenen = 0;
     const bol = butceBolumuListe(c.grup_kod).map(b => b.ad);
     db.islem(() => satirlar.forEach(r => {
@@ -1247,7 +1295,7 @@ window.API = (function () {
   const AYLIK_ETIKET = {
     hesap_turu: 'Hesaplama türü', kanun: 'Kanun türü', sakatlik_derece: 'Sakatlık derecesi',
     ozurlu_indirimi: 'Özürlü indirimi', bes: 'BES', gv_tesvik: 'GV teşvik oranı', yol: 'Yol parası',
-    ayni: 'Net ayni yardım', prim: 'Prim ve diğer ödemeler', fm1: 'Hafta içi mesai (saat)',
+    ayni: 'Ayni yardım', prim: 'Prim ve diğer ödemeler', fm1: 'Hafta içi mesai (saat)',
     fm2: 'Hafta sonu mesai (saat)', yakit: 'Yakıt yardımı', calisilan_gun: 'Çalışılan gün', arge_gun: 'AR-GE gün',
   };
 
@@ -1557,7 +1605,9 @@ window.API = (function () {
       const o = calismaOzetOku(c.id);
       Object.keys(o).forEach(k => { if (o[k] != null) ozet[k] = (ozet[k] || 0) + Number(o[k]); });
     });
-    return { kisiler: kisiler, ozet: ozet };
+    /* Esası farklı çalışmaların MAAŞ tutarları toplanmamalı (maliyetler esastan bağımsızdır) */
+    const esaslar = [...new Set(calismaListesi.map(c => ucretEsasi(c.id)))];
+    return { kisiler: kisiler, ozet: ozet, esaslar: esaslar, karisikEsas: esaslar.length > 1 };
   }
 
   /* Bir çalışmanın bütün hesabı. Önbellekli; veri yazan her işlem önbelleği temizler.
@@ -1570,6 +1620,7 @@ window.API = (function () {
     const anahtar = id + (secenek.dilimler ? ':d' : '');
     if (!secenek.tazele && hesapOnbellek[anahtar]) return hesapOnbellek[anahtar];
     const P = hesapParametre(c.yil, c.durum === 'ONAYLI' ? calismaParametreAnlik(id) : null);
+    P.ucretEsasi = ucretEsasi(id);
     if (secenek.dilimler) {
       P.dilimler = secenek.dilimler;
       Object.assign(P, HESAP.parametreHazirla(Object.assign({}, P, { dilimler: secenek.dilimler })));
@@ -1644,7 +1695,7 @@ window.API = (function () {
       const yil = HESAP.yilHesapla(P, k, m => aylikGirdiler[m]);
       return { kp: kp, zam: zam, yil: yil, girdi: aylikGirdiler };
     });
-    const sonuc = { calisma: c, P: P, kisiler: kisiler };
+    const sonuc = { calisma: c, P: P, kisiler: kisiler, ucretEsasi: P.ucretEsasi };
     hesapOnbellek[anahtar] = sonuc;
     return sonuc;
   }
@@ -1766,7 +1817,7 @@ window.API = (function () {
     parametreDurumu, ongoruHesapla, ongoruUygula, parametreDurumYaz, yilOnayliMi,
 
     calismaListe, calismaGetir, calismaKaydet, calismaSil, calismaOzetOku, calismaOzetYaz,
-    calismaAyarOku, calismaAyarYaz, calismaZamKademe,
+    calismaAyarOku, calismaAyarYaz, calismaZamKademe, ucretEsasi, ucretEsasiBagli,
 
     personelGetir, calismaPersonelListe, calismaPersonelGetir, calismaPersonelKaydet,
     calismaPersonelAlanYaz, calismaPersonelSil, calismaPersonelKopyala, erpAktar, aktarimSozluk, aktarimSozlukYaz, tcBaskaGrupta,

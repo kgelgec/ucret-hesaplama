@@ -10,7 +10,8 @@
    - "Grup" bütçenin tutulduğu birimdir (örn. Ofis, Üretim); gruplar
      Tanımlar ekranından açılır. "Çalışma" bir grubun bir yıllık
      bütçe/zam çalışmasıdır (örn. 2026 · Ofis).
-   - Tutarlar NET'tir; brüt ve maliyet hesap motorunda
+   - Tutarlar çalışmanın ücret esasındadır (calisma_ayar 'ucret.esas':
+     yoksa NET, 'BRUT' ise brüt); öbür taraf ve maliyet hesap motorunda
      (js/core/hesap.js) üretilir, veritabanında saklanmaz.
    - Parametreler YIL bazındadır; yeni yıl açıldığında önceki yıldan
      kopyalanır ve yalnızca değişenler düzeltilir.

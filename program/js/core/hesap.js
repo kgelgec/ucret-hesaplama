@@ -9,9 +9,15 @@
      k  — kişinin yıllık bilgisi (yaka, giriş/çıkış ayı, maaşlar…)
      g  — kişinin o ayki girdileri (hesap türü, kanun, mesai, prim…)
 
-   NETTEN BRÜTE: brüt kendi kendisine bağlıdır
-   (BB = net + SGK(BB) + GV(BB) + DV(BB)); eşitlik, değişim 1e-9'un
-   altına inene kadar tekrar edilerek (sabit nokta) çözülür.
+   ÜCRET ESASI (çalışma ayarı 'ucret.esas' → P.ucretEsasi):
+   NET (varsayılan) — girilen maaş ve ek ödemeler NET'tir. Brüt kendi
+     kendisine bağlıdır (BB = net + SGK(BB) + GV(BB) + DV(BB)); eşitlik,
+     değişim 1e-9'un altına inene kadar tekrar edilerek (sabit nokta) çözülür.
+   BRUT — girilen maaş ve ek ödemeler BRÜT'tür. Brütler doğrudan girdidir;
+     aynı kesinti formülleri bir kez uygulanır ve net (DD) bulunur. Fazla
+     mesai brüt saat ücretinden hesaplanır; ayni yardımın vergisi girilen
+     brüt tutarın içinden düşer. Kesinti, teşvik, işveren payı ve maliyet
+     formülleri iki esasta aynıdır.
 
    KURALLAR
      a. Giriş öncesi / çıkış sonrası ayda maaş ve bütün ek ödemeler
@@ -30,8 +36,8 @@
         girmez; BES tavanı sigorta günüyle.
      h. SGK prim matrahı asgari ücret tabanının altına inmez.
      i. Yakıt yardımının damga vergisi yılın damga oranıyla.
-     Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur): saat ücreti =
-     net maaş / 30 / günlük saat; FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri
+     Mesai, çalışmanın ücret esasındaki maaştan hesaplanır: saat ücreti =
+     maaş / 30 / günlük saat (net esasta net, brüt esasta brüt); FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri
      yılın katsayılarıyla çarpılır (Parametreler → Genel).
    ===================================================================== */
 window.HESAP = (function () {
@@ -137,8 +143,9 @@ window.HESAP = (function () {
     const zamli = k.zamAyi <= m;
     const pasifSifir = !aktif;                     // (a) çalışmadığı ayda ek ödemeler de 0
 
+    const brutKip = P.ucretEsasi === 'BRUT';
     const r = {};
-    r.AM = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0;       // NET MAAŞ
+    r.AM = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0;       // MAAŞ (net; brüt esasta brüt)
     const AF = g.ozurluIndirimi || 0;
     /* Kişiye AR-GE günü girilmemişse çalışmanın AR-GE günü, yalnız GV teşviki eşiğin (vars. %80) üstündekilere */
     const argeEsik = P.argeEsik == null ? 0.8 : P.argeEsik;
@@ -158,6 +165,7 @@ window.HESAP = (function () {
     const istDV = istVar ? P.istDV[m] * istOran : 0;
     const istMatrahDV = P.istMatrahDV[m] * istOran;
 
+    /* AS…BA girilen esastadır (net esasta net, brüt esasta brüt tutarlar) */
     r.AS = hata0(r.AM / 30 * UG) + AO;                           // TOPLAM ÜCRET ÖDEMESİ
     const saat = P.gunlukSaat || 7.5;
     const kat1 = P.mesaiKat1 == null ? 1.5 : P.mesaiKat1, kat2 = P.mesaiKat2 == null ? 2 : P.mesaiKat2;
@@ -196,8 +204,10 @@ window.HESAP = (function () {
        tüketmediyse artan kısım bu kaleme düşer (BV, CD, CO, CE, CP, CR). */
     function artakalan(onceki, bu) { return pos(onceki < 0 ? bu + onceki : bu); }
 
-    // Döngüsel değişkenler: brüt ücret, brüt mesai, brüt ayni, brüt ek ödeme, ek ödeme-2
+    // Döngüsel değişkenler: brüt ücret, brüt mesai, brüt ayni, brüt ek ödeme, ek ödeme-2.
+    // Brüt esasta hepsi girdidir ve döngüde değişmez (ilk turda biter); sakatlık etkisi AN yoktur.
     let BB = 0, BM = 0, BX = 0, CF = 0, CQ = 0, AN = 0;
+    if (brutKip) { BB = netUcret; BM = r.AV; BX = AW; CF = r.AZ - AO; CQ = AO; }
     let s = {};
     for (let tur_ = 0; tur_ < 2000; tur_++) {
       s = {};
@@ -243,13 +253,13 @@ window.HESAP = (function () {
       // --- Ek ödeme 2 (yakıt yardımı): yalnızca damga ---
       s.CR = dvVar ? artakalan(dvE, hata0(CQ * dvO)) : 0;
       // --- Sakatlık indiriminin vergi etkisi, çalışana verilir (AN) ---
-      const yeniAN = r.AM === 0 ? 0 : hata0(dilimOrani(s.CK, D) * AF / 30 * UG);
+      const yeniAN = brutKip || r.AM === 0 ? 0 : hata0(dilimOrani(s.CK, D) * AF / 30 * UG);
 
-      const yBB = hata0(netUcret + s.BC + s.BD + s.BK + s.BL + yeniAN);
-      const yBM = hata0(r.AV + s.BN + s.BO + s.BV + s.BW);
-      const yBX = hata0(AW + s.CD + s.CE);
-      const yCF = hata0(r.AZ - AO + s.CG + s.CH + s.CO + s.CP);
-      const yCQ = hata0(AO + s.CR);
+      const yBB = brutKip ? BB : hata0(netUcret + s.BC + s.BD + s.BK + s.BL + yeniAN);
+      const yBM = brutKip ? BM : hata0(r.AV + s.BN + s.BO + s.BV + s.BW);
+      const yBX = brutKip ? BX : hata0(AW + s.CD + s.CE);
+      const yCF = brutKip ? CF : hata0(r.AZ - AO + s.CG + s.CH + s.CO + s.CP);
+      const yCQ = brutKip ? CQ : hata0(AO + s.CR);
       const fark = Math.abs(yBB - BB) + Math.abs(yBM - BM) + Math.abs(yBX - BX) +
                    Math.abs(yCF - CF) + Math.abs(yCQ - CQ) + Math.abs(yeniAN - AN);
       BB = yBB; BM = yBM; BX = yBX; CF = yCF; CQ = yCQ; AN = yeniAN;
@@ -275,7 +285,9 @@ window.HESAP = (function () {
           ? (besMatrah < tavan ? besMatrah * P.besOrani : tavan * P.besOrani)
           : (besMatrah / besGun < tavanG ? besMatrah * P.besOrani : tavanG * besGun * P.besOrani))
       : 0;
-    r.DD = r.CV - r.CW - r.CX - r.CY - r.DA - AW - r.DC; // NET ÖDEME
+    /* NET ÖDEME (çalışana ödenen tutar): ayni yardımın net değeri düşülür — net esasta girilen tutar,
+       brüt esasta brüt tutardan vergisi çıkmış hâli (vergisi brüt tutarın içindendir) */
+    r.DD = r.CV - r.CW - r.CX - r.CY - r.DA - (brutKip ? BX - r.CD - r.CE : AW) - r.DC;
 
     // --- İşveren payları (DE/DF) ---
     function isveren(o) {

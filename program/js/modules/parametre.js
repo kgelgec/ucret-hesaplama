@@ -113,9 +113,10 @@
 
       <div class="kart">
         <div class="kart-baslik"><div><h2>Zam Öngörüsü</h2>
-          <div class="kart-aciklama">Önceki yıl net maaşı alt eşiğin altındaysa üst oran, üst eşiğin üstündeyse alt oran;
+          <div class="kart-aciklama">Önceki yıl maaşı (çalışmanın ücret esasında: net ya da brüt) alt eşiğin altındaysa üst oran, üst eşiğin üstündeyse alt oran;
             arada doğrusal azalır. Buradaki değerler yılın <strong>genel</strong> değeridir; her grubun kendi eşik ve oranları
-            Bütçe Çalışmaları → ✎ Çalışma Ayarları'ndan girilir (gruplar arasında farklı olabilir). Yöntem (kademe / performans) de orada seçilir.</div></div></div>
+            Bütçe Çalışmaları → ✎ Çalışma Ayarları'ndan girilir (gruplar arasında farklı olabilir). Yöntem (kademe / performans) de orada seçilir.
+            Brüt esaslı çalışma bu eşikleri brüt maaşa uygular; o grupta eşikleri Çalışma Ayarları'ndan brüte göre girin.</div></div></div>
         <div class="izgara izgara-2">
           ${[['B', 'Beyaz Yaka'], ['M', 'Mavi Yaka']].map(y => `<div><h3>${y[1]}</h3>
             <table class="genis-tablo param-tablo" data-zam="${y[0]}"><tbody>

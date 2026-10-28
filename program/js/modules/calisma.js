@@ -9,6 +9,11 @@
                 karşılaştırma maliyeti olur. (Dış liste aktarımı sonradan
                 gerçek maaşlarla günceller.)
      KOPYA    — aynı yıldan birebir kopya (senaryo denemek için)
+
+   ÜCRET ESASI (net / brüt) çalışmanın ayarıdır: girilen maaş ve ek ödemeler
+   net mi brüt mü? Yalnız BOŞ çalışmada seçilir; YENI_YIL, KOPYA ve revize
+   kaynağın esasını devralır. Personeli olan çalışmanın esası değiştirilemez
+   (kural API'dedir; ekran yalnız seçimi kapatır ve nedenini yazar).
    ===================================================================== */
 (function () {
   'use strict';
@@ -35,6 +40,7 @@
           { baslik: 'Parametreler', deger: c => c.durum === 'ONAYLI' && API.calismaParametreDondurulmusMu(c.id)
               ? '<span class="rz rz-gri" title="Onay anındaki parametrelerle hesaplanır; Parametreler\'deki değişiklik bu çalışmaya yansımaz">🔒 onay anındaki</span>'
               : parametreDurum(c.yil) },
+          { baslik: 'Ücret esası', deger: c => B.esasRozet(c) },
           { baslik: 'Zam yöntemi', deger: c => [c.zam_kademe ? 'Kademe' : 'Sabit oran', c.zam_performans ? 'Performans' : null].filter(Boolean).join(' × ') },
           { baslik: 'Durum', deger: c => c.durum === 'ONAYLI' ? '<span class="rz rz-yesil">Onaylı</span>' : '<span class="rz rz-sari">Taslak</span>' },
           { baslik: '', sinif: 'sag-hiza', deger: c => `
@@ -97,7 +103,8 @@
     const yp = API.parametreOku(c.yil);
     const yy = (k, vars) => API.parametreSayi(yp, k, vars);
     return `<h3 class="ust-bosluk">Bu gruba özel zam kademesi</h3>
-      <div class="kucuk soluk">Boş bırakılan alanda ${c.yil} yılının genel değeri (soluk) geçerlidir.</div>
+      <div class="kucuk soluk">Boş bırakılan alanda ${c.yil} yılının genel değeri (soluk) geçerlidir.${B.esasKod(c) === 'BRUT'
+        ? ' <strong>Brüt esaslı çalışma:</strong> eşikler brüt maaşa uygulanır; yılın genel eşikleri net maaşa göreyse burada brüte göre girin.' : ''}</div>
       <table class="genis-tablo ust-bosluk" id="ayarKademe"><thead><tr><th></th>${KADEME.map(z => `<th class="num">${z[1]}</th>`).join('')}</tr></thead>
         <tbody>${[['B', 'Beyaz yaka'], ['M', 'Mavi yaka']].map(y => `<tr><td class="kalin">${y[1]}</td>${KADEME.map(z => {
           const an = 'zam.' + y[0] + '.' + z[0];
@@ -136,6 +143,16 @@
     return o;
   }
 
+  /* Ücret esası seçimi (yeni çalışma ve Çalışma Ayarları penceresi; açıklama esasGuncelle / form'da yazılır) */
+  function esasHtml(deger) {
+    return `<h3 class="ust-bosluk">Ücret esası</h3>
+      <div class="alan" style="max-width:520px"><label>Girilen maaş ve ek ödemeler (prim, yol, aynî, yakıt)</label>
+        <select name="ucret_esas">${C.secenekler([
+          { deger: 'NET', etiket: 'Net — girilen tutarlar net; brüt hesaplanır' },
+          { deger: 'BRUT', etiket: 'Brüt — girilen tutarlar brüt; net ödeme hesaplanır' }], deger)}</select>
+        <div class="alan-not" id="esasNot"></div></div>`;
+  }
+
   function parametreDurum(yil) {
     const p = API.parametreDurumu(yil);
     if (!p.var) return '<span class="rz rz-kirmizi">girilmemiş</span>';
@@ -164,7 +181,9 @@
           <label class="satir"><input type="radio" name="kaynak" value="BOS">
             <span><strong>Boş</strong> — personel sonra Personel İçe Aktarma ekranından (Excel / ERP listesi) alınır ya da elle eklenir</span></label>
           <div class="alan ust-bosluk" id="kaynakKap"><label>Kaynak çalışma</label><select name="kaynak_id"></select>
-            <div class="alan-not" id="kaynakNot"></div></div>` : ''}
+            <div class="alan-not" id="kaynakNot"></div></div>
+          ${esasHtml('NET')}` : ''}
+        ${yeni ? '' : esasHtml(B.esasKod(c))}
         ${yeni ? '' : `<h3>Zam öngörüsü yöntemi</h3>
         <label class="satir"><input type="checkbox" name="zam_kademe" ${k.zam_kademe ? 'checked' : ''}>
           Maaş kademesine göre oran (düşük maaşa yüksek oran)</label>
@@ -175,6 +194,36 @@
         <div class="alan ust-bosluk"><label>Açıklama</label><input name="aciklama" value="${U.esc(k.aciklama || '')}"></div>`,
       altlik: `<button class="btn btn-ikincil" data-kip-kapat>Vazgeç</button><button class="btn" data-kaydet>Kaydet</button>`,
     });
+
+    /* Ücret esası: yeni çalışmada yalnız "Boş" kaynakta seçilir (kaynaklı açılışta kaynağın esası gösterilir);
+       var olan çalışmada personel yoksa değiştirilebilir, varsa salt okunur. */
+    const esasSec = kip.querySelector('[name=ucret_esas]'), esasNot = kip.querySelector('#esasNot');
+    let esasElle = 'NET';                         // "Boş"ta kullanıcının son seçimi (kaynak türü değişip dönünce korunur)
+    esasSec.addEventListener('change', () => { if (!esasSec.disabled) esasElle = esasSec.value; });
+    const esasGuncelle = () => {
+      const tur = (kip.querySelector('[name=kaynak]:checked') || {}).value;
+      if (tur === 'BOS') {
+        esasSec.disabled = false; esasSec.value = esasElle;
+        esasNot.innerHTML = 'Bütün maaş ve ek ödeme tutarları bu esasla girilir. Personel eklendikten sonra <strong>değiştirilemez</strong>.';
+        return;
+      }
+      const kid = Number(kip.querySelector('[name=kaynak_id]').value);
+      esasSec.disabled = true;
+      esasSec.value = kid ? B.esasKod(kid) : 'NET';
+      esasNot.innerHTML = kid ? `Kaynak çalışmadan gelir: <strong>${B.esasBas(kid)} esas</strong>. Farklı esasla başlamak için "Boş" seçin.`
+                              : 'Kaynak çalışmadan gelir.';
+    };
+    if (!yeni) {
+      const kisi = API.calismaPersonelListe(c.id).length;
+      const bagli = API.ucretEsasiBagli(c.id);      // API ile aynı kural: bütçe satırı ya da aylık girdi
+      if (bagli || c.durum === 'ONAYLI') {
+        esasSec.disabled = true;
+        esasNot.innerHTML = c.durum === 'ONAYLI' ? 'Onaylı çalışma kilitlidir.'
+          : (kisi ? `Personeli olan çalışmanın esası değiştirilemez; girilmiş ${kisi} kişinin maaşları öbür esasta yanlış okunur.`
+                  : 'Çalışmada aylık girdi tutarları var; esas değiştirilirse öbür esasta yanlış okunur.') +
+            ' Farklı esasla çalışmak için yeni, boş bir çalışma açın.';
+      } else esasNot.innerHTML = 'Çalışmada henüz personel yok; esas değiştirilebilir. Personel eklendikten sonra değiştirilemez.';
+    }
 
     // Kaynak seçenekleri, yıl / grup / kaynak türü değiştikçe yenilenir
     const kaynakGuncelle = () => {
@@ -188,15 +237,17 @@
       U.el('kaynakNot').textContent = l.length ? '' : (tur === 'YENI_YIL' ? `${y - 1} yılında bu grubun çalışması yok.` : 'Bu yılda kopyalanacak çalışma yok.');
       const pd = API.parametreDurumu(y);
       if (tur !== 'BOS' && !pd.var) U.el('kaynakNot').textContent += ` ${y} parametreleri henüz yok — önce Parametreler → Yeni Yıl Öngörüsü ile oluşturun.`;
+      esasGuncelle();
     };
     if (yeni) {
       kip.querySelectorAll('[name=kaynak], [name=yil], [name=grup_kod]').forEach(e => e.addEventListener('change', kaynakGuncelle));
+      kip.querySelector('[name=kaynak_id]').addEventListener('change', esasGuncelle);
       kaynakGuncelle();
     }
     /* Onaylı çalışma kilitlidir: yalnızca durum (Taslak'a alma) ve açıklama değiştirilebilir */
     const kilitli = !yeni && c.durum === 'ONAYLI';
     if (kilitli) {
-      kip.querySelectorAll('[data-ayar], [name=zam_kademe], [name=zam_performans], [name=ad]')
+      kip.querySelectorAll('[data-ayar], [name=zam_kademe], [name=zam_performans], [name=ad], [name=ucret_esas]')
          .forEach(e => { e.disabled = true; });
       kip.querySelector('.kip-govde').insertAdjacentHTML('afterbegin', `<div class="uyari uyari-bilgi kucuk"><span class="ik">🔒</span>
         <div>Onaylı çalışma kilitlidir. Ayarları değiştirmek için Durum'u "Taslak" yapıp kaydedin, sonra yeniden açın.<br>
@@ -209,11 +260,20 @@
       const tur = yeni ? (kip.querySelector('[name=kaynak]:checked') || {}).value : null;
       try {
         if (yeni && tur !== 'BOS' && !f.kaynak_id) throw new Error('Kaynak çalışma seçin ya da "Boş" seçeneğini işaretleyin.');
-        // Ayarlar, çalışma kilitlenmeden (Onaylı'ya alınmadan) önce yazılır
-        if (!yeni && !kilitli) API.calismaAyarYaz(c.id, ayarOku(kip));
-        const alanlar = kilitli ? { durum: f.durum, aciklama: f.aciklama } : f;
+        // Ayarlar, çalışma kilitlenmeden (Onaylı'ya alınmadan) önce yazılır. Esas yalnız değiştiyse gönderilir
+        // (personeli olan çalışmada API değişikliği reddeder).
+        if (!yeni && !kilitli) {
+          const ayar = ayarOku(kip);
+          if (!esasSec.disabled && esasSec.value !== B.esasKod(c)) ayar['ucret.esas'] = esasSec.value;
+          API.calismaAyarYaz(c.id, ayar);
+        }
+        const yeniEsas = f.ucret_esas;
+        const alanlar = Object.assign({}, kilitli ? { durum: f.durum, aciklama: f.aciklama } : f);
+        delete alanlar.ucret_esas;
+        /* Kaynaklı açılışta esas kaynaktan gelir (calismaPersonelKopyala); "Boş"ta seçilen esas */
         const id = API.calismaKaydet(Object.assign({}, k, alanlar, { id: yeni ? null : c.id, yil: yeni ? Number(f.yil) : c.yil,
-                                                                   grup_kod: yeni ? f.grup_kod : c.grup_kod }));
+                                                                   grup_kod: yeni ? f.grup_kod : c.grup_kod,
+                                                                   ucret_esas: yeni && tur === 'BOS' ? yeniEsas : null }));
         if (yeni && tur !== 'BOS') {
           const n = API.calismaPersonelKopyala(Number(f.kaynak_id), id, tur);
           U.bildir(n + ' kişi aktarıldı.', 'basari');

@@ -79,7 +79,7 @@
         <li><strong>Bütçe Çalışmaları → + Yeni Çalışma:</strong> grubu seçin, kaynak olarak <em>Önceki yılın çalışmasından</em>'ı seçin.
           Geçen yılın zamlı maaşları bu yılın başlangıç maaşı olur; kişiler, kanunlar, BES ve benzeri bilgiler taşınır.
           Aynî yardım, prim, yakıt, mesai ve AR-GE günü <strong>taşınmaz</strong>; her yıl yeniden girilir. ${ac('calisma')}</li>
-        <li><strong>Personel İçe Aktarma:</strong> ERP ya da bordro programınızdaki güncel net maaşları ve personel bilgisini alın. ${ac('aktarim')}</li>
+        <li><strong>Personel İçe Aktarma:</strong> ERP ya da bordro programınızdaki güncel net maaşları (brüt esaslı bütçede brüt maaşları) ve personel bilgisini alın. ${ac('aktarim')}</li>
         <li><strong>Personel ve Zam:</strong> zam öngörüsünü inceleyin, gereken kişilere düzeltme yazın. ${ac('personel')}</li>
         <li><strong>Performans Değerlendirme</strong> (zam performansa bağlıysa): değerlendirmeleri girin ya da Excel şablonuyla toplayın,
           sonra <em>Çarpanları zam hesabına uygula</em> deyin. ${ac('performans')}</li>
@@ -161,12 +161,43 @@
         <li><strong>Onaylı:</strong> yönetimin onayladığı bütçe. Rakamları, parametreleri ve kişilerin giriş-çıkış tarihleri onay anındaki hâliyle dondurulur;
           sonradan parametre ya da kart değişse de onaylı maliyet değişmez.</li>
         <li><strong>Revize aç:</strong> onaylı bir çalışmada değişiklik gerekirse eski çalışma kilitli kalır, yanında "Revize" adlı yeni bir taslak açılır.</li>
+        <li><strong>Ücret esası</strong> (net / brüt): yeni çalışma <em>Boş</em> açılırken seçilir; diğer kaynaklar kaynağın esasını devralır.
+          Personeli olan çalışmada değiştirilemez (bkz. <em>Ücret esası</em> bölümü).</li>
         <li><strong>✎ Çalışma Ayarları:</strong> zam yöntemi (maaş kademesi, performans çarpanı), gruba özel zam kademesi, varsayılan çalışılan gün,
           05510 indirim oranı ve bu çalışmaya özel <em>zam öngörüsü yuvarlama adımı</em> (boşsa yılın parametresi kullanılır).</li>
       </ul>
       ${dikkat(`Aynı yıl ve grup için iki çalışma açarsanız ekranlar seçili olanı gösterir. "Kişiler görünmüyor" gibi bir durumda
         önce üst çubuktaki çalışma seçicisine bakın; gereksiz çalışmayı Bütçe Çalışmaları ekranından silin.`)}
       ${gorsel('06-calisma', 'Bütçe Çalışmaları: taslak ve onaylı çalışmalar; Aç, Revize aç ve ✎ düğmeleri')}` },
+
+    { id: 'esas', baslik: 'Ücret esası: net ya da brüt bütçe', kime: 'herkes', html: `
+      <p>Her bütçe çalışmasının bir <strong>ücret esası</strong> vardır: girdiğiniz maaş ve ek ödemelerin (prim, yol parası, aynî yardım,
+        yakıt yardımı) <strong>net</strong> mi <strong>brüt</strong> mü olduğu. Ekranlardaki etiketler esası izler ("Net Maaş" / "Brüt Maaş",
+        "Tutarlar NET" / "Tutarlar BRÜT"); Bütçe Çalışmaları listesinde ve başlıklarda <em>Net esas</em> / <em>Brüt esas</em> rozeti görünür. ${ac('calisma')}</p>
+      <ul>
+        <li><strong>Net esas</strong> (varsayılan): girilen tutarlar nettir, program brütü hesaplar.</li>
+        <li><strong>Brüt esas:</strong> girilen tutarlar brüttür, program kesintileri düşüp <em>net ödemeyi</em> hesaplar.</li>
+        <li>Brüt toplam, SGK ve vergi kesintileri, net ödeme, teşvikler ve <strong>toplam maliyet</strong> iki esasta da aynı anlamdadır;
+          maliyetler esastan bağımsız karşılaştırılabilir.</li>
+        <li><strong>Fazla mesai</strong> brüt esasta brüt saat ücretinden hesaplanır (brüt maaş / 30 / günlük saat × katsayı).</li>
+        <li><strong>Aynî yardım</strong> brüt esasta brüt tutar olarak girilir; vergisi bu tutarın içinden düşer.</li>
+        <li><strong>Zam kademesinin eşikleri</strong> çalışmanın esasındaki maaşa uygulanır: brüt esaslı grupta eşikleri Çalışma Ayarları'ndan brüte göre girin.</li>
+      </ul>
+      <h4>Nerede seçilir?</h4>
+      <p><strong>Bütçe Çalışmaları → + Yeni Çalışma</strong> penceresinde, kaynak <em>Boş</em> seçiliyken. <em>Önceki yılın çalışmasından</em>,
+        <em>kopya</em> ve <em>Revize aç</em> kaynağın esasını devralır (önceki yıl maaşı ile yeni maaş hep aynı esasta kalır).
+        Personeli olmayan bir çalışmanın esası ✎ Çalışma Ayarları'ndan da değiştirilebilir.</p>
+      <h4>Güvenlik kuralları</h4>
+      <ul>
+        <li><strong>Personeli olan çalışmanın esası değiştirilemez.</strong> Net ile brüt arasındaki dönüşüm aydan aya değiştiği için kesin karşılığı yoktur;
+          girilmiş tutarlar öbür esasta yanlış okunurdu. Farklı esasla çalışmak için yeni, boş bir çalışma açın.</li>
+        <li><strong>Esası farklı çalışmalar arasında kişi taşınmaz;</strong> kişi kartındaki <em>Grup</em> listesinde yalnız aynı esastaki çalışmalar çıkar.</li>
+        <li>Yeni personelde T.C. yazınca önceki çalışması farklı esastaysa maaşı <strong>doldurulmaz</strong>; kartta "maaşı girin" notu görünür.</li>
+        <li><strong>Personel İçe Aktarma:</strong> brüt esaslı bütçede maaş sütunu yalnız başlığında "Brüt" geçiyorsa alınır (örn. "Brüt Maaş");
+          net esaslı bütçeye "Brüt" başlıklı maaş sütunu alınmaz. Örnek şablon çalışmanın esasına göre iner.</li>
+        <li><strong>"Tümü" görünümü:</strong> gruplar farklı esastaysa Özet, Maliyet Tablosu ve Maaş Dağılımı'nda uyarı çıkar;
+          maaş ve zam toplamları "—" gösterilir (net ile brüt toplanmaz), maliyetler gösterilmeye devam eder.</li>
+      </ul>` },
 
     { id: 'perfmesai', baslik: 'Performans Değerlendirme ve Fazla Mesai Planı', kime: 'herkes', html: `
       <p>İki ekran da seçili grubun çalışması üzerinde çalışır ve isteğe bağlıdır: kullanmayan grupta boş kalır, hesaba etkisi olmaz.</p>
@@ -228,7 +259,7 @@
       ${gorsel('11-rapor', 'Excel Raporu: Excel’e aktarma ve yönetimden dönen dosyayı içeri alma')}` },
 
     { id: 'aktarim', baslik: 'Personel İçe Aktarma (Excel / CSV / ERP)', kime: 'herkes', html: `
-      <p>Elinizdeki personel listesini (Excel, CSV ya da ERP / bordro programı çıktısı) bütçeye alır: güncel net maaşları ve personel bilgilerini (ad, işe giriş-çıkış, bölüm, görev, yaka, bütçe bölümü)
+      <p>Elinizdeki personel listesini (Excel, CSV ya da ERP / bordro programı çıktısı) bütçeye alır: güncel maaşları (çalışmanın esasında: net ya da brüt) ve personel bilgilerini (ad, işe giriş-çıkış, bölüm, görev, yaka, bütçe bölümü)
         çalışmaya alır. Maaşlar çalışmanın "önceki yıl maaşı" olur ve zam bunların üzerine uygulanır; önceki yılın gerçekleşen maliyeti de
         buradan gelebilir. ${ac('aktarim')}</p>
       <ul>
@@ -321,6 +352,8 @@
         <dd>Bilerek böyle: bunlar her yıl yeniden belirlenir. Aylık Girdiler'den girin.</dd>
         <dt>Bir kişiyi yanlışlıkla bütçeden çıkardım.</dt>
         <dd>+ Yeni Personel ile T.C.'yi yazarak tekrar ekleyin; bilgileri gelir. Aylık girdileri yeniden girmeniz gerekir. Büyük bir kayıpta Sistem ekranından yedeğe dönülür.</dd>
+        <dt>Çalışmanın ücret esasını (net / brüt) değiştiremiyorum.</dt>
+        <dd>Çalışmada personel varsa esas değiştirilemez. Yeni, boş bir çalışma açıp esası orada seçin, personeli o esastaki tutarlarla içe aktarın.</dd>
         <dt>Programda değişiklik yapıldı ama ekranda görünmüyor.</dt>
         <dd>Sayfayı yenileyin (F5).</dd>
       </dl>` },

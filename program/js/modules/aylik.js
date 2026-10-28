@@ -5,23 +5,26 @@
    - SÜREKLİ (hesaplama türü, kanun, mesai saatleri, AR-GE günü): o aydan
      itibaren geçerlidir, sonraki aylar devralır. Devralınan değer soluk görünür.
    - O AYA ÖZGÜ (ayni yardım, prim, yakıt, çalışılan gün): yalnızca o ay.
+   Tutarlar (aynî, prim, yakıt) çalışmanın ücret esasındadır (net / brüt).
    ===================================================================== */
 (function () {
   'use strict';
 
   let ay = 1;
-  const TEK = [
-    ['ayni', 'Net Ayni Yardım'], ['prim', 'Prim / Diğer (net)'], ['fm1', 'Hafta İçi Mesai (saat)'],
-    ['fm2', 'Hafta Sonu Mesai (saat)'], ['yakit', 'Yakıt Yardımı'], ['calisilan_gun', 'Çalışılan Gün'],
+  /* Tutar alanlarının etiketi çalışmanın esasını izler (net esasta bugünkü adlar) */
+  const tekAlanlar = c => { const es = B.esas(c), Es = B.esasBas(c), brut = B.esasKod(c) === 'BRUT'; return [
+    ['ayni', Es + ' Ayni Yardım'], ['prim', 'Prim / Diğer (' + es + ')'], ['fm1', 'Hafta İçi Mesai (saat)'],
+    ['fm2', 'Hafta Sonu Mesai (saat)'], ['yakit', 'Yakıt Yardımı' + (brut ? ' (brüt)' : '')], ['calisilan_gun', 'Çalışılan Gün'],
     /* AR-GE günü: boş = çalışmanın AR-GE günü ayarı (Bütçe Çalışmaları → ✎), o da yoksa 0 — ayar yalnız GV teşviki %80+
        olanlarda kullanılır. Gün, AR-GE GV/DV teşvikinde ve 05746 SGK teşvikinde kullanılır. */
     ['arge_gun', 'AR-GE Günü'],
-  ];
+  ]; };
   const TOPLAMSIZ = { calisilan_gun: 1, arge_gun: 1 };
   const DEVREDEN = { fm1: 1, fm2: 1, arge_gun: 1 };
 
   function ciz(kap) {
     const c = APP.calisma();
+    const TEK = tekAlanlar(c);
     const h = API.calismaHesapla(c.id);
     const har = API.aylikGirdiHarita(c.id);
     const yaz = API.calismaYazilabilir(c);

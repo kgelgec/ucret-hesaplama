@@ -1,7 +1,7 @@
 # Ücret Hesaplama
 
 Kurumların **yıllık maaş bütçesini**, **zam çalışmasını** ve **ay ay işveren maliyetini** hesaplayan,
-tarayıcıda çalışan bir program. Maliyet bir mini bordroyla çıkar: netten brüte, SGK işçi/işveren payları,
+tarayıcıda çalışan bir program. Maliyet bir mini bordroyla çıkar: netten brüte (ya da brütten nete), SGK işçi/işveren payları,
 kümülatif gelir vergisi, damga vergisi, asgari ücret istisnası, BES ve teşvikler (05510, 05746 AR-GE, 14857
 engelli, 15510 emekli).
 
@@ -17,6 +17,10 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
 - **Gruplar ve çalışmalar.** Bütçe, kurumun belirlediği gruplar için ayrı ayrı tutulur (ör. Ofis, Üretim).
   Bir grubun bir yılı bir "çalışma"dır. Onaylanan çalışma kilitlenir; parametreleri de onay anındaki hâliyle
   dondurulur. Sonradan "revize" açılabilir.
+- **Net ya da brüt bütçe.** Her çalışma açılırken ücret esası seçilir: maaşlar **net** girilir (brüt hesaplanır) ya da
+  **brüt** girilir (net hesaplanır). Yeni yıl, kopya ve revize kaynağın esasını devralır; personeli olan çalışmanın
+  esası değiştirilemez ve esası farklı çalışmalar arasında kişi taşınmaz. Böylece yıllar arası karşılaştırmada önceki
+  yıl maaşı ile yeni maaş hep aynı esastadır; işveren maliyeti iki esasta da aynı formülle çıkar.
 - **Zam öngörüsü.** Maaş kademesine göre oran: alt eşiğin altına üst oran, üst eşiğin üstüne alt oran, arada
   doğrusal geçiş. İsteğe bağlı olarak performans çarpanı da uygulanır; yönetim kişi bazında düzeltme girebilir.
 - **Mini bordro.** Kişi × ay maliyet tablosu ve her kişi için 12 aylık bordro dökümü.
@@ -25,12 +29,14 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
 - **Yeni yıl.** Yasal parametre öngörüsü (açıklanmamış asgari ücret ve dilimler için artış oranı) ve önceki
   yılın zamlı maaşlarından yeni çalışma.
 - **Performans değerlendirmesi.** Amir puanları, bölüm katsayısı ve zam çarpanı. Gelen model bir
-  **örnektir**; kriterleri ve ağırlıkları kendi politikanıza göre `program/js/core/performans.js`'te değiştirin.
+  **örnektir**; kriterleri ve ağırlıkları ekrandan kendi politikanıza göre değiştirin.
 - **Mesai öngörüsü.** Bölüm × ay mesai saati.
 - **Personel listesini içe alma.** Elinizdeki Excel / CSV listesi ya da ERP / bordro programı çıktısı başlık adlarıyla
   tanınır; hazır listesi olmayan için ekrandan **örnek Excel şablonu** indirilir (Personel İçe Aktarma).
 - **Excel.** Bütçenin Excel raporu ve yönetimin düzeltmelerinin geri yüklenmesi; performans ve mesai şablonları.
 - **Kullanıcılar.** Rol yerine kişi bazında yetki ve grup erişimi; işlem kaydı; hareketsizlikte otomatik çıkış.
+- **Veri güvenliği.** İsteğe bağlı şifreleme (AES-256-GCM, paroladan PBKDF2 ile anahtar), otomatik ve elle
+  yedek, aynı anda birden çok kişi ya da sekme açtığında yazma kilidi.
 
 ### Tanımlar ekrandan düzenlenir
 
@@ -45,13 +51,12 @@ Kurumdan kuruma değişen her tanım kod değiştirmeden, ekrandan girilir:
 | Hesaplama türleri (SGK oranları), kanun / teşvik türleri | Tanımlar |
 | Gruplar, bütçe bölümleri | Tanımlar |
 | Dış listenin (ERP / bordro programı) sütun başlıkları | Tanımlar → İçe Aktarma Başlıkları |
+| Ücret esası (net / brüt) | Yeni Çalışma penceresi; personel girilmemişse Bütçe Çalışmaları → ✎ Çalışma Ayarları |
 | Çalışmaya özel gün, AR-GE günü, 05510 oranı, yuvarlama | Bütçe Çalışmaları → ✎ Çalışma Ayarları |
 | Kullanıcılar, yetkiler, otomatik kapanma süresi | Kullanıcılar, Sistem |
 
 Bilerek kodda kalanlar: teşvik ve sigorta kollarının formülleri (adları ve oranları düzenlenir), yaka türleri (beyaz /
 mavi), 30 günlük ay ve üç sakatlık derecesi (tutarları düzenlenir), yetki anahtarları.
-- **Veri güvenliği.** İsteğe bağlı şifreleme (AES-256-GCM, paroladan PBKDF2 ile anahtar), otomatik ve elle
-  yedek, aynı anda birden çok kişi ya da sekme açtığında yazma kilidi.
 
 ## Kurulum ve kullanım (Windows)
 
@@ -126,7 +131,7 @@ Program Windows'ta denenmiştir (yerel sunucu bir PowerShell betiğidir).
    ilişkiler, şema sürümleri, başlangıç verisi, dosyaya kayıt, şifreleme, yedek, yazma kilidi, sunucu uç
    noktaları, veri dosyasını başka bir sisteme aktarma.
 2. [`docs/02-hesap-motoru.md`](docs/02-hesap-motoru.md): girdi ve parametre sözlüğü, aylık bordronun adım
-   adım formülleri (netten brüte, SGK tavanı, kümülatif GV, asgari ücret istisnası, teşvikler), yıllık hesap,
+   adım formülleri (netten brüte ve brütten nete, SGK tavanı, kümülatif GV, asgari ücret istisnası, teşvikler), yıllık hesap,
    zam motoru, performans modeli, rakamlı örnekler ve sınama vektörleri.
 3. [`docs/03-is-kurallari-ve-yetkiler.md`](docs/03-is-kurallari-ve-yetkiler.md): çalışma yaşam döngüsü (yeni
    yıl, kopya, onay, revize), personel işlemleri, aylık girdi kuralları, içe almalar, yetki modeli, güvenlik

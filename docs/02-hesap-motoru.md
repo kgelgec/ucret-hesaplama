@@ -41,9 +41,12 @@ Genel ilkeler (bütün bölümler için geçerli):
   biçimdir (`js/core/bicim.js`).
 - Motor veritabanını tanımaz; düz nesnelerle çalışır: `P` (yıl parametreleri), `k` (kişinin yıllık bilgisi), `g`
   (kişinin o ayki girdileri). Bu nesneleri veritabanından `api.js:calismaHesapla` kurar (§1.3, §2.6).
-- Maaş **tek bir net aylık tutardır**: önceki yılın maaşı `calisma_personel.maas_eski` (motorda `k.maasEski`), zamlı
-  maaş `zamHesapla` sonucunun `yeni` alanı (motorda `k.maasYeni`). Bütçe netle tutulur; brüt, SGK, vergiler ve maliyet
-  netten türetilir.
+- Maaş **tek bir aylık tutardır**: önceki yılın maaşı `calisma_personel.maas_eski` (motorda `k.maasEski`), zamlı
+  maaş `zamHesapla` sonucunun `yeni` alanı (motorda `k.maasYeni`).
+- **Ücret esası** çalışma başınadır (çalışma ayarı `ucret.esas` → `P.ucretEsasi`): **NET** (varsayılan) çalışmada
+  girilen maaş ve ek ödemeler nettir; brüt, SGK, vergiler ve maliyet netten türetilir (sabit nokta, §3.5). **BRÜT**
+  çalışmada girilen tutarlar brüttür; kesintiler bir kez uygulanır ve net (`DD`) bulunur (§3.13). Kesinti, teşvik,
+  işveren payı ve maliyet formülleri iki esasta aynıdır.
 - **Alan kodları.** Motorun ara değerleri iki harfli **alan kodlarıyla** adlandırılır (`AM` = net maaş, `BB` = brüt
   ücret, `CV` = brüt toplam, `DM` = toplam maliyet …). Bunlar `ayHesapla`'nın döndürdüğü nesnenin (`r`) alan adlarıdır;
   kodlar yalnız kısa addır, alfabetik sıraları kabaca hesap sırasını izler. Tam sözlük §3.12'dedir.
@@ -63,7 +66,7 @@ Genel ilkeler (bütün bölümler için geçerli):
 | g | Aynî yardım işçi SGK tavan karşılaştırmasına ve BES matrahına girmez; BES tavanı sigorta günüyle. | `topEk` (§3.5), `besMatrah`, `besGun` (§3.7) |
 | h | SGK prim matrahı asgari ücret tabanının (asgari / 30 × sigorta günü) altına inmez. | `taban`, `tb` (§3.4) |
 | i | Yakıt yardımının damga vergisi yılın damga oranıyla. | `CR` (§3.5) |
-| — | Mesai NET maaş üzerinden hesaplanır (bütçe net maaşla tutulur): saat ücreti = net maaş / 30 / günlük saat; FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri yılın katsayılarıyla çarpılır. | `AV` (§3.3) |
+| — | Mesai çalışmanın ücret esasındaki maaştan hesaplanır: saat ücreti = maaş / 30 / günlük saat (net esasta net, brüt esasta brüt — §3.13); FM1 (hafta içi) ve FM2 (hafta sonu / tatil) saatleri yılın katsayılarıyla çarpılır. | `AV` (§3.3) |
 
 Motorda kalan sabitler: 30 günlük ay, yaka türleri (B / M), 3 sakatlık derecesi (tutarları parametredir), teşvik ve sigorta
 kolu kurallarının formülleri (kanun ve hesaplama türlerinin adı ve oranı parametredir). Oranlar, katsayılar, eşikler ve
@@ -81,8 +84,10 @@ yuvarlama adımları yıl parametresidir (§2.1).
 | `girisAy` | 0–13 | `personel.ise_giris` ya da `calisma_personel.onay_giris` | `ayOf(tarih, yil) \|\| 0` (bkz. §4.2). |
 | `cikisAy` | 0–13 ya da `null` | `personel.isten_ayrilis` ya da `calisma_personel.onay_cikis` | `ayOf(tarih, yil)`; boşsa `null` = ayrılmamış. |
 | `zamAyi` | 1–12 | `calisma_personel.zam_ayi` | `kp.zam_ayi \|\| 1`. Bu aydan itibaren yeni maaş geçerli. |
-| `maasEski` | TL/ay, net | `calisma_personel.maas_eski` | Önceki yılın net aylık maaşı. `\|\| 0`. Zam ayından önceki aylarda ödenir. |
-| `maasYeni` | TL/ay, net | zam motoru çıktısı `zam.yeni` | `maasEski + miktar` (§5). Zam ayından itibaren ödenir. |
+| `maasEski` | TL/ay, çalışmanın esasında (net ya da brüt) | `calisma_personel.maas_eski` | Önceki yılın aylık maaşı. `\|\| 0`. Zam ayından önceki aylarda ödenir. |
+| `maasYeni` | TL/ay, çalışmanın esasında | zam motoru çıktısı `zam.yeni` | `maasEski + miktar` (§5). Zam ayından itibaren ödenir. |
+
+Aylık tutar girdileri (`yol`, `prim`, `ayni`, `yakit`) de çalışmanın esasındadır: net esasta net, brüt esasta brüt.
 
 Zam motoruna ayrıca giden kişi alanları (`calisma_personel`): `duzeltme` (TL/ay — zam öngörüsüne elle eklenen tutar),
 `performans_puani`, `performans_carpani`. Bkz. §5.
@@ -189,8 +194,9 @@ hesaplanır: yeni yılın yasal rakamları sonradan girilse de onaylı maliyet d
 | `argeEsik` | `arge_gv_esik` | 0,8 | — (varsayılan) | Kişiye AR-GE günü girilmemişse çalışmanın AR-GE günü yalnız `gvTesvik ≥ argeEsik` olan kişiye uygulanır (§3.2). |
 | `mesaiKat1` | `mesai_fm1_kat` | 1,5 | — (varsayılan) | Hafta içi fazla mesai katsayısı (§3.3). |
 | `mesaiKat2` | `mesai_fm2_kat` | 2 | — (varsayılan) | Hafta sonu / tatil mesaisi katsayısı (§3.3). |
-| `gunlukSaat` | `mesai_gun_saat` | 7,5 | — (varsayılan) | Saat ücretinde günlük çalışma saati: saat ücreti = net maaş / 30 / `gunlukSaat` (§3.3). |
+| `gunlukSaat` | `mesai_gun_saat` | 7,5 | — (varsayılan) | Saat ücretinde günlük çalışma saati: saat ücreti = maaş / 30 / `gunlukSaat` (§3.3; maaş çalışmanın ücret esasında). |
 | `zamYuvarla` | `zam_yuvarla` | 10 | — (varsayılan) | Zam öngörüsü yuvarlama adımı (TL); çalışma ayarı `zam.yuvarla_ongoru` önceliklidir (§5.1). `parametreHazirla`'dan sonra `P`'ye eklenir. |
+| `ucretEsasi` | — (yıl parametresi değil; çalışma ayarı `ucret.esas`) | `'NET'` | — | `'BRUT'` ise brüt esas (§3.13), başka her değer net esas. `calismaHesapla` kurar (§2.6); sonuç nesnesinde de `ucretEsasi` olarak döner. |
 | `turler` | `hesap_turu` (yıl) | — | bkz. §2.3 | |
 | `tesvik.k05510` | `t05510` | 0,02 | 0,02 | 05510 indirimi varsayılan oranı (kanun türünde oran yoksa). |
 | `tesvik.k05746` | `t05746` | 0,09875 | 0,1975 / 2 | 05746 AR-GE SGK teşviki oranı (işveren %19,75 × ½). |
@@ -287,6 +293,7 @@ tür kendiliğinden geri gelmez. Motor **kural koduna** bakar; ad ve oran serbes
 | `tesvik.k05510` / `k05746` / `k14857` / `k15510` | `P.tesvik` oranlarını ezer (ör. imalat işyerinde 05510 %5). | Yalnız `tesvik.k05510` (işyerinin niteliği) |
 | `gun.<M\|B>.<ay>` | O yaka ve ay için varsayılan çalışılan gün (`AQ`). | Hayır |
 | `mesai.ongoru` | `'1'` ise mesai, bölüm × ay öngörü tablosundan gelir (§1.3). | Evet |
+| `ucret.esas` | `'BRUT'` ise `P.ucretEsasi = 'BRUT'`; kayıt yoksa `'NET'` (`api.js:ucretEsasi`). Yalnız `'BRUT'` yazılır, NET kaydı silmek demektir (`ucretEsasiYazIc`). | Evet (her aktarımda kaynaktan devralınır, §4.5) |
 
 Revize (`KOPYA`) bütün ayarları birebir kopyalar. Kayıt yoksa yılın parametresi geçerlidir.
 
@@ -294,6 +301,7 @@ Revize (`KOPYA`) bütün ayarları birebir kopyalar. Kayıt yoksa yılın parame
 
 ```
 P = hesapParametre(c.yil, c.durum == 'ONAYLI' ? calismaParametreAnlik(id) : null)   # P.argeGun = 0
+P.ucretEsasi = ucretEsasi(id)                            # 'NET' | 'BRUT' (çalışma ayarı 'ucret.esas')
 if secenek.dilimler:                                     # GV tarifesini bu hesap için değiştirir (karşılaştırma)
   P.dilimler = secenek.dilimler; Object.assign(P, parametreHazirla(P + {dilimler}))
 ayar = calisma_ayar(id)
@@ -319,6 +327,8 @@ uygulanamaz (`ongoruUygula`). Uygulanan yıl `durum = 'ONGORU'` olarak işaretle
 ## 3. Aylık bordro hesabı (adım adım) — `hesap.js:ayHesapla(P, k, g, m, devreden)`
 
 `devreden` = önceki ayın kümülatif GV matrahı (`CK`); Ocak'ta 0. Dönüş nesnesi `r` bütün ara değerleri taşır.
+§3.1–§3.12 net esası (varsayılan) anlatır; brüt esasta ayrılan yerler §3.13'tedir
+(`brutKip = P.ucretEsasi === 'BRUT'`).
 
 ### 3.1 Tür, SGK/GV/DV/istisna bayrakları
 
@@ -339,7 +349,7 @@ aktif      = !(k.cikisAy != null && k.cikisAy < m) && !(k.girisAy > m)
 zamli      = k.zamAyi <= m
 pasifSifir = !aktif                                          # kural (a)
 
-AM   = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0         # NET MAAŞ
+AM   = aktif ? (zamli ? k.maasYeni : k.maasEski) : 0         # MAAŞ (net esasta net, brüt esasta brüt)
 AF   = g.ozurluIndirimi || 0                                 # özürlü (sakatlık) indirimi, aylık TL
 argeEsik = P.argeEsik ?? 0.8
 r.AP = g.argeGun != null ? g.argeGun : ((g.gvTesvik || 0) < argeEsik ? 0 : P.argeGun)   # AR-GE GÜN (ham)
@@ -382,7 +392,8 @@ netUcret = hata0(AM/30×UG)
 ```
 `hata0(x)` = `x` sonlu sayı değilse 0 (sıfıra bölme gibi durumlar). Mesai NET maaş (`AM`) üzerinden: saat ücreti
 `AM / 30 / gunlukSaat`, hafta içi × `mesaiKat1`, hafta sonu/tatil × `mesaiKat2` (varsayılanlarla `AM / 225`, ×1,5, ×2).
-Mesai, kısmi ayda da tam ay maaşının saat ücretiyle hesaplanır (`AM`, `UG` ile oranlanmaz). Gözlem: `AO` hem `AS`'de hem `AZ`'de olduğundan `BA`'da iki kez
+Mesai, kısmi ayda da tam ay maaşının saat ücretiyle hesaplanır (`AM`, `UG` ile oranlanmaz). `AS`, `AV`, `AZ`, `BA`
+girilen esastadır: net esasta net, brüt esasta brüt tutarlardır (§3.13). Gözlem: `AO` hem `AS`'de hem `AZ`'de olduğundan `BA`'da iki kez
 sayılır; `BA` hiçbir hesaba girmez (§7).
 
 ### 3.4 SGK tabanı ve yardımcı işlevler
@@ -523,9 +534,9 @@ girmez), maliyeti değiştirmez.
 ### 3.8 Net ödeme — `DD`
 
 ```
-DD = CV − CW − CX − CY − DA − AW − DC
+DD = CV − CW − CX − CY − DA − (brutKip ? BX − CD − CE : AW) − DC
 ```
-Aynî (`AW`) parayla ödenmediği için düşülür. `DD`, teşvik öncesi `CY` / `DA` ile hesaplanır (teşvik çalışanın netini
+Net esasta `DD = CV − CW − CX − CY − DA − AW − DC`: aynî (`AW`) parayla ödenmediği için düşülür (brüt esas: §3.13). `DD`, teşvik öncesi `CY` / `DA` ile hesaplanır (teşvik çalışanın netini
 değiştirmez). Sakatlık etkisi `AN` brütte olduğundan net ödemeye eklenmiş olur. Sonuç olarak tam ayda
 `DD = AM + AV + AY + AX + AO − DC + AN` olur (kişi B: `30.000 + 4.133,33 + 2.000 − 1.329 = 34.804,33`).
 
@@ -648,6 +659,46 @@ netinden kesildiği için maliyeti değiştirmez.
 | | | | `DL` | AR-GE DV teşviki |
 | | | | `DM` | TOPLAM MALİYET |
 
+### 3.13 Brüt esas — `P.ucretEsasi === 'BRUT'` (`hesap.js:ayHesapla`, `brutKip`)
+
+Brüt esaslı çalışmada maaş (`AM`) ve aylık tutarlar (`yol`, `prim`, `ayni`, `yakit`) **brüttür**. Beş brüt yinelemeden önce
+doğrudan girdiden kurulur ve döngüde değişmez:
+
+```
+BB = netUcret = hata0(AM/30×UG)                              # brüt ücret (gün oranında)
+BM = AV = hata0(AM/30/saat×kat1×AT + AM/30/saat×kat2×AU)     # brüt mesai: BRÜT saat ücretinden
+BX = AW                                                      # brüt aynî
+CF = AZ − AO   (= AY + AX)                                   # brüt yol + prim
+CQ = AO                                                      # brüt yakıt
+yeniAN = 0
+yBB = BB; yBM = BM; yBX = BX; yCF = CF; yCQ = CQ             # yeni değer = girdi
+DD = CV − CW − CX − CY − DA − (BX − CD − CE) − DC
+```
+
+- **Döngü ilk turda biter.** Yeni değerler girdinin aynısı olduğundan `fark = 0` ve `r.tur = 1`; §3.5'teki bütün
+  kesintiler (`BC` … `CR`) girilen brütlerle bir kez hesaplanır. Sabit nokta çözümü gerekmez.
+- **`AN` yoktur.** Sakatlık indirimi `BE`'de matrahtan zaten düşülür (`BE = BB − BC − BD − AF/30×AR`); GV azalır,
+  çalışanın neti indirimin vergi etkisi kadar artar. Brüt girdi olduğu için brüte eklenecek bir etki yoktur; kural (b)
+  burada "indirim nete yansır, maliyetten düşülmez" olarak gerçekleşir.
+- **Mesai brüt saat ücretinden.** Brüt esasta brüt mesai `brüt maaş / 30 / gunlukSaat × katsayı × saat`'tir. Net
+  esasta ise net saat ücretiyle bulunan net mesai brütleştirilir. Bu fark bilinçlidir: her esas kendi saat ücretini
+  kullanır; aynı kişinin iki esastaki mesai tutarı birbirinin tam karşılığı değildir.
+- **Aynî yardım.** Girilen tutar brüttür (`BX = AW`); vergisi (`CD` GV, `CE` DV) bu tutarın içinden düşer. `DD`'den
+  aynînin net değeri (`BX − CD − CE`) çıkarılır, çünkü parayla ödenmez; aynî verilen ayda çalışanın eline geçen para
+  değişmez (§6.4 kişi V, Mayıs). Net esasta `DD`'den girilen net tutar (`AW`) çıkarılır (§3.8).
+- **Bilgi alanları** `AS`, `AV`, `AZ`, `BA` brüt tutardır.
+- **Aynı kalanlar:** SGK tabanı (kural h; `tb` girilen brüte uygulanır), SGK tavanı, kümülatif GV ve ortalama oranlar,
+  asgari ücret istisnaları, BES (§3.7), işveren payları (§3.9), teşvikler (§3.10), toplamlar (§3.6) ve maliyet
+  (`DM`, §3.11) formülleri iki esasta aynıdır.
+
+**Gidiş-dönüş özelliği (sınama).** Net esasta hesaplanmış bir ayın brütleri brüt esasa girdi verilirse (maaş =
+`BB × 30 / AR`, yol = `CF`, prim 0, aynî = `BX`, yakıt = `CQ`, aynı devreden matrah) mesaisiz ayda `DD, DM, CY, DA, CW,
+CX, DE, DF, DG–DL, DC, CV` 0,01 TL içinde aynı çıkar; kalan fark net esastaki yinelemenin durma ölçütünden gelir. §6'daki
+vektörlerin (A–T, S) mesaisiz 90 kişi-ayında en büyük fark 0,00015 TL; örnek veride (`data/ornek-veri.js`) 655 kişi-ayda
+0,00016 TL. Mesaili aylar bu sınamaya girmez (mesai iki esasta farklı tanımlıdır); örnek verinin mesaili 666 kişi-ayında
+brüt esastaki brüt mesai, brüt saat ücreti × katsayı × saat ile birebir aynıdır. Örnek: kişi A'nın Ocak brütü
+63.697,4966 brüt esasta maaş olarak girilirse `DD = 50.000,00`, `DM = 77.551,70` çıkar.
+
 ---
 
 ## 4. Yıllık hesap
@@ -688,7 +739,9 @@ Sonuç önbelleğe alınır; anahtar `id + (secenek.dilimler ? ':d' : '')`; veri
 `secenek.tazele` önbelleği atlar.
 
 `birlesikHesapla(calismaListesi)`: her çalışmayı ayrı `calismaHesapla` ile hesaplar, kişileri `{calisma}` ekiyle tek
-listede birleştirir, `calisma_ozet` değerlerini anahtar bazında toplar. Gruplar arası etkileşim yoktur.
+listede birleştirir, `calisma_ozet` değerlerini anahtar bazında toplar. Gruplar arası etkileşim yoktur. Dönüşte
+`esaslar` (çalışmaların ücret esasları) ve `karisikEsas` (birden çok esas var mı) da bulunur; karışık esasta maaş
+tutarları toplanmamalıdır (maliyet ve kesintiler her iki esasta aynı anlamdadır).
 
 ### 4.4 Yeni yıla geçiş (girdi hazırlığı) — `api.js:calismaPersonelKopyala(kaynakId, hedefId, 'YENI_YIL')`
 
@@ -704,6 +757,19 @@ aktarılmaz. Çalışma ayarlarından taşınmayanlar §2.5'tedir (ayrıca `dagi
 Revize (`calismaRevizeAc` → `calismaPersonelKopyala(…, 'KOPYA')`) satırları, aylık girdileri, özet değerlerini, performans
 girdilerini, mesai tablosunu ve bütün çalışma ayarlarını birebir kopyalar; onay tarihleri (`onay_sabit`) kopyalanmaz ve
 revize TASLAK olduğu için yılın **güncel** parametreleriyle hesaplanır.
+
+### 4.5 Ücret esasının güvenlik kuralları (`api.js`; ayrıntısı 03 numaralı belgede)
+
+Net ↔ brüt dönüşümünün aydan aya değişen (kümülatif GV) kesin bir karşılığı olmadığından girilmiş tutarların öbür esasta
+sessizce yanlış okunması engellenir:
+- Esas çalışma açılırken seçilir (`calismaKaydet` `ucret_esas`: `NET` / `BRUT`, başka değer hata). **Personeli olan
+  çalışmanın esası değişmez** (`calismaAyarYaz` `ucret.esas` için hata verir); esası değiştirmek için boş çalışma açılır.
+- **Yeni yıl, kopya ve revize kaynağın esasını devralır** (`calismaPersonelKopyala`; hedefte personel varken esas farklıysa
+  aktarım reddedilir). Böylece önceki yıl maaşı ile yeni maaş hep aynı esastadır.
+- **Esası farklı çalışmalar arasında kişi taşınmaz** (`calismaPersonelTasi` hata verir; `tasimaHedefleri` yalnız aynı
+  esastaki çalışmaları önerir). `personelOnDoldur(tc, yil, hedefId)` önceki çalışmanın esası hedeften farklıysa önceki
+  yıl maaşını doldurmaz (`esasFarkli`).
+- **Birleşik görünümde** (`birlesikHesapla`) esaslar karışıksa maaş tutarları toplanmaz (`karisikEsas`).
 
 ---
 
@@ -721,14 +787,18 @@ z = { yaka, eskiYilda: girisAy === 0 || girisAy === null,
 **Yuvarlama adımının önceliği:** çalışma ayarı `zam.yuvarla_ongoru` > yılın `zam_yuvarla` parametresi (`P.zamYuvarla`,
 `hesapParametre`'de varsayılan 10) > 10 (`zamHesapla`: `yuvarla.ongoru || 10` — boş ya da 0 adım 10 sayılır).
 
+**Zam motoru esastan bağımsızdır:** `maasEski`, `duzeltme` ve sonuçlar çalışmanın esasındadır (net ya da brüt) ve
+kademe eşikleri bu tutara uygulanır. Brüt esaslı çalışmada eşikler brüt maaşa göre okunur; aynı kademe değerleri iki
+esasta farklı kişileri kapsar.
+
 `calismaZamKademe(c, P)`: yılın `P.zamKademe`'si, üzerine çalışma ayarı `zam.<Y>.<anahtar>` (doluysa) yazılır.
 Kademe varsayılanları (`api.js:ZAM_TANIM`; yıl parametresi `zam.<Y>.<anahtar>`, çalışma ayarı ezer). Bunlar yalnız
 başlangıç değeridir; kurum kendi politikasına göre Parametreler'den değiştirir:
 
 | Anahtar | Motor | Varsayılan | Anlam |
 |---|---|---|---|
-| `alt_esik` | `altEsik` | 50.000 | Alt eşik (net) |
-| `ust_esik` | `ustEsik` | 100.000 | Üst eşik (net) |
+| `alt_esik` | `altEsik` | 50.000 | Alt eşik (çalışmanın ücret esasında) |
+| `ust_esik` | `ustEsik` | 100.000 | Üst eşik (çalışmanın ücret esasında) |
 | `ust_oran` | `ustOran` | 0,30 | Alt eşiğin **altındaki** oran (yüksek oran) |
 | `alt_oran` | `altOran` | 0,25 | Üst eşiğin **üstündeki** oran (düşük oran) |
 
@@ -906,7 +976,7 @@ oran = eski ? miktar / eski : 0             # gerçekleşen zam oranı (düzeltm
 ```
 Dönüş yalnız şu alanlardır: `{ eski, oranOngoru, ongoru, miktar, yeni, oran }` (`oranOngoru` = §5.2'deki `oran`).
 
-- Yeni maaş **tek bir net tutardır**; motor bunu `k.maasYeni` olarak zam ayından itibaren öder (§3.2).
+- Yeni maaş **tek bir tutardır** (çalışmanın esasında: net ya da brüt); motor bunu `k.maasYeni` olarak zam ayından itibaren öder (§3.2).
 - **Yalnız öngörü yuvarlanır** (`mround`; kat: çalışma ayarı `zam.yuvarla_ongoru`, yoksa yılın `zam_yuvarla`, yoksa 10).
   `duzeltme` yuvarlanmadan eklenir;
   `maas_eski` yuvarlak değilse yeni maaş da yuvarlak olmaz.
@@ -988,6 +1058,7 @@ P.sakatlik   = { 1: 12000, 2: 7000, 3: 3000 };
 const SUREKLI = { hesap_turu: 'tur', kanun: 'kanun', sakatlik_derece: 'sakatlikDerece', ozurlu_indirimi: 'ozurluIndirimi',
                   bes: 'bes', gv_tesvik: 'gvTesvik', yol: 'yol', fm1: 'fm1', fm2: 'fm2', arge_gun: 'argeGun' };
 function hesapla(kp, ay = {}) {
+  P.ucretEsasi = kp.esas || 'NET';   // çalışma ayarı 'ucret.esas' (calismaHesapla'da çalışma başına)
   const s = { tur: kp.hesap_turu, kanun: P.kanunKural[kp.kanun] || 'YOK', kanunOran: P.kanunOran[kp.kanun],
               sakatlikDerece: kp.sakatlik_derece, ozurluIndirimi: kp.ozurlu_indirimi || 0, bes: kp.bes,
               gvTesvik: kp.gv_tesvik || 0, yol: kp.yol || 0, fm1: 0, fm2: 0, argeGun: null };
@@ -1024,6 +1095,10 @@ const KISI = {
   G: [{ yaka: 'B', hesap_turu: 'SSK', kanun: '05510', zamAyi: 7, maasEski: 40000, maasYeni: 50000 }],
   T: [{ yaka: 'B', hesap_turu: 'SSK', kanun: '05510', maasEski: 300000, maasYeni: 300000 }, { 3: { prim: 100000 } }],
   S: [{ yaka: 'B', hesap_turu: 'SGKSIZ', kanun: 'YOK', maasEski: 50000, maasYeni: 50000 }],
+  // Brüt esas: maaş ve aylık tutarlar brüt
+  U: [{ esas: 'BRUT', yaka: 'B', hesap_turu: 'SSK', kanun: '05510', maasEski: 60000, maasYeni: 60000 }],
+  V: [{ esas: 'BRUT', yaka: 'M', hesap_turu: 'SSK', kanun: '05510-5', bes: 'EVET', yol: 2000, maasEski: 35000, maasYeni: 35000 },
+      { 1: { fm1: 10, fm2: 8 }, 5: { ayni: 5000 } }],
 };
 for (const ad in KISI) {
   const y = hesapla(...KISI[ad]);
@@ -1044,6 +1119,8 @@ Beklenen çıktı (yeniden yazılan motorun ilk sınaması):
 | G | Net 40.000 → 50.000, zam ayı Temmuz | 49.709,72 | 60.521,59 | 877.226,18 |
 | T | Net 300.000 (SGK tavanı üstü), Mart prim 100.000 | 405.989,80 | 470.646,02 | 6.747.519,38 |
 | S | SGK'sız, net 50.000 | 54.056,79 | 54.056,79 | 694.356,98 |
+| U | **Brüt esas**: beyaz yaka, brüt 60.000, SSK, 05510 %2 | 60.000,00 | 73.050,00 | 876.600,00 |
+| V | **Brüt esas**: mavi yaka, brüt 35.000, 05510 %5, mesai 10 + 8 saat, yol 2.000 brüt, BES; Mayıs aynî 5.000 brüt | 35.000,00 | 49.663,89 | 600.966,67 |
 
 ### 6.2 Kişi A — Ocak, adım adım
 
@@ -1212,6 +1289,33 @@ girmez (`CG = CH = 0`), yalnız GV ve DV doğurur. Yıl: **6.747.519,38 TL**.
 Kontrol: `BB = (50.000 − 4.211,325 − 250,6977) / (1 − 0,15 − 0,00759) = 45.537,98 / 0,84241 = 54.056,79`; SGK, işveren
 payı ve teşvik yok → maliyet = brüt. Asgari ücret istisnası uygulanır (`istisna = 1`). Yıl: **694.356,98 TL**.
 
+**U — brüt esas, beyaz yaka.** `esas 'BRUT'`, brüt maaş 60.000, SSK, kanun `05510`.
+
+| Ay | AM | BB | CW | CX | BE | CY | DA | DD | DE | DG | DM | tur |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 60.000 | 60.000,00 | 8.400,00 | 600,00 | 51.000,00 | 3.438,68 | 204,70 | 47.356,62 | 13.050,00 | 1.200,00 | 73.050,00 | 1 |
+| 5 | 60.000 | 60.000,00 | 8.400,00 | 600,00 | 51.000,00 | 5.988,67 | 204,70 | 44.806,62 | 13.050,00 | 1.200,00 | 73.050,00 | 1 |
+| 12 | 60.000 | 60.000,00 | 8.400,00 | 600,00 | 51.000,00 | 8.154,90 | 204,70 | 42.640,40 | 13.050,00 | 1.200,00 | 73.050,00 | 1 |
+
+Kontrol: `BB = 60.000/30 × 30` (tek tur); `BE = 60.000 − 8.400 − 600 = 51.000`; Ocak `CY = 0,15 × 51.000 − 4.211,325 =
+3.438,68`; `DA = 60.000 × 0,00759 − 250,6977 = 204,70`; `DD = 60.000 − 8.400 − 600 − 3.438,68 − 204,70 = 47.356,62`.
+Brüt sabit olduğu için maliyet her ay aynıdır; kümülatif GV dilimi yükseldikçe yalnız net düşer. Yıl: **876.600,00 TL**
+(12 × 73.050).
+
+**V — brüt esas, mavi yaka, mesai, aynî.** `esas 'BRUT'`, brüt maaş 35.000; Ocak'a `fm1 10`, `fm2 8` (sürekli);
+`yol 2.000` brüt (sürekli); `bes 'EVET'`; Mayıs `ayni 5.000` brüt; kanun `05510-5`.
+
+| Ay | AV | BB | BM | BX | CF | CY | CD | CE | DA | DC | DD | DG | DM |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 4.822,22 | 35.000,00 | 4.822,22 | 0 | 2.000,00 | 1.121,01 | 0 | 0 | 66,73 | 1.254 | 33.107,15 | 2.091,11 | 49.663,89 |
+| 5 | 4.822,22 | 35.000,00 | 4.822,22 | 5.000,00 | 2.000,00 | 1.871,01 | 750,00 | 37,95 | 104,68 | 1.254 | 33.107,15 | 2.091,11 | 54.663,89 |
+| 12 | 4.822,22 | 35.000,00 | 4.822,22 | 0 | 2.000,00 | 3.705,74 | 0 | 0 | 66,73 | 1.254 | 30.522,41 | 2.091,11 | 49.663,89 |
+
+Kontrol: brüt mesai `35.000 / 30 / 7,5 × (1,5×10 + 2×8) = 4.822,22` (brüt saat ücretinden); `DC = asagiYuvarla(0,03 ×
+(35.000 + 2.000 + 4.822,22)) = 1.254`; `DG = 41.822,22 × 0,05`. Mayıs'ta aynînin GV'si (`CD = 750`) ve DV'si
+(`CE = 37,95`) 5.000'in içinden düşer; `DD`'den `5.000 − 750 − 37,95` çıkarıldığı için çalışanın eline geçen para Ocak'la
+aynıdır (33.107,15); maliyet aynînin brütü kadar artar. Yıl: **600.966,67 TL**.
+
 ---
 
 ## 7. Belirsiz / doğrulanamayan noktalar
@@ -1251,3 +1355,13 @@ payı ve teşvik yok → maliyet = brüt. Asgari ücret istisnası uygulanır (`
 13. **Kriter ağırlık toplamı.** `PERF.hazirla` toplamı 100 olmayan kriter ağırlıklarını reddetmez (ekran yalnız uyarır).
     Toplam 100 değilse amir puanı ölçeklenir; bölüm katsayısı etkilenmez ama ek puanların değerlendirmeye göre payı
     değişir, dolayısıyla çarpanlar da değişir.
+14. **Net ↔ brüt esas dönüşümü yoktur (bilinçli).** Personeli olan çalışmanın esası değiştirilemez ve program girilmiş
+    tutarları öbür esasa çevirmez: dönüşüm kümülatif GV yüzünden aydan aya değişir, tek bir kesin karşılığı yoktur
+    (§4.5). Esas değiştirilecekse boş bir çalışma açılıp tutarlar o esasta girilir. Ücret esası çalışma ayarından okunur,
+    onay anındaki parametrelerle dondurulmaz; değişikliği engelleyen kural bu yüzden önemlidir.
+15. **Brüt esasta asgari ücretin altındaki brüt.** SGK tabanı kuralı (h) brüt esasta da aynen uygulanır: girilen brüt
+    asgari ücretin gün karşılığından düşükse işçi ve işveren SGK'sı asgari ücret üzerinden hesaplanır, brüt ise girildiği
+    gibi kalır; fark çalışanın netinden düşer. Örn. brüt 30.000 (asgari 33.030): `BC = 4.624,20`, `BD = 330,30`,
+    `DD = 25.045,50`, `DE = 7.184,02`. Bu durum için uyarı yoktur.
+16. **Mesai iki esasta farklıdır.** Net esasta net saat ücreti, brüt esasta brüt saat ücreti esas alınır (§3.13); aynı
+    kişinin iki esastaki mesai maliyeti birbirinin tam karşılığı değildir.
