@@ -36,16 +36,16 @@ düzenleyecekleri gruplar ile yetkileri kişi kişi atanır.
 |---|---|---|
 | Genel | Özet | Yaka ve bütçe bölümü toplamları, bütçelenen tutar ve fark; "Tümü" ile bütün gruplar |
 | Genel | Maaş Dağılımı | Maaş aralıklarına göre kişi sayısı ve sıralı maaş listesi |
+| Bütçe | Bütçe Çalışmaları | Her grubun her yılı için bütçe (taslak / onaylı / revize), zam yöntemi ve ayarlar |
 | Bütçe | Personel ve Zam | Bütçe satırları, zam öngörüsü, yönetim düzeltmesi, kişi kartı |
-| Bütçe | Maliyet Tablosu | Kişi × ay tutarlar; kişiye tıklayınca 12 aylık bordro dökümü |
 | Bütçe | Aylık Girdiler | Aynî yardım, prim, mesai, yakıt, AR-GE günü; yıl içi hesaplama türü / kanun değişikliği |
+| Bütçe | Maliyet Tablosu | Kişi × ay tutarlar; kişiye tıklayınca 12 aylık bordro dökümü |
 | Bütçe | Performans Değerlendirme | Amir değerlendirmeleri, bölüm katsayısı ve zam çarpanı; yıl bazında düzenlenen değerlendirme modeli (amirler, kriterler, ağırlıklar, ek puanlar); Excel şablonu |
-| Bütçe | Mesai Öngörüsü | Bölüm × ay mesai saati ve kişi sayısı; kişi başı mesai |
-| Bütçe | Çalışmalar | Yıl × grup çalışmaları (taslak / onaylı / revize), zam yöntemi |
-| Bütçe | Yönetim Raporu | Yönetime giden Excel ve geri dönen düzeltmelerin içeri alınması |
-| Veri | Dış Liste Aktarımı | ERP / bordro programından güncel maaş ve personel listesinin alınması |
+| Bütçe | Fazla Mesai Planı | Bölüm × ay mesai saati ve kişi sayısı; kişi başı mesai |
+| İçe / Dışa Aktarma | Personel İçe Aktarma | Personel listesini (Excel / CSV ya da ERP / bordro programı çıktısı) bütçeye alma; örnek Excel şablonu |
+| İçe / Dışa Aktarma | Excel Raporu | Bütçenin Excel çıktısı ve yönetimin düzeltmelerinin geri yüklenmesi |
 | Tanımlar | Parametreler | Asgari ücret, GV tarifesi, SGK ve teşvik oranları, zam kademesi, sakatlık indirimi, mesai katsayıları |
-| Tanımlar | Tanımlar | Gruplar, hesaplama türleri (SSK / Emekli / SGK'sız), kanun türleri, bütçe bölümleri, aktarım başlıkları |
+| Tanımlar | Tanımlar | Gruplar, hesaplama türleri (SSK / Emekli / SGK'sız), kanun türleri, bütçe bölümleri, içe aktarma başlıkları |
 | Yönetim | Kullanıcılar | Kullanıcılar, grup erişimi ve yetkiler |
 | Yönetim | Sistem | Yedek, veri şifreleme, işlem kaydı, örnek veri, sıfırlama |
 

@@ -123,7 +123,7 @@
     const yontem = [c.zam_kademe ? 'maaş kademesi' : 'sabit oran', c.zam_performans ? 'performans çarpanı' : null]
       .filter(Boolean).join(' × ');
     const aciklama = {
-      zam: 'Tutarlar NET. Zam öngörüsü: ' + U.esc(yontem) + ' (Çalışmalar ekranından değiştirilir). DÜZELTME yönetimin ' +
+      zam: 'Tutarlar NET. Zam öngörüsü: ' + U.esc(yontem) + ' (Bütçe Çalışmaları ekranından değiştirilir). DÜZELTME yönetimin ' +
            'müdahalesidir; öngörülen zamma eklenir, eksi olabilir.',
       kisi: 'Hesaplamayı belirleyen bilgiler. Değiştirmek için kişinin adına tıklayın; yıl içi değişiklikler Aylık Girdiler\'den.',
     }[sekme];
@@ -212,7 +212,7 @@
       altBaslik: yeni ? c.yil + ' · ' + c.grup_adi : 'T.C. ' + (API.yetkiVar('alan.tc') ? k.tc_kimlik_no : U.tcMaskele(k.tc_kimlik_no)),
       genislik: 'genis',
       govde: `
-        <h3 class="bosluk-yok">Kimlik ve İstihdam <span class="kucuk soluk">— Dış Liste Aktarımı'yla ERP / bordro programından da gelebilir</span></h3>
+        <h3 class="bosluk-yok">Kimlik ve İstihdam <span class="kucuk soluk">— Personel İçe Aktarma'yla ERP / bordro programından da gelebilir</span></h3>
         <div class="izgara izgara-3 ust-bosluk">
           <div class="alan"><label>T.C. Kimlik No <span class="zorunlu">*</span></label>
             <input name="tc_kimlik_no" class="mono" maxlength="11" value="${v(k.tc_kimlik_no)}"></div>

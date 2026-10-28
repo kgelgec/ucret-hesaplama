@@ -49,7 +49,7 @@
         ${(() => { const on = API.yilOnayliCalismalar(yil); return on.length ? `<div class="uyari uyari-bilgi"><span class="ik">🔒</span><div>
           <strong>${yil} yılının onaylı çalışmaları kilitli:</strong> ${on.map(x => U.esc(x.grup_adi + ' · ' + x.ad)).join(', ')}.
           Bunlar onay anındaki parametrelerle hesaplanır; burada yapılan değişiklik (örn. Ocak'ta resmî rakamlar) onlara <strong>yansımaz</strong>,
-          yalnız taslak ve revize çalışmaları etkiler. Resmî rakamlarla yeni hesap için <strong>Çalışmalar → Revize aç</strong>.</div></div>` : ''; })()}
+          yalnız taslak ve revize çalışmaları etkiler. Resmî rakamlarla yeni hesap için <strong>Bütçe Çalışmaları → Revize aç</strong>.</div></div>` : ''; })()}
         ${durum.ongoru ? `<div class="uyari uyari-dikkat"><span class="ik">⚠</span><div><strong>${yil} yasal parametreleri öngörüdür.</strong>
           ${durum.kaynakYil} değerlerine %${B.tlDuz((durum.oran || 0) * 100, 1)} artış uygulandı${durum.araOran ? `, ${U.AYLAR[durum.araAy - 1]} ayında %${B.tlDuz(durum.araOran * 100, 1)} ara artış öngörüldü` : ''}.
           Resmî rakamlar açıklanınca aşağıdaki değerleri düzeltip "Resmî rakamlar girildi" düğmesine basın.</div></div>` : ''}
@@ -115,7 +115,7 @@
         <div class="kart-baslik"><div><h2>Zam Öngörüsü</h2>
           <div class="kart-aciklama">Önceki yıl net maaşı alt eşiğin altındaysa üst oran, üst eşiğin üstündeyse alt oran;
             arada doğrusal azalır. Buradaki değerler yılın <strong>genel</strong> değeridir; her grubun kendi eşik ve oranları
-            Çalışmalar → ✎ Çalışma Ayarları'ndan girilir (gruplar arasında farklı olabilir). Yöntem (kademe / performans) de orada seçilir.</div></div></div>
+            Bütçe Çalışmaları → ✎ Çalışma Ayarları'ndan girilir (gruplar arasında farklı olabilir). Yöntem (kademe / performans) de orada seçilir.</div></div></div>
         <div class="izgara izgara-2">
           ${[['B', 'Beyaz Yaka'], ['M', 'Mavi Yaka']].map(y => `<div><h3>${y[1]}</h3>
             <table class="genis-tablo param-tablo" data-zam="${y[0]}"><tbody>

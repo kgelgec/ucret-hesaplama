@@ -27,8 +27,9 @@ Bordro, İK ve finans ekipleri için yazıldı. Kurulum gerektirmez: internetsiz
 - **Performans değerlendirmesi.** Amir puanları, bölüm katsayısı ve zam çarpanı. Gelen model bir
   **örnektir**; kriterleri ve ağırlıkları kendi politikanıza göre `program/js/core/performans.js`'te değiştirin.
 - **Mesai öngörüsü.** Bölüm × ay mesai saati.
-- **Excel.** Yönetim raporu çıktısı ve geri dönen dosyanın içe alınması; performans ve mesai şablonları; ERP ya
-  da bordro programından alınan personel listesinin aktarımı (Dış Liste Aktarımı).
+- **Personel listesini içe alma.** Elinizdeki Excel / CSV listesi ya da ERP / bordro programı çıktısı başlık adlarıyla
+  tanınır; hazır listesi olmayan için ekrandan **örnek Excel şablonu** indirilir (Personel İçe Aktarma).
+- **Excel.** Bütçenin Excel raporu ve yönetimin düzeltmelerinin geri yüklenmesi; performans ve mesai şablonları.
 - **Kullanıcılar.** Rol yerine kişi bazında yetki ve grup erişimi; işlem kaydı; hareketsizlikte otomatik çıkış.
 
 ### Tanımlar ekrandan düzenlenir
@@ -39,12 +40,12 @@ Kurumdan kuruma değişen her tanım kod değiştirmeden, ekrandan girilir:
 |---|---|
 | Asgari ücret, gelir vergisi dilimleri, SGK tavanı, damga vergisi, BES ve teşvik oranları, sakatlık indirimi | Parametreler (yıl bazında) |
 | Mesai katsayıları (hafta içi / hafta sonu), günlük çalışma saati, AR-GE günü eşiği, zam yuvarlama adımı | Parametreler → Genel |
-| Zam kademesi (eşikler, oranlar), performans puanı → çarpan kademesi | Parametreler; gruba özel kademe Çalışmalar → ✎ |
+| Zam kademesi (eşikler, oranlar), performans puanı → çarpan kademesi | Parametreler; gruba özel kademe Bütçe Çalışmaları → ✎ |
 | Performans değerlendirme modeli: amirler, kriterler, ağırlıklar, ek puan kuralları | Performans Değerlendirme → Değerlendirme modeli (yıl bazında) |
 | Hesaplama türleri (SGK oranları), kanun / teşvik türleri | Tanımlar |
 | Gruplar, bütçe bölümleri | Tanımlar |
-| Dış listenin (ERP / bordro programı) sütun başlıkları | Tanımlar → Aktarım Başlıkları |
-| Çalışmaya özel gün, AR-GE günü, 05510 oranı, yuvarlama | Çalışmalar → ✎ Çalışma Ayarları |
+| Dış listenin (ERP / bordro programı) sütun başlıkları | Tanımlar → İçe Aktarma Başlıkları |
+| Çalışmaya özel gün, AR-GE günü, 05510 oranı, yuvarlama | Bütçe Çalışmaları → ✎ Çalışma Ayarları |
 | Kullanıcılar, yetkiler, otomatik kapanma süresi | Kullanıcılar, Sistem |
 
 Bilerek kodda kalanlar: teşvik ve sigorta kollarının formülleri (adları ve oranları düzenlenir), yaka türleri (beyaz /
@@ -78,7 +79,7 @@ verileriniz bu klasörün içinde tutulur.
    - **Örnek veriyle başla:** uydurma iki grup (Ofis, Üretim), 56 kişi, 2026 onaylı ve 2027 taslak
      çalışmalar. Programı tanımak içindir.
    - **Boş başla:** yalnız yasal parametreler ve bir "Genel" grubu. Gruplarınızı **Tanımlar → Gruplar**'dan
-     açın; personeli elle girin ya da Dış Liste Aktarımı ile alın.
+     açın; personeli elle girin ya da Personel İçe Aktarma ile alın.
 
 Örnek veriden gerçek kullanıma geçerken **Sistem → Veritabanını Sıfırla** ile baştan başlayın. Program içinde
 ayrıntılı bir **Kullanım Kılavuzu** vardır (sol alttaki düğme).
@@ -183,5 +184,5 @@ baştaki sorumluluk notu).
 ## Üçüncü taraf bileşenler
 
 `program/js/vendor/` altındaki kütüphaneler kendi lisanslarıyla dağıtılır: [sql.js](https://github.com/sql-js/sql.js)
-(MIT; SQLite kamu malıdır) ve [ExcelJS](https://github.com/exceljs/exceljs) (MIT). Ayrıntı:
-`program/js/vendor/LISANSLAR.md`.
+(MIT; SQLite kamu malıdır) ve [ExcelJS](https://github.com/exceljs/exceljs) (MIT). Arayüz simgeleri
+[Lucide](https://lucide.dev) setinden alınmıştır (ISC; `program/js/core/ikon.js`). Ayrıntı: `program/js/vendor/LISANSLAR.md`.

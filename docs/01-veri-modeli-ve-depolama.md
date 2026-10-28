@@ -249,8 +249,8 @@ PK: (`yil`, `anahtar`). Bir yılın parametrelerinin "var" sayılması için `as
 | `t14857` | 14857 engelli teşvik oranı | 0.1975 | aynı |
 | `t15510` | 15510 teşvik oranı | 0.05 | aynı |
 | `arge_gv_esik` | Çalışmanın AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı (kişiye aylık AR-GE günü girilmemişse, §3.4 madde 8) | 0.8 | `parametreYaz` |
-| `mesai_fm1_kat` | Hafta içi fazla mesai (FM1) katsayısı (× saat ücreti) | 1.5 | `parametreYaz` |
-| `mesai_fm2_kat` | Hafta sonu / tatil mesaisi (FM2) katsayısı (× saat ücreti) | 2 | `parametreYaz` |
+| `mesai_fm1_kat` | Hafta içi fazla mesai katsayısı (× saat ücreti) | 1.5 | `parametreYaz` |
+| `mesai_fm2_kat` | Hafta sonu / tatil mesaisi katsayısı (× saat ücreti) | 2 | `parametreYaz` |
 | `mesai_gun_saat` | Saat ücretinde günlük çalışma saati: saat ücreti = net maaş / 30 / bu değer | 7.5 | `parametreYaz` |
 | `zam_yuvarla` | Zam öngörüsünün yuvarlama adımı (TL); çalışmaya özel `calisma_ayar.zam.yuvarla_ongoru` önce gelir | 10 | `parametreYaz` |
 | `zam.M.alt_esik` / `zam.B.alt_esik` | Zam kademesi alt eşiği (önceki yıl net maaşı), mavi (M) / beyaz (B) yaka | 50000 | `SEED_YUKLE`, `parametreYaz` |
@@ -459,8 +459,8 @@ PK: (`calisma_id`, `tc_kimlik_no`, `ay`, `alan`). İndeks: `ix_aylik_calisma (ca
 | `bes` | BES | Sürekli | `EVET` / `HAYIR` | `personel.yaz` |
 | `gv_tesvik` | GV teşvik oranı | Sürekli | oran | `personel.yaz` |
 | `yol` | Yol parası | Sürekli | tutar | `personel.yaz` |
-| `fm1` | FM1 mesai (saat) | **Sürekli** | saat (hafta içi) | `aylik.yaz` |
-| `fm2` | FM2 mesai (saat) | **Sürekli** | saat (hafta sonu) | `aylik.yaz` |
+| `fm1` | Hafta içi mesai (saat) | **Sürekli** | saat (hafta içi) | `aylik.yaz` |
+| `fm2` | Hafta sonu mesai (saat) | **Sürekli** | saat (hafta sonu) | `aylik.yaz` |
 | `arge_gun` | AR-GE gün | **Sürekli** | gün | `aylik.yaz` |
 | `ayni` | Net ayni yardım | **O aya özgü** (devretmez; girilmeyen ay 0) | tutar | `aylik.yaz` |
 | `prim` | Prim ve diğer ödemeler | O aya özgü | tutar | `aylik.yaz` |

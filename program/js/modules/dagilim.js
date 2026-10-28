@@ -145,7 +145,7 @@
 
         <h3 class="ust-bosluk">Küçükten büyüğe — en küçük ve en büyük maaş</h3>
         <div class="kucuk soluk">Zam kademesinin alt ve üst eşiği <strong>önceki yıl maaşına</strong> uygulanır; eşik belirlerken
-          esası "${c.yil - 1} maaşı" bırakın. Mevcut eşikler Çalışmalar → ✎ ekranında değiştirilir.</div>
+          esası "${c.yil - 1} maaşı" bırakın. Mevcut eşikler Bütçe Çalışmaları → ✎ ekranında değiştirilir.</div>
         <div class="tablo-sar ust-bosluk"><table class="genis-tablo">
           <thead><tr><th></th><th class="num">Kişi</th><th class="num">En küçük</th><th class="num">En büyük</th>
             <th class="num">Ortanca</th><th class="num">Ortalama</th><th class="num">Mevcut kademe (alt / üst eşik)</th></tr></thead>

@@ -2,7 +2,7 @@
    ÇALIŞMALAR — her grubun her yılı ayrı bir bütçe çalışmasıdır
 
    Yeni çalışma üç kaynaktan açılabilir:
-     BOS      — boş; personel dış liste aktarımıyla (ERP / bordro
+     BOS      — boş; personel Personel İçe Aktarma ekranıyla (Excel / ERP
                 programı) ya da elle girilir
      YENI_YIL — önceki yılın çalışmasından: o yılın ZAMLI maaşları yeni
                 yılın "önceki yıl maaşı" olur, önceki yılın maliyeti
@@ -162,7 +162,7 @@
           <label class="satir"><input type="radio" name="kaynak" value="KOPYA">
             <span><strong>Aynı yıldaki bir çalışmanın kopyası</strong> — senaryo denemek için</span></label>
           <label class="satir"><input type="radio" name="kaynak" value="BOS">
-            <span><strong>Boş</strong> — personel Dış Liste Aktarımı (ERP / bordro programı) ile ya da elle eklenir</span></label>
+            <span><strong>Boş</strong> — personel sonra Personel İçe Aktarma ekranından (Excel / ERP listesi) alınır ya da elle eklenir</span></label>
           <div class="alan ust-bosluk" id="kaynakKap"><label>Kaynak çalışma</label><select name="kaynak_id"></select>
             <div class="alan-not" id="kaynakNot"></div></div>` : ''}
         ${yeni ? '' : `<h3>Zam öngörüsü yöntemi</h3>
@@ -225,8 +225,8 @@
   }
 
   APP.modulKaydet({
-    id: 'calisma', ad: 'Çalışmalar', ikon: '🗂', grup: 'Bütçe',
-    baslik: 'Çalışmalar', altBaslik: 'Yıl × grup bütçe çalışmaları',
+    id: 'calisma', ad: 'Bütçe Çalışmaları', ikon: '🗂', grup: 'Bütçe',
+    baslik: 'Bütçe Çalışmaları', altBaslik: 'Her grubun her yılı için bütçe: açma, onay, revize ve ayarlar',
     yetki: 'personel.oku', ciz: ciz,
   });
 })();

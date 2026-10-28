@@ -187,8 +187,8 @@ hesaplanır: yeni yılın yasal rakamları sonradan girilse de onaylı maliyet d
 | `istisnaKesinti` | `istisna_kesinti` | 0,15 | 0,15 | Asgari ücretin GV matrahı = brüt × (1 − bu oran) (SGK %14 + işsizlik %1). |
 | `argeGun` | — (yıl parametresi değildir) | **0** | — | `hesapParametre` her zaman 0 kurar; çalışma ayarı `arge_gun` ezer (§2.6). |
 | `argeEsik` | `arge_gv_esik` | 0,8 | — (varsayılan) | Kişiye AR-GE günü girilmemişse çalışmanın AR-GE günü yalnız `gvTesvik ≥ argeEsik` olan kişiye uygulanır (§3.2). |
-| `mesaiKat1` | `mesai_fm1_kat` | 1,5 | — (varsayılan) | Hafta içi fazla mesai (FM1) katsayısı (§3.3). |
-| `mesaiKat2` | `mesai_fm2_kat` | 2 | — (varsayılan) | Hafta sonu / tatil mesaisi (FM2) katsayısı (§3.3). |
+| `mesaiKat1` | `mesai_fm1_kat` | 1,5 | — (varsayılan) | Hafta içi fazla mesai katsayısı (§3.3). |
+| `mesaiKat2` | `mesai_fm2_kat` | 2 | — (varsayılan) | Hafta sonu / tatil mesaisi katsayısı (§3.3). |
 | `gunlukSaat` | `mesai_gun_saat` | 7,5 | — (varsayılan) | Saat ücretinde günlük çalışma saati: saat ücreti = net maaş / 30 / `gunlukSaat` (§3.3). |
 | `zamYuvarla` | `zam_yuvarla` | 10 | — (varsayılan) | Zam öngörüsü yuvarlama adımı (TL); çalışma ayarı `zam.yuvarla_ongoru` önceliklidir (§5.1). `parametreHazirla`'dan sonra `P`'ye eklenir. |
 | `turler` | `hesap_turu` (yıl) | — | bkz. §2.3 | |

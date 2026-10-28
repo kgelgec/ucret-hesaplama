@@ -1,7 +1,7 @@
 /* Maaş Bütçe Sistemi — uygulamaya özgü görünüm */
 .artis{color:var(--danger);}
 .azalis{color:var(--green);}
-.toplam-satir td{font-weight:700; background:var(--accent-soft);}
+.toplam-satir td{font-weight:700; background:#eef2ff;}
 .ozet-girdi{width:150px; text-align:right; padding:4px 8px;}
 .ozet-tablo td, .ozet-tablo th{white-space:nowrap;}
 .izgara-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
@@ -9,9 +9,9 @@ th.num, td.num{text-align:right;}
 .gosterge{font-size:22px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums;}
 /* Geniş maliyet ve bordro tabloları: ilk sütun sabit */
 .genis-tablo{font-size:12px;}
-.genis-tablo td, .genis-tablo th{white-space:nowrap; padding:5px 8px;}
+.genis-tablo td, .genis-tablo th{white-space:nowrap; padding:6px 9px;}
 .genis-tablo th:first-child, .genis-tablo td:first-child{position:sticky; left:0; background:var(--surface); z-index:1;}
-.hucre-girdi{width:92px; text-align:right; padding:3px 6px; font-size:12px;}
+.hucre-girdi{width:92px; text-align:right; padding:3px 7px; font-size:12px; min-height:28px; border-radius:6px;}
 .hucre-girdi.degisti{background:var(--warn-soft);}
 .devralan{color:var(--ink-fade);}
 .sekme-cubuk{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
@@ -24,22 +24,24 @@ th.num, td.num{text-align:right;}
 .tablo-sar{max-height:calc(100vh - 150px); overflow:auto;}
 .kip .tablo-sar{max-height:calc(100vh - 260px);}
 .tablo-sar thead th{
-  position:sticky; top:0; z-index:3; background:#e9eff7; color:var(--ink);
-  box-shadow:inset 0 -2px 0 #c9d4e3;
+  position:sticky; top:0; z-index:3; background:var(--surface-2); color:var(--ink-soft);
+  box-shadow:inset 0 -1px 0 var(--line);
 }
-.genis-tablo thead th:first-child{left:0; z-index:4; background:#e9eff7;}
-.tablo-sar tr.toplam-satir td{position:sticky; bottom:0; z-index:2; background:#dce8f5; box-shadow:inset 0 2px 0 #c9d4e3;}
+.genis-tablo thead th:first-child{left:0; z-index:4; background:var(--surface-2);}
+.tablo-sar tr.toplam-satir td{position:sticky; bottom:0; z-index:2; background:#eef2ff; box-shadow:inset 0 1px 0 #c7d2fe;}
 .genis-tablo tr.toplam-satir td:first-child{z-index:3;}
-.tablo-sar tbody tr:hover td{background:#f5f8fc;}
-.genis-tablo tbody tr:hover td:first-child{background:#f5f8fc;}
+.tablo-sar tbody tr:hover td{background:var(--surface-2);}
+.genis-tablo tbody tr:hover td:first-child{background:var(--surface-2);}
 
 /* ---------- Üst çubuk: yıl + grup ---------- */
-.grup-dugmeler{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
-.grup-dugmeler button{border:0; background:var(--surface); padding:6px 14px; font:inherit; font-size:12.5px; cursor:pointer; color:var(--ink-soft);}
+.grup-dugmeler{display:inline-flex; border:1px solid var(--line-input); border-radius:9px; overflow:hidden; background:var(--surface); box-shadow:0 1px 2px rgba(15,23,42,.04);}
+.grup-dugmeler button{border:0; background:var(--surface); padding:7px 15px; min-height:34px; font:inherit; font-size:13px; font-weight:500; color:var(--ink-soft); transition:background var(--hiz) var(--egri), color var(--hiz) var(--egri);}
+.grup-dugmeler button:hover{background:var(--surface-2); color:var(--ink);}
 .grup-dugmeler button + button{border-left:1px solid var(--line);}
-.grup-dugmeler button.etkin{background:var(--accent); color:#fff; font-weight:700;}
+.grup-dugmeler button.etkin{background:var(--accent); color:#fff; font-weight:600;}
 .ust-secici{display:flex; align-items:center; gap:10px;}
-.rz-ongoru{background:#fff1d6; color:#8a5a00;}
+.ust-secici select{width:auto; min-width:96px;}
+.rz-ongoru{background:var(--warn-soft); color:var(--warn); border-color:#fde68a;}
 /* app.css'teki üst kaydırma çubuğu kuralı başlığı 13px aşağı iter (sayfa
    kaydırması için); burada tablo kendi kabında kaydığı için başlık tam tepede durur. */
 .tablo-ust-cubuk + .tablo-sar th, .tablo-sar thead th{top:0;}
@@ -50,8 +52,8 @@ th.num, td.num{text-align:right;}
    Bu yüzden düğmeler hiç küçülmez; yer yetmezse üst çubuk alt satıra geçer. */
 .grup-dugmeler{overflow:visible; flex-shrink:0;}
 .grup-dugmeler button{white-space:nowrap;}
-.grup-dugmeler button:first-child{border-radius:7px 0 0 7px;}
-.grup-dugmeler button:last-child{border-radius:0 7px 7px 0;}
+.grup-dugmeler button:first-child{border-radius:8px 0 0 8px;}
+.grup-dugmeler button:last-child{border-radius:0 8px 8px 0;}
 .ust-secici{flex-wrap:wrap; justify-content:flex-end;}
 .ust{flex-wrap:wrap;}
 .ust .sag{flex-wrap:wrap; justify-content:flex-end; min-width:0;}
@@ -60,19 +62,19 @@ th.num, td.num{text-align:right;}
    Sütun grupları (önceki yıl, öngörü, düzeltme, zam, yeni yıl, maliyet)
    başlık rengiyle, hücreler aynı rengin açık tonuyla ve gruplar arasında
    kalın çizgiyle birbirinden ayrılır. */
-.personel-tablo thead th.bas-eski{background:#7fae4e; color:#fff;}
-.personel-tablo thead th.bas-ong {background:#8392a8; color:#fff;}
-.personel-tablo thead th.bas-duz {background:#d19a12; color:#fff;}
-.personel-tablo thead th.bas-zam {background:#c0504d; color:#fff;}
-.personel-tablo thead th.bas-yeni{background:#1d8fc4; color:#fff;}
-.personel-tablo thead th.bas-mal {background:#1f4e79; color:#fff;}
-.personel-tablo td.hucre-eski{background:#f0f7e8;}
-.personel-tablo td.hucre-ong {background:#f4f6f9;}
-.personel-tablo td.hucre-duz {background:#fff6da;}
-.personel-tablo td.hucre-zam {background:#fbeceb;}
-.personel-tablo td.hucre-yeni{background:#eaf6fc;}
-.personel-tablo td.hucre-mal {background:#eef2f8;}
-.personel-tablo .grup-sinir{border-left:3px solid #fff; box-shadow:inset 3px 0 0 #9aa8bc;}
+.personel-tablo thead th.bas-eski{background:#3f6212; color:#fff;}
+.personel-tablo thead th.bas-ong {background:#475569; color:#fff;}
+.personel-tablo thead th.bas-duz {background:#b45309; color:#fff;}
+.personel-tablo thead th.bas-zam {background:#b91c1c; color:#fff;}
+.personel-tablo thead th.bas-yeni{background:#0369a1; color:#fff;}
+.personel-tablo thead th.bas-mal {background:#1e40af; color:#fff;}
+.personel-tablo td.hucre-eski{background:#f7fee7;}
+.personel-tablo td.hucre-ong {background:#f8fafc;}
+.personel-tablo td.hucre-duz {background:#fffbeb;}
+.personel-tablo td.hucre-zam {background:#fef2f2;}
+.personel-tablo td.hucre-yeni{background:#f0f9ff;}
+.personel-tablo td.hucre-mal {background:#eef2ff;}
+.personel-tablo .grup-sinir{border-left:3px solid #fff; box-shadow:inset 3px 0 0 #cbd5e1;}
 .personel-tablo thead th{white-space:normal; min-width:92px; line-height:1.25; vertical-align:bottom;}
 .personel-tablo thead th:first-child{min-width:190px;}
 .personel-tablo tbody tr:hover td{filter:brightness(0.97);}
@@ -81,14 +83,14 @@ th.num, td.num{text-align:right;}
    Bütün tablolarda çift sütunlar hafif koyulaştırılır; sütunlar birbirinden ayrılır.
    Renk, hücrenin kendi zemininin ÜSTÜNE gölge katmanı olarak eklenir — Personel ve Zam'daki
    renk grupları, toplam satırı ve sarı düzeltme hücreleri bozulmaz. */
-table td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.045);}
-table thead th:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.07), inset 0 -2px 0 #c9d4e3;}
-table tr.toplam-satir td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(31,78,121,0.06), inset 0 2px 0 #c9d4e3;}
+table td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(15,23,42,0.022);}
+table thead th:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(15,23,42,0.03), inset 0 -1px 0 var(--line);}
+table tr.toplam-satir td:nth-child(even){box-shadow:inset 0 0 0 9999px rgba(30,64,175,0.04), inset 0 1px 0 #c7d2fe;}
 /* Personel ve Zam'da grup sınırı çizgisi zebra katmanıyla birlikte */
 .personel-tablo td.grup-sinir:nth-child(even), .personel-tablo th.grup-sinir:nth-child(even){
-  box-shadow:inset 3px 0 0 #9aa8bc, inset 0 0 0 9999px rgba(31,78,121,0.045);}
-.personel-tablo td.grup-sinir:nth-child(odd), .personel-tablo th.grup-sinir:nth-child(odd){box-shadow:inset 3px 0 0 #9aa8bc;}
-table td + td, table th + th{border-left:1px solid rgba(31,78,121,0.06);}
+  box-shadow:inset 3px 0 0 #cbd5e1, inset 0 0 0 9999px rgba(15,23,42,0.022);}
+.personel-tablo td.grup-sinir:nth-child(odd), .personel-tablo th.grup-sinir:nth-child(odd){box-shadow:inset 3px 0 0 #cbd5e1;}
+table td + td, table th + th{border-left:1px solid rgba(15,23,42,0.045);}
 
 /* Süzgeç satırı — düğmeler, arama ve seçiciler yan yana (kart başlığı dışında da) */
 .suzgec-satir{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
@@ -100,15 +102,15 @@ table td + td, table th + th{border-left:1px solid rgba(31,78,121,0.06);}
 .kilit-serit{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   margin:0 22px 12px; padding:10px 14px; border-radius:10px;
-  background:var(--warn-soft); border:1px solid var(--warn); color:#7a5210; font-size:13px;
+  background:var(--warn-soft); border:1px solid #fde68a; border-left:4px solid var(--gold); color:#78350f; font-size:13px;
 }
 .kilit-serit.gizli{display:none;}
-.kilit-serit .ik{font-size:16px; line-height:1;}
+.kilit-serit .ik{font-size:17px; line-height:1; display:flex;}
 .kilit-serit .metin{flex:1; min-width:220px;}
 
 /* Maaş Dağılımı */
-.dagilim-cubuk{display:inline-block; width:110px; height:10px; background:#eef1f6; border-radius:5px; overflow:hidden; vertical-align:middle; margin-right:6px;}
-.dagilim-cubuk span{display:block; height:100%; background:var(--accent, #1f4e79); border-radius:5px;}
+.dagilim-cubuk{display:inline-block; width:110px; height:10px; background:var(--line-soft); border-radius:5px; overflow:hidden; vertical-align:middle; margin-right:6px;}
+.dagilim-cubuk span{display:block; height:100%; background:var(--accent-2); border-radius:5px;}
 tr.dagilim-uc td{background:var(--warn-soft);}
 td.kalin{font-weight:700;}
 
@@ -127,17 +129,18 @@ td.kalin{font-weight:700;}
    rakamlar belirler; tablolar daralır, yan yana sığar. */
 .genis-tablo thead th, .ozet-tablo thead th{white-space:normal; line-height:1.25; vertical-align:bottom;}
 
-/* Personel ve Zam: 🗑 adın solunda — silme düğmesi satırın başında, kolay erişilir */
+/* Personel ve Zam: silme düğmesi adın solunda — silme düğmesi satırın başında, kolay erişilir */
 .personel-tablo .ad-sil{margin-right:6px; vertical-align:middle; opacity:.55;}
 .personel-tablo tr:hover .ad-sil{opacity:1;}
 
 /* Kullanım Kılavuzu — solda içindekiler, sağda bölümler */
-.kenar-alt .kilavuz-btn{margin-top:10px; background:rgba(255,255,255,.14); color:#fff; font-weight:600;}
+.kenar-alt .kilavuz-btn{margin-top:10px; background:rgba(59,130,246,.2); color:#fff; font-weight:600;}
+.kenar-alt .kilavuz-btn:hover{background:rgba(59,130,246,.32);}
 .kl-duzen{display:grid; grid-template-columns:260px minmax(0,1fr); gap:16px; align-items:start;}
 .kl-icindekiler{position:sticky; top:12px; max-height:calc(100vh - 120px); overflow:auto;}
 .kl-icindekiler input{width:100%;}
 .kl-icindekiler a{display:block; padding:6px 8px; border-radius:6px; color:var(--ink); text-decoration:none; font-size:13px;}
-.kl-icindekiler a:hover{background:var(--line);}
+.kl-icindekiler a:hover{background:var(--accent-soft); color:var(--accent);}
 .kl-bolum{margin-bottom:16px; line-height:1.6;}
 .kl-bolum h4{margin:14px 0 6px; font-size:13.5px;}
 .kl-bolum ul,.kl-bolum ol{padding-left:22px; margin:6px 0;}
@@ -150,13 +153,29 @@ td.kalin{font-weight:700;}
 .kl-sss dd{margin:4px 0 0 0; color:var(--ink-soft);}
 @media (max-width:900px){.kl-duzen{grid-template-columns:1fr;} .kl-icindekiler{position:static; max-height:none;}}
 .kl-gorsel{margin:12px 0 16px;}
-.kl-gorsel img{max-width:100%; height:auto; border:1px solid var(--line); border-radius:8px; box-shadow:0 2px 10px rgba(20,35,60,.08); cursor:zoom-in; display:block;}
+.kl-gorsel img{max-width:100%; height:auto; border:1px solid var(--line); border-radius:8px; box-shadow:var(--golge-orta); cursor:zoom-in; display:block;}
 .kl-gorsel figcaption{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}
 
 /* Performans: değerlendirme modeli düzenleyicisi — ek puan alanı kutuları */
-.pf-model-ek{border:1px solid var(--line); border-radius:8px; padding:12px 14px 8px; margin-top:12px; background:#fbfcfe;}
+.pf-model-ek{border:1px solid var(--line); border-radius:8px; padding:12px 14px 8px; margin-top:12px; background:var(--surface-2);}
 .pf-model-ek-ust{display:flex; gap:10px; align-items:flex-start;}
 .pf-model-ek-ust > .izgara{flex:1; min-width:0;}
 .pf-model-ek .alan{margin-bottom:8px;}
 .pf-model-ek .satir > label{display:inline-flex; align-items:center; gap:6px; margin:0;}
 .pf-model-ek input[type=checkbox]{width:auto;}
+
+/* Personel İçe Aktarma: adım adım yönerge */
+.adimlar{margin:0 0 18px; padding:0; list-style:none; counter-reset:adim; display:grid; gap:8px;}
+.adimlar li{counter-increment:adim; position:relative; padding:3px 0 3px 34px; font-size:13px; color:var(--ink-soft); line-height:1.7;}
+.adimlar li::before{
+  content:counter(adim); position:absolute; left:0; top:4px; width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:1px solid #bfdbfe;
+}
+.adimlar li .btn{margin-left:6px; vertical-align:middle;}
+.adimlar li strong{color:var(--ink);}
+
+/* Açıklamalı seçenek (radyo / onay kutusu + başlık + ipucu) */
+.secenek{display:flex; align-items:flex-start; gap:4px; font-weight:500; color:var(--ink); margin:0 0 8px; text-align:left; cursor:pointer;}
+.secenek input{margin-top:3px;}
+.secenek .ipucu{display:block; font-weight:400; font-size:12px; color:var(--ink-fade); margin-top:1px;}
+div.ipucu{font-size:12px; color:var(--ink-fade); margin-top:4px;}

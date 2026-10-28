@@ -76,17 +76,17 @@
         <li><strong>Parametreler:</strong> üst çubuktan yeni yılı seçin. <em>Yeni yıl öngörüsü</em> bölümünde kaynak yıl, seçili yılın bir önceki yılı;
           hedef yıl, seçili yıldır. Öngörü oranlarını kontrol edip parametreleri oluşturun (vergi dilimleri, asgari ücret, sakatlık indirimi oranla artırılır).
           Resmî rakamlar açıklanınca bu ekrandan düzeltin ve <strong>Resmî rakamlar girildi</strong> deyin. ${ac('parametre')}</li>
-        <li><strong>Çalışmalar → + Yeni Çalışma:</strong> grubu seçin, kaynak olarak <em>Önceki yılın çalışmasından</em>'ı seçin.
+        <li><strong>Bütçe Çalışmaları → + Yeni Çalışma:</strong> grubu seçin, kaynak olarak <em>Önceki yılın çalışmasından</em>'ı seçin.
           Geçen yılın zamlı maaşları bu yılın başlangıç maaşı olur; kişiler, kanunlar, BES ve benzeri bilgiler taşınır.
           Aynî yardım, prim, yakıt, mesai ve AR-GE günü <strong>taşınmaz</strong>; her yıl yeniden girilir. ${ac('calisma')}</li>
-        <li><strong>Dış Liste Aktarımı:</strong> ERP ya da bordro programınızdaki güncel net maaşları ve personel bilgisini alın. ${ac('aktarim')}</li>
+        <li><strong>Personel İçe Aktarma:</strong> ERP ya da bordro programınızdaki güncel net maaşları ve personel bilgisini alın. ${ac('aktarim')}</li>
         <li><strong>Personel ve Zam:</strong> zam öngörüsünü inceleyin, gereken kişilere düzeltme yazın. ${ac('personel')}</li>
         <li><strong>Performans Değerlendirme</strong> (zam performansa bağlıysa): değerlendirmeleri girin ya da Excel şablonuyla toplayın,
           sonra <em>Çarpanları zam hesabına uygula</em> deyin. ${ac('performans')}</li>
         <li><strong>Aylık Girdiler:</strong> aynî yardım, prim, yakıt yardımı, fazla mesai ve AR-GE günlerini girin. ${ac('aylik')}
-          Fazla mesaiyi bölüm bölüm planlıyorsanız <em>Mesai Öngörüsü</em>'nü kullanın. ${ac('mesai')}</li>
-        <li><strong>Yönetim Raporu:</strong> yönetime Excel gönderin ya da yönetime programda Personel ve Zam yetkisi verin. ${ac('excel')}</li>
-        <li><strong>Onay:</strong> yönetim onaylayınca Çalışmalar → ✎ → Durum: <em>Onaylı</em>. Onaylı çalışma kilitlenir ve rakamları bir daha değişmez.</li>
+          Fazla mesaiyi bölüm bölüm planlıyorsanız <em>Fazla Mesai Planı</em>'nü kullanın. ${ac('mesai')}</li>
+        <li><strong>Excel Raporu:</strong> yönetime Excel gönderin ya da yönetime programda Personel ve Zam yetkisi verin. ${ac('excel')}</li>
+        <li><strong>Onay:</strong> yönetim onaylayınca Bütçe Çalışmaları → ✎ → Durum: <em>Onaylı</em>. Onaylı çalışma kilitlenir ve rakamları bir daha değişmez.</li>
       </ol>
       ${gorsel('08-parametre', 'Adım 1 — Parametreler: üstte Yeni Yıl Öngörüsü, altta yılın parametreleri')}
       ${gorsel('07-yeni-calisma', 'Adım 2 — Yeni Çalışma penceresi: "Önceki yılın çalışmasından" seçilir')}` },
@@ -130,7 +130,7 @@
           Bir ayda değiştirirseniz o aydan itibaren yeni değer geçerli olur.</li>
         <li>Aynî yardım, prim ve yakıt yardımı hangi ayda verilecekse o ayın sekmesine girilir.</li>
         <li>AR-GE günü kişiye girilmezse çalışmanın AR-GE günü ayarı (varsa) kullanılır; o da yoksa 0 gün sayılır.</li>
-        <li>Grupta <em>Mesai Öngörüsü</em> açıksa kişinin mesaisi bölüm tablosundan gelir; buraya o ay elle yazılan mesai önceliklidir.</li>
+        <li>Grupta <em>Fazla Mesai Planı</em> açıksa kişinin mesaisi bölüm tablosundan gelir; buraya o ay elle yazılan mesai önceliklidir.</li>
       </ul>
       <h4>Hızlı giriş</h4>
       <ul>
@@ -152,7 +152,7 @@
       ${gorsel('09-maliyet', 'Maliyet Tablosu: kişi × ay; kişinin adına tıklayınca bordro dökümü açılır')}
       ${gorsel('10-bordro', 'Bordro dökümü: bir kişinin ay ay brüt ücret, SGK, vergi ve teşvik hesabı')}` },
 
-    { id: 'calisma', baslik: 'Çalışmalar: taslak, onay ve revize', kime: 'herkes', html: `
+    { id: 'calisma', baslik: 'Bütçe Çalışmaları: taslak, onay ve revize', kime: 'herkes', html: `
       <p>Her grubun her yılı ayrı bir bütçe çalışmasıdır (örneğin "2027 · Ofis · 2027 Bütçe"). ${ac('calisma')}</p>
       <ul>
         <li><strong>+ Yeni Çalışma:</strong> <em>Önceki yılın çalışmasından</em> (yeni yıl için), <em>Aynı yıldaki bir çalışmanın kopyası</em>
@@ -165,10 +165,10 @@
           05510 indirim oranı ve bu çalışmaya özel <em>zam öngörüsü yuvarlama adımı</em> (boşsa yılın parametresi kullanılır).</li>
       </ul>
       ${dikkat(`Aynı yıl ve grup için iki çalışma açarsanız ekranlar seçili olanı gösterir. "Kişiler görünmüyor" gibi bir durumda
-        önce üst çubuktaki çalışma seçicisine bakın; gereksiz çalışmayı Çalışmalar ekranından silin.`)}
-      ${gorsel('06-calisma', 'Çalışmalar: taslak ve onaylı çalışmalar; Aç, Revize aç ve ✎ düğmeleri')}` },
+        önce üst çubuktaki çalışma seçicisine bakın; gereksiz çalışmayı Bütçe Çalışmaları ekranından silin.`)}
+      ${gorsel('06-calisma', 'Bütçe Çalışmaları: taslak ve onaylı çalışmalar; Aç, Revize aç ve ✎ düğmeleri')}` },
 
-    { id: 'perfmesai', baslik: 'Performans Değerlendirme ve Mesai Öngörüsü', kime: 'herkes', html: `
+    { id: 'perfmesai', baslik: 'Performans Değerlendirme ve Fazla Mesai Planı', kime: 'herkes', html: `
       <p>İki ekran da seçili grubun çalışması üzerinde çalışır ve isteğe bağlıdır: kullanmayan grupta boş kalır, hesaba etkisi olmaz.</p>
       <h4>Performans Değerlendirme</h4>
       <ul>
@@ -205,7 +205,7 @@
       </ul>
       ${gorsel('14-model', 'Değerlendirme modeli penceresi: amirler, yaka sekmeleri, kriterler ve ek puan alanları')}
       ${dikkat(`Onaylı çalışma onay anındaki modelle değerlendirilir; modeldeki değişiklik o yılın taslak ve revize çalışmalarına uygulanır.`)}
-      <h4>Mesai Öngörüsü</h4>
+      <h4>Fazla Mesai Planı</h4>
       <ul>
         <li>Fazla mesaiyi kişi kişi değil bölüm bölüm planlamak içindir: her bölümün ay ay toplam mesai saati (mavi yaka hafta içi ve hafta sonu,
           beyaz yaka hafta sonu) ve kişi sayısı girilir. Kişi başı mesai = bölümün saati ÷ kişi sayısı; kişi sayısı boşsa çalışmadaki kadro sayılır. ${ac('mesai')}</li>
@@ -215,7 +215,7 @@
           Geçen yılın tablosu <em>… tablosunu kopyala</em> ile yeni yıla başlangıç olarak alınabilir.</li>
       </ul>` },
 
-    { id: 'rapor', baslik: 'Yönetim Raporu (Excel)', kime: 'herkes', html: `
+    { id: 'rapor', baslik: 'Excel Raporu', kime: 'herkes', html: `
       <p>Yönetime gidecek Excel'i hazırlar ve geri gelen dosyadaki düzeltmeleri programa alır. ${ac('excel')}</p>
       <ul>
         <li><strong>Excel'e Aktar:</strong> üç sayfa: <em>ÖZET</em> (yaka ve bölüm toplamları), <em>ZAM ÇALIŞMASI</em> (kişi bazında zam; sarı
@@ -225,17 +225,20 @@
         <li>Öncelik: elle yazılmış zam oranı → elle yazılmış zam miktarı → düzeltme.</li>
       </ul>
       ${ipucu(`Yönetim programı kullanacaksa Excel'e gerek kalmaz; yönetime Personel ve Zam yetkisi verin. Düzeltmeyi doğrudan programa yazarlar.`)}
-      ${gorsel('11-rapor', 'Yönetim Raporu: Excel’e aktarma ve yönetimden dönen dosyayı içeri alma')}` },
+      ${gorsel('11-rapor', 'Excel Raporu: Excel’e aktarma ve yönetimden dönen dosyayı içeri alma')}` },
 
-    { id: 'aktarim', baslik: 'Dış Liste Aktarımı (ERP / bordro programı)', kime: 'herkes', html: `
-      <p>ERP ya da bordro programınızdaki güncel net maaşları ve personel bilgilerini (ad, işe giriş-çıkış, bölüm, görev, yaka, bütçe bölümü)
+    { id: 'aktarim', baslik: 'Personel İçe Aktarma (Excel / CSV / ERP)', kime: 'herkes', html: `
+      <p>Elinizdeki personel listesini (Excel, CSV ya da ERP / bordro programı çıktısı) bütçeye alır: güncel net maaşları ve personel bilgilerini (ad, işe giriş-çıkış, bölüm, görev, yaka, bütçe bölümü)
         çalışmaya alır. Maaşlar çalışmanın "önceki yıl maaşı" olur ve zam bunların üzerine uygulanır; önceki yılın gerçekleşen maliyeti de
         buradan gelebilir. ${ac('aktarim')}</p>
       <ul>
-        <li>Programınızın raporunu Excel (.xlsx) ya da CSV olarak verin ya da tabloyu başlık satırıyla birlikte kopyalayıp yapıştırın.</li>
+        <li>Hazır bir listeniz yoksa ekrandaki <strong>Örnek Excel şablonunu indir</strong> düğmesiyle şablonu alın: ilk sayfaya (PERSONEL)
+          kişileri yazın; ikinci sayfada her sütunun açıklaması ve örneği vardır. Şablonun başlıkları program tarafından tanınır.</li>
+        <li>Listenizi Excel (.xlsx) ya da CSV olarak verin ya da tabloyu başlık satırıyla birlikte kopyalayıp yapıştırın.</li>
+        <li>Önizlemede bütçede olmayan kişiler ayrı listelenir; <strong>Tümünü seç</strong> ile hepsini (başka grupta kayıtlı olanlar hariç) işaretleyebilirsiniz.</li>
         <li>Sütunlar sırasına göre değil <strong>başlık adına</strong> göre tanınır (örneğin "T.C. Kimlik No", "Adı Soyadı", "Net Maaş");
           önizlemede hangi sütunun neye eşlendiği gösterilir. Programınızın başlıkları tanınmıyorsa tanınan başlıklar
-          <em>Tanımlar → Aktarım Başlıkları</em>'ndan alan başına eklenir.</li>
+          <em>Tanımlar → İçe Aktarma Başlıkları</em>'ndan alan başına eklenir.</li>
         <li>Önce önizleme gösterilir: güncellenecek kişiler, değişmeyenler, çalışmada olmayan yeni kişiler ve dosyada olmayanlar.
           Yeni kişilerden eklenecekleri işaretleyip <em>Aktarımı Uygula</em> deyin. Dosyada boş gelen alana dokunulmaz.</li>
       </ul>
@@ -252,7 +255,7 @@
         <li><strong>Yeni yıl öngörüsü:</strong> kaynak yıl her zaman seçili yılın bir önceki yılıdır, hedef yıl seçili yıldır. Onaylı çalışması olan yılın
           parametreleri kilitlidir.</li>
         <li><strong>Tanımlar:</strong> hesaplama türleri (SSK, EMK, SGK'sız), kanun (teşvik) türleri, gruplar (yalnız sistem yöneticisi),
-          her grubun bütçe bölümleri ve <strong>Aktarım Başlıkları</strong>: Dış Liste Aktarımı'nın her alan için tanıdığı sütun başlıkları
+          her grubun bütçe bölümleri ve <strong>İçe Aktarma Başlıkları</strong>: Personel İçe Aktarma'nın her alan için tanıdığı sütun başlıkları
           (virgülle ayrılmış; büyük / küçük harf ve Türkçe karakter farkı gözetilmez). Değiştirilen alan <em>Varsayılan</em> düğmesiyle geri alınır. ${ac('tanim')}</li>
       </ul>` },
 
@@ -267,7 +270,7 @@
         <li>Bütçe uygun olduğunda bütçe sorumlusuna bildirin; çalışma <strong>Onaylı</strong>'ya alınır ve kilitlenir.</li>
       </ol>
       ${gorsel('02-personel', 'Düzeltme, sarı DÜZELTME sütununa aylık net tutar olarak yazılır; üstteki kutular hemen güncellenir')}
-      ${ipucu(`Excel ile çalışmayı tercih ederseniz bütçe sorumlusu <em>Yönetim Raporu</em>'ndan Excel gönderir; sarı DÜZELTME sütununu doldurup geri verirsiniz.`)}` },
+      ${ipucu(`Excel ile çalışmayı tercih ederseniz bütçe sorumlusu <em>Excel Raporu</em>'ndan Excel gönderir; sarı DÜZELTME sütununu doldurup geri verirsiniz.`)}` },
 
     { id: 'gruplar', baslik: 'Gruplar', kime: 'yonetici', html: `
       <p>Bütçe gruplar hâlinde tutulur (örneğin birim, işyeri ya da şube); her grubun her yılı ayrı bir çalışmadır ve üst çubuktaki grup
@@ -279,7 +282,7 @@
         <li><strong>🗑 Sil:</strong> bütçe çalışması olan grup silinmez; önce çalışmalarını silin. Silinen grubun bütçe bölümleri ve kullanıcı erişimleri de gider.</li>
       </ul>
       ${ipucu(`Yeni grubu sistem yöneticisi dışındaki kullanıcıların görmesi için <em>Kullanıcılar</em> ekranından grup erişimi verin.
-        Ardından grubun bütçe bölümlerini <em>Tanımlar → Bütçe Bölümleri</em>'nden ekleyip <em>Çalışmalar</em>'dan ilk çalışmasını açın.`)}` },
+        Ardından grubun bütçe bölümlerini <em>Tanımlar → Bütçe Bölümleri</em>'nden ekleyip <em>Bütçe Çalışmaları</em>'ndan ilk çalışmasını açın.`)}` },
 
     { id: 'kullanici', baslik: 'Kullanıcılar ve yetkiler', kime: 'yonetici', html: `
       <p>Sistem yöneticisi her kullanıcı için hangi grupları görebileceğini ve düzenleyebileceğini, hangi işlemlere erişebileceğini tek tek işaretler. ${ac('kullanici')}</p>

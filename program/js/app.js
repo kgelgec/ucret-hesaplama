@@ -232,10 +232,10 @@ window.APP = (function () {
         </div>
         <div class="alan">
           <label>Başlangıç</label>
-          <label class="satir" style="font-weight:normal"><input type="radio" name="kurBaslangic" value="ornek" checked>
-            Örnek veriyle başla <span class="ipucu">— uydurma iki grup ve personel; programı denemek için</span></label>
-          <label class="satir" style="font-weight:normal"><input type="radio" name="kurBaslangic" value="bos">
-            Boş başla <span class="ipucu">— yalnız yasal parametreler ve "Genel" grubu</span></label>
+          <label class="secenek"><input type="radio" name="kurBaslangic" value="ornek" checked>
+            <span><strong>Örnek veriyle başla</strong><span class="ipucu">Uydurma iki grup ve personel; programı denemek için.</span></span></label>
+          <label class="secenek"><input type="radio" name="kurBaslangic" value="bos">
+            <span><strong>Boş başla</strong><span class="ipucu">Yalnız yasal parametreler ve bir "Genel" grubu.</span></span></label>
           <div class="ipucu">Örnek veriden gerçek kullanıma geçerken Sistem → Veritabanını Sıfırla ile baştan başlayın.</div>
         </div>
         <button class="btn" id="kurBtn" style="width:100%; justify-content:center;">Hesabı Oluştur ve Başla</button>
@@ -678,7 +678,7 @@ window.APP = (function () {
       const g = m.grup || 'Diğer';
       (gruplar[g] = gruplar[g] || []).push(m);
     });
-    const sira = ['Genel', 'Bütçe', 'Veri', 'Tanımlar', 'Yönetim'];
+    const sira = ['Genel', 'Bütçe', 'İçe / Dışa Aktarma', 'Tanımlar', 'Yönetim'];
     const anahtarlar = Object.keys(gruplar).sort((a, b) => {
       const ia = sira.indexOf(a), ib = sira.indexOf(b);
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
@@ -690,8 +690,8 @@ window.APP = (function () {
         let rozet = '';
         try { if (m.sayac) { const n = m.sayac(); if (n) rozet = `<span class="rozet">${U.sayi(n)}</span>`; } }
         catch (e) {}
-        return `<button data-modul="${m.id}" class="${aktifModul === m.id ? 'etkin' : ''}">
-                  <span class="ikon">${m.ikon || '•'}</span><span>${U.esc(m.ad)}</span>${rozet}
+        return `<button data-modul="${m.id}" class="${aktifModul === m.id ? 'etkin' : ''}"${aktifModul === m.id ? ' aria-current="page"' : ''}>
+                  <span class="ikon">${IKON.menu(m.id)}</span><span>${U.esc(m.ad)}</span>${rozet}
                 </button>`;
       }).join('')}`).join('');
 
@@ -785,7 +785,7 @@ window.APP = (function () {
           kap.insertAdjacentHTML('afterbegin', `<div class="uyari uyari-bilgi"><span class="ik">🔒</span>
             <div><strong>${oc.yil} · ${U.esc(oc.grup_adi)} onaylı ve kilitli.</strong> Onaylanmış maliyetler olduğu gibi gösterilir;
             değişiklik yapılamaz.
-            Gerekirse Çalışmalar → ✎ ekranından "Taslak"a alın.</div></div>`);
+            Gerekirse Bütçe Çalışmaları → ✎ ekranından "Taslak"a alın.</div></div>`);
         }
       }
     } catch (e) {

@@ -11,9 +11,9 @@
 
   let ay = 1;
   const TEK = [
-    ['ayni', 'Net Ayni Yardım'], ['prim', 'Prim / Diğer (net)'], ['fm1', 'FM1 Mesai (saat)'],
-    ['fm2', 'FM2 Mesai (saat)'], ['yakit', 'Yakıt Yardımı'], ['calisilan_gun', 'Çalışılan Gün'],
-    /* AR-GE günü: boş = çalışmanın AR-GE günü ayarı (Çalışmalar → ✎), o da yoksa 0 — ayar yalnız GV teşviki %80+
+    ['ayni', 'Net Ayni Yardım'], ['prim', 'Prim / Diğer (net)'], ['fm1', 'Hafta İçi Mesai (saat)'],
+    ['fm2', 'Hafta Sonu Mesai (saat)'], ['yakit', 'Yakıt Yardımı'], ['calisilan_gun', 'Çalışılan Gün'],
+    /* AR-GE günü: boş = çalışmanın AR-GE günü ayarı (Bütçe Çalışmaları → ✎), o da yoksa 0 — ayar yalnız GV teşviki %80+
        olanlarda kullanılır. Gün, AR-GE GV/DV teşvikinde ve 05746 SGK teşvikinde kullanılır. */
     ['arge_gun', 'AR-GE Günü'],
   ];

@@ -81,7 +81,7 @@
       : '<span class="rz rz-ongoru">Kapalı — kişilerin mesaisi Aylık Girdiler\'den</span>';
     kap.innerHTML = `
       <div class="kart">
-        <div class="kart-baslik"><div><h2>Mesai Öngörüsü — ${U.esc(c.grup_adi || c.grup_kod)}</h2>
+        <div class="kart-baslik"><div><h2>Fazla Mesai Planı — ${U.esc(c.grup_adi || c.grup_kod)}</h2>
           <div class="kart-aciklama">${c.yil} · ${U.esc(c.ad)}. Bölüm bazında aylık toplam mesai saati; kişi başı mesai =
             bölümün saati ÷ bölümün kişi sayısı. Kişiye o ay Aylık Girdiler'den mesai yazılmışsa o geçerlidir.</div></div>
           <div class="btn-satir">
@@ -366,8 +366,8 @@
   }
 
   APP.modulKaydet({
-    id: 'mesai', ad: 'Mesai Öngörüsü', ikon: '⏱', grup: 'Bütçe',
-    baslik: 'Mesai Öngörüsü', altBaslik: 'Bölüm bazında aylık mesai saati ve kişi sayısı',
+    id: 'mesai', ad: 'Fazla Mesai Planı', ikon: '⏱', grup: 'Bütçe',
+    baslik: 'Fazla Mesai Planı', altBaslik: 'Bölüm bazında aylık mesai saati ve kişi sayısı',
     yetki: 'personel.oku', calismaGerekli: true, ciz: ciz,
   });
 })();

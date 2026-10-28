@@ -58,7 +58,7 @@
         ${yaz ? '<button class="btn ust-bosluk" id="yeniKanun">+ Yeni Kanun Türü</button>' : ''}`;
     } else if (sekme === 'baslik') {
       const S = API.aktarimSozluk();
-      icerik = `<div class="kart-aciklama">Dış Liste Aktarımı, ERP / bordro programından alınan listedeki sütunları
+      icerik = `<div class="kart-aciklama">Personel İçe Aktarma, ERP / bordro programından alınan listedeki sütunları
           <strong>başlık adlarıyla</strong> tanır. Her alan için tanınacak başlıkları virgülle ayırarak yazın; büyük / küçük harf
           ve Türkçe karakter farkı gözetilmez ("Net Ücret" = "net ucret"). Başlık tam tutmazsa başlığın içinde geçen aday da
           eşleşir. T.C. sütunu zorunludur.</div>
@@ -115,7 +115,7 @@
       <div class="kart">
         <div class="sekme-cubuk">
           ${[['tur', 'Hesaplama Türleri'], ['kanun', 'Kanun / Teşvik Türleri'], ['grup', 'Gruplar'], ['bolum', 'Bütçe Bölümleri'],
-             ['baslik', 'Aktarım Başlıkları']]
+             ['baslik', 'İçe Aktarma Başlıkları']]
             .filter(s => s[0] !== 'grup' || yonetici).map(s =>
             `<button class="btn btn-ikincil btn-kucuk${sekme === s[0] ? ' etkin' : ''}" data-sekme="${s[0]}">${s[1]}</button>`).join('')}
         </div>
@@ -295,7 +295,7 @@
     const g = API.grupListe().find(x => x.kod === kod);
     if (!g) return;
     const n = API.calismaListe().filter(c => c.grup_kod === kod).length;
-    if (n) return U.bildir(`${g.ad} grubunun ${n} bütçe çalışması var; grup silinmeden önce çalışmaları Çalışmalar ekranından silin.`, 'hata');
+    if (n) return U.bildir(`${g.ad} grubunun ${n} bütçe çalışması var; grup silinmeden önce çalışmaları Bütçe Çalışmaları ekranından silin.`, 'hata');
     const ok = await C.onay({ baslik: 'Grubu Sil', mesaj: `<strong>${U.esc(g.ad)}</strong> (${U.esc(g.kod)}) grubu silinecek.`,
       detay: 'Grubun bütçe bölümü tanımları ve kullanıcıların bu gruba erişim kayıtları da silinir.', evetYazi: 'Sil', tehlike: true });
     if (!ok) return;
@@ -316,7 +316,7 @@
 
   APP.modulKaydet({
     id: 'tanim', ad: 'Tanımlar', ikon: '📋', grup: 'Tanımlar',
-    baslik: 'Tanımlar', altBaslik: 'Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri, aktarım başlıkları',
+    baslik: 'Tanımlar', altBaslik: 'Hesaplama türleri, kanun türleri, gruplar, bütçe bölümleri, içe aktarma başlıkları',
     yetki: 'parametre.oku', ciz: ciz,
   });
 })();

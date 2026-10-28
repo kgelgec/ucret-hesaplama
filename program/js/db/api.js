@@ -226,7 +226,7 @@ window.API = (function () {
     if (!grupYazabilir(c.grup_kod)) throw new Error('Bu grupta değişiklik yetkiniz yok.');
     /* Onaylı çalışma kilitlidir: onaylanmış maliyet — hatalı olsa bile — değişmez.
        Değişiklik için Çalışma Ayarları'ndan Taslak'a alınır. */
-    if (c.durum === 'ONAYLI') throw new Error('Bu çalışma onaylı ve kilitli. Değişiklik için Çalışmalar → ✎ ekranından "Taslak"a alın.');
+    if (c.durum === 'ONAYLI') throw new Error('Bu çalışma onaylı ve kilitli. Değişiklik için Bütçe Çalışmaları → ✎ ekranından "Taslak"a alın.');
     if (yetki) yetkiIste(yetki);
     return c;
   }
@@ -486,13 +486,13 @@ window.API = (function () {
     { anahtar: 'dv',             ad: 'Damga vergisi oranı',        birim: 'oran', vars: 0.00759 },
     { anahtar: 'istisna_kesinti',ad: 'Asgari ücret GV matrahı kesintisi (SGK %14 + işsizlik %1)', birim: 'oran', vars: 0.15 },
     { anahtar: 'bes_orani',      ad: 'BES kesinti oranı',          birim: 'oran', vars: 0.03 },
-    { anahtar: 't05510',         ad: '05510 indirimi — varsayılan (gruba özel oran: Çalışmalar → ✎)', birim: 'oran', vars: 0.02 },
+    { anahtar: 't05510',         ad: '05510 indirimi — varsayılan (gruba özel oran: Bütçe Çalışmaları → ✎)', birim: 'oran', vars: 0.02 },
     { anahtar: 't05746',         ad: '05746 AR-GE SGK teşvik oranı (işveren %19,75 × ½)', birim: 'oran', vars: 0.09875 },
     { anahtar: 't14857',         ad: '14857 engelli teşvik oranı', birim: 'oran', vars: 0.1975 },
     { anahtar: 't15510',         ad: '15510 teşvik oranı',         birim: 'oran', vars: 0.05 },
     { anahtar: 'arge_gv_esik',   ad: 'AR-GE günü varsayılanının uygulandığı en düşük GV teşvik oranı', birim: 'oran', vars: 0.8 },
-    { anahtar: 'mesai_fm1_kat',  ad: 'Hafta içi fazla mesai (FM1) katsayısı', birim: '× saat ücreti', vars: 1.5 },
-    { anahtar: 'mesai_fm2_kat',  ad: 'Hafta sonu / tatil mesaisi (FM2) katsayısı', birim: '× saat ücreti', vars: 2 },
+    { anahtar: 'mesai_fm1_kat',  ad: 'Hafta içi fazla mesai katsayısı', birim: '× saat ücreti', vars: 1.5 },
+    { anahtar: 'mesai_fm2_kat',  ad: 'Hafta sonu / tatil mesaisi katsayısı', birim: '× saat ücreti', vars: 2 },
     { anahtar: 'mesai_gun_saat', ad: 'Saat ücretinde günlük çalışma saati (net maaş / 30 / saat)', birim: 'saat', vars: 7.5 },
     { anahtar: 'zam_yuvarla',    ad: 'Zam öngörüsü yuvarlama adımı (çalışmaya özel de girilebilir)', birim: 'TL', vars: 10 },
   ];
@@ -1123,7 +1123,7 @@ window.API = (function () {
   }
 
   /* ---------------------------------------------------------------
-     DIŞ LİSTE AKTARIMI (ERP / bordro programı)
+     PERSONEL İÇE AKTARMA (Excel / CSV listesi ya da ERP / bordro programı çıktısı)
      ERP'den ya da bordro programından alınan Excel / yapıştırılmış liste ile;
      doğrudan veritabanı bağlantısı kurulursa yalnızca bu işlevin kaynağı değişir.
      satir = { tc, ad, ise_giris, isten_ayrilis, bolum, ekip, gorev,
@@ -1133,7 +1133,7 @@ window.API = (function () {
      yeniEklensin: { tc: true } — çalışmada olmayıp eklenecekler
      --------------------------------------------------------------- */
   /* Başlık sözlüğü: alan → dosyadaki olası sütun başlıkları. Varsayılanlar aşağıda; kullanıcı
-     Tanımlar → Aktarım Başlıkları'ndan alan başına listeyi değiştirebilir (sistem_bilgi 'aktarim.sozluk', JSON). */
+     Tanımlar → İçe Aktarma Başlıkları'ndan alan başına listeyi değiştirebilir (sistem_bilgi 'aktarim.sozluk', JSON). */
   const AKTARIM_ALANLARI = [
     ['tc', 'T.C.', ['tc', 't c', 'tc kimlik', 'tc kimlik no', 't c kimlik no', 'kimlik no', 'tckn', 'tc no']],
     ['ad', 'Ad Soyad', ['ad soyad', 'adi soyadi', 'adı soyadı', 'ad soyadi', 'personel', 'calisan', 'çalışan', 'isim']],
@@ -1247,8 +1247,8 @@ window.API = (function () {
   const AYLIK_ETIKET = {
     hesap_turu: 'Hesaplama türü', kanun: 'Kanun türü', sakatlik_derece: 'Sakatlık derecesi',
     ozurlu_indirimi: 'Özürlü indirimi', bes: 'BES', gv_tesvik: 'GV teşvik oranı', yol: 'Yol parası',
-    ayni: 'Net ayni yardım', prim: 'Prim ve diğer ödemeler', fm1: 'FM1 mesai (saat)',
-    fm2: 'FM2 mesai (saat)', yakit: 'Yakıt yardımı', calisilan_gun: 'Çalışılan gün', arge_gun: 'AR-GE gün',
+    ayni: 'Net ayni yardım', prim: 'Prim ve diğer ödemeler', fm1: 'Hafta içi mesai (saat)',
+    fm2: 'Hafta sonu mesai (saat)', yakit: 'Yakıt yardımı', calisilan_gun: 'Çalışılan gün', arge_gun: 'AR-GE gün',
   };
 
   /* ---------------------------------------------------------------

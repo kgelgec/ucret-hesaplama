@@ -29,7 +29,7 @@
     const yaz = API.calismaYazilabilir(c) && API.yetkiVar('zam.yaz');
     kap.innerHTML = `
       <div class="kart">
-        <div class="kart-baslik"><div><h2>Yönetim Raporu (Excel)</h2>
+        <div class="kart-baslik"><div><h2>Excel Raporu</h2>
           <div class="kart-aciklama">${c.yil} · ${U.esc(c.grup_adi)} · ${U.esc(c.ad)}. Tutarlar net maaştır.</div></div>
           <button class="btn" id="aktarBtn">Excel'e Aktar</button></div>
         <ul class="kucuk">
@@ -366,8 +366,8 @@
   window.EXCEL_RAPOR = { aktar: aktar, oku: oku };
 
   APP.modulKaydet({
-    id: 'excel', ad: 'Yönetim Raporu', ikon: '📤', grup: 'Bütçe',
-    baslik: 'Yönetim Raporu', altBaslik: 'Excel çıktısı ve yönetim düzeltmelerinin içeri alınması',
+    id: 'excel', ad: 'Excel Raporu', ikon: '📤', grup: 'İçe / Dışa Aktarma',
+    baslik: 'Excel Raporu', altBaslik: 'Bütçeyi Excel olarak alın; yönetimin düzeltmelerini dosyadan geri yükleyin',
     yetki: 'excel.aktar', calismaGerekli: true, ciz: ciz,
   });
 })();
